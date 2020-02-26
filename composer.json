@@ -1,0 +1,14 @@
+{
+  "name": "australian_greens/dataprocessor",
+  "description": "The data processor is a CiviCRM extension designed to provide more flexibility for data searches and exposure through API endpoints",
+  "type": "drupal-module",
+  "authors": [
+    {
+      "name": "John Twyman",
+      "email": "john.twyman@greens.org.au"
+    }
+  ],
+  "require": {
+    "composer/installers": "~1.0"
+  }
+}
