@@ -122,6 +122,7 @@ class Factory {
     $this->addDataSource('primary_membership', new Definition('Civi\DataProcessor\Source\Member\PrimaryMembershipSource'), E::ts('Primary Membership (retrieve the owner membership id'));
     $this->addDataSource('membership_type', new Definition('Civi\DataProcessor\Source\Member\MembershipTypeSource'), E::ts('Membership Type'));
     $this->addDataSource('membership_status', new Definition('Civi\DataProcessor\Source\Member\MembershipStatusSource'), E::ts('Membership Status'));
+    $this->addDataSource('membership_payment', new Definition('Civi\DataProcessor\Source\Member\MembershipPaymentSource'), E::ts('Membership Payment'));
     $this->addDataSource('note', new Definition('Civi\DataProcessor\Source\Note\NoteSource'), E::ts('Note'));
     $this->addDataSource('csv', new Definition('Civi\DataProcessor\Source\CSV'), E::ts('CSV File'));
     $this->addDataSource('sqltable', new Definition('Civi\DataProcessor\Source\SQLTable'), E::ts('SQL Table'));
