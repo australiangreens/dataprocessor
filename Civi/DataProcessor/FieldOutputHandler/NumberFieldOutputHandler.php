@@ -40,7 +40,7 @@ class NumberFieldOutputHandler extends AbstractSimpleFieldOutputHandler implemen
       $formattedValue = $this->prefix . $formattedValue . $this->suffix;
     }
 
-    $output = new FieldOutput($rawRecord[$this->aggregateField->alias]);
+    $output = new FieldOutput($rawRecord[$this->inputFieldSpec->alias]);
     $output->formattedValue = $formattedValue;
     return $output;
   }
