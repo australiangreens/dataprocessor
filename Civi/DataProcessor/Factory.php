@@ -160,6 +160,7 @@ class Factory {
     $this->addOutputHandler('date', new Definition('Civi\DataProcessor\FieldOutputHandler\DateFieldOutputHandler'), E::ts('Date field value'));
     $this->addOutputHandler('age', new Definition('Civi\DataProcessor\FieldOutputHandler\AgeFieldOutputHandler'), E::ts('Age field value'));
     $this->addOutputHandler('contact_link', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactLinkFieldOutputHandler'), E::ts('Link to view contact'));
+    $this->addOutputHandler('contact_checksum', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactChecksumFieldOutputHandler'), E::ts('Contact Checksum'));
     $this->addOutputHandler('is_active', new Definition('Civi\DataProcessor\FieldOutputHandler\IsActiveFieldOutputHandler'), E::ts('Is Active (based on dates)'));
     $this->addOutputHandler('file_field', new Definition('Civi\DataProcessor\FieldOutputHandler\FileFieldOutputHandler'), E::ts('File download link'));
     $this->addOutputHandler('option_label', new Definition('Civi\DataProcessor\FieldOutputHandler\OptionFieldOutputHandler'), E::ts('Option label'));

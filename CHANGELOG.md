@@ -3,6 +3,7 @@
 * Fixed issue with filtering on contact subtype.
 * Fixed issue with returning after a participant task.
 * Added data source for membership payments.
+* Added Contact Checksum Field.
 
 # Version 1.8.0
 
