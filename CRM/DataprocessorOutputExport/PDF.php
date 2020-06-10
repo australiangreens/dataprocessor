@@ -516,9 +516,11 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
       fwrite($file, $content['content'] . "\r\n");
       fclose($file);
 
-      $file = fopen($filename.".header_part.".$sectionHeader, 'a');
-      fwrite($file, $content['header'] . "\r\n");
-      fclose($file);
+      if (isset($content['header'])) {
+        $file = fopen($filename.".header_part.".$sectionHeader, 'a');
+        fwrite($file, $content['header'] . "\r\n");
+        fclose($file);
+      }
     }
 
     $smarty->popScope();
