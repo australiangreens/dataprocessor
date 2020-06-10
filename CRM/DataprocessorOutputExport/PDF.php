@@ -74,6 +74,14 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
       'placeholder' => E::ts('- select -'),
     ));
 
+    $form->add('select', 'header_fields', E::ts('Header fields'), $fields, false, array(
+      'style' => 'min-width:250px',
+      'class' => 'crm-select2 huge',
+      'multiple' => true,
+      'placeholder' => E::ts('- select -'),
+    ));
+    $form->add('checkbox', 'header_after_section', E::ts('Show header after each section'), array(), false);
+
     $form->add('select', 'hidden_fields', E::ts('Hidden fields'), $fields, false, array(
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge',
@@ -109,6 +117,12 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     $configuration = false;
     if ($output && isset($output['configuration'])) {
       $configuration = $output['configuration'];
+    }
+    if ($configuration && isset($configuration['header_fields'])) {
+      $defaults['header_fields'] = $configuration['header_fields'];
+    }
+    if ($configuration && isset($configuration['header_after_section'])) {
+      $defaults['header_after_section'] = $configuration['header_after_section'];
     }
     if ($configuration && isset($configuration['hidden_fields'])) {
       $defaults['hidden_fields'] = $configuration['hidden_fields'];
@@ -163,12 +177,14 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
    */
   public function processConfiguration($submittedValues, &$output) {
     $configuration = array();
+    $configuration['header_fields'] = $submittedValues['header_fields'];
+    $configuration['header_after_section'] = isset($submittedValues['header_after_section']) ? $submittedValues['header_after_section'] : false;
     $configuration['hidden_fields'] = $submittedValues['hidden_fields'];
     $configuration['section_titles'] = $submittedValues['section_titles'];
     $configuration['pdf_format'] = $submittedValues['pdf_format'];
     $configuration['header'] = $submittedValues['header'];
-    $configuration['anonymous'] = $submittedValues['anonymous'];
-    $configuration['additional_column'] = $submittedValues['additional_column'];
+    $configuration['anonymous'] = isset($submittedValues['anonymous']) ? $submittedValues['anonymous'] : false;
+    $configuration['additional_column'] = isset($submittedValues['additional_column']) ? $submittedValues['additional_column'] : false;
     $configuration['additional_column_title'] = $submittedValues['additional_column_title'];
     $configuration['additional_column_width'] = $submittedValues['additional_column_width'];
     $configuration['additional_column_height'] = $submittedValues['additional_column_height'];
@@ -344,10 +360,20 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
 
   protected static function createFooter($filename, \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $configuration, $dataProcessor) {
     $content = "";
+    $headerContent = "";
+    $showHeaderAfterEachSection = false;
     $hiddenFields = array();
     if (isset($configuration['hidden_fields']) && is_array($configuration['hidden_fields'])) {
       $hiddenFields = $configuration['hidden_fields'];
     }
+    $headerFields = array();
+    if (isset($configuration['header_fields']) && is_array($configuration['header_fields'])) {
+      $headerFields = $configuration['header_fields'];
+    }
+    if (isset($configuration['header_after_section']) && $configuration['header_after_section']) {
+      $showHeaderAfterEachSection = true;
+    }
+
     $headerColumns = [];
     foreach($dataProcessorClass->getDataFlow()->getOutputFieldHandlers() as $outputHandler) {
       $headerColumns[$outputHandler->getOutputFieldSpecification()->alias] = $outputHandler->getOutputFieldSpecification()->title;
@@ -357,28 +383,43 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     $smarty->pushScope(array());
     $smarty->assign('configuration', $configuration);
     $smarty->assign('hiddenFields', $hiddenFields);
+    $smarty->assign('headerFields', $headerFields);
     $smarty->assign('headerColumns', $headerColumns);
     $smarty->assign('dataProcessor', $dataProcessor);
 
     $parts = [];
     foreach (glob($filename.".part.*") as $partFilename) {
+      $headerPartFileName = str_replace(".part.", ".header_part.", $partFilename);
       $basePartFileName = basename($partFilename);
       $partName = substr($basePartFileName, stripos($basePartFileName, ".part.")+6);
       $partContent = file_get_contents($partFilename);
+      $partHeaderContent = file_get_contents($headerPartFileName);
       if ($partName == "_none_") {
         $smarty->assign('sectionTitle', '');
+        if ($showHeaderAfterEachSection) {
+          $smarty->assign('header', $partHeaderContent);
+        } elseif (empty($headerContent)) {
+          $headerContent = $partHeaderContent;
+        }
         $smarty->assign('rows', $partContent);
         $content .= $smarty->fetch(self::getTemplateFolder($configuration)."table.tpl");
         $smarty->popScope();
       } else {
-        $parts[$partName] = $partContent;
+        $parts[$partName]['content'] = $partContent;
+        $parts[$partName]['header'] = $partHeaderContent;
       }
       unlink($partFilename);
+      unlink($headerPartFileName);
     }
 
-    foreach($parts as $sectionTitle => $rows) {
+    foreach($parts as $sectionTitle => $section) {
       $smarty->assign('sectionTitle', $sectionTitle);
-      $smarty->assign('rows', $rows);
+      $smarty->assign('rows', $section['content']);
+      if ($showHeaderAfterEachSection) {
+        $smarty->assign('header', $section['header']);
+      } elseif (empty($headerContent)) {
+        $headerContent = $section['header'];
+      }
       $content .= $smarty->fetch(self::getTemplateFolder($configuration)."table.tpl");
       $smarty->popScope();
       unset($parts[$sectionTitle]);
@@ -389,6 +430,9 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     $smarty->assign('configuration', $configuration);
     $smarty->assign('dataProcessor', $dataProcessor);
     $smarty->assign('content', $content);
+    if (!$showHeaderAfterEachSection && !empty($headerContent)) {
+      $smarty->assign('header', $headerContent);
+    }
     $content = $smarty->fetch(self::getTemplateFolder($configuration)."html.tpl");
     $smarty->popScope();
 
@@ -407,11 +451,23 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     if (isset($configuration['hidden_fields']) && is_array($configuration['hidden_fields'])) {
       $hiddenFields = $configuration['hidden_fields'];
     }
+    $headerFields = array();
+    if (isset($configuration['header_fields']) && is_array($configuration['header_fields'])) {
+      $headerFields = $configuration['header_fields'];
+    }
+    $headerColumns = [];
+    foreach($dataProcessor->getDataFlow()->getOutputFieldHandlers() as $outputHandler) {
+      $headerColumns[$outputHandler->getOutputFieldSpecification()->alias] = $outputHandler->getOutputFieldSpecification()->title;
+    }
+
+    $headerContent = null;
 
     $smarty = \CRM_Core_Smarty::singleton();
     $smarty->pushScope(array());
     $smarty->assign('configuration', $configuration);
     $smarty->assign('hiddenFields', $hiddenFields);
+    $smarty->assign('headerFields', $headerFields);
+    $smarty->assign('headerColumns', $headerColumns);
     $smarty->assign('dataProcessor', $dataProcessor);
 
     if (!isset($configuration['section_titles']) || !is_array($configuration['section_titles'])) {
@@ -431,8 +487,8 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
             $rowIsSelected = true;
           }
         }
+        $smarty->assign('record', $record);
         if ($rowIsSelected) {
-          $smarty->assign('record', $record);
           $content = $smarty->fetch(self::getTemplateFolder($configuration)."row.tpl");
         }
 
@@ -444,17 +500,24 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
           $sectionHeader = "_none_";
         }
         $sectionHeader = trim($sectionHeader);
-        if (!isset($contents[$sectionHeader])) {
-          $contents[$sectionHeader] = "";
+        if (!isset($contents[$sectionHeader]['content'])) {
+          $contents[$sectionHeader]['content'] = "";
         }
-        $contents[$sectionHeader] .= $content;
+        if (!isset($contents[$sectionHeader]['header']) && count($headerFields)) {
+          $contents[$sectionHeader]['header'] = $smarty->fetch(self::getTemplateFolder($configuration)."header.tpl");;
+        }
+        $contents[$sectionHeader]['content'] .= $content;
       }
     } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
       // Do nothing
     }
     foreach($contents as $sectionHeader => $content) {
       $file = fopen($filename.".part.".$sectionHeader, 'a');
-      fwrite($file, $content . "\r\n");
+      fwrite($file, $content['content'] . "\r\n");
+      fclose($file);
+
+      $file = fopen($filename.".header_part.".$sectionHeader, 'a');
+      fwrite($file, $content['header'] . "\r\n");
       fclose($file);
     }
 

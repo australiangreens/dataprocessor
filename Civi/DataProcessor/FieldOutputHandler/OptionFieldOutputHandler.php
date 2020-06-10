@@ -67,7 +67,9 @@ class OptionFieldOutputHandler extends AbstractSimpleFieldOutputHandler implemen
     $options = $this->inputFieldSpec->getOptions();
     if (is_array($rawValue)) {
       foreach ($rawValue as $v) {
-        $formattedOptions[] = $options[$v];
+        if (isset($options[$v])) {
+          $formattedOptions[] = $options[$v];
+        }
       }
     }
     $formattedValue = new FieldOutput($rawRecord[$this->inputFieldSpec->alias]);

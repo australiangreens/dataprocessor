@@ -1,6 +1,9 @@
 {if $sectionTitle}
   <h2>{$sectionTitle}</h2>
 {/if}
+{if ($header)}
+  {$header}
+{/if}
 <table style="width: 100%;">
   <thead>
   <tr>

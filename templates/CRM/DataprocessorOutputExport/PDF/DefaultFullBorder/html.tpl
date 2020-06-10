@@ -13,6 +13,9 @@
 {if $configuration.header}
   {$configuration.header}
 {/if}
+{if ($header)}
+  {$header}
+{/if}
 {$content}
 </body>
 </html>

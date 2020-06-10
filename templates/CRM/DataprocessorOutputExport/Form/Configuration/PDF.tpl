@@ -24,6 +24,16 @@
     <div class="clear"></div>
   </div>
   <div class="crm-section">
+    <div class="label">{$form.header_fields.label}</div>
+    <div class="content">{$form.header_fields.html}</div>
+    <div class="clear"></div>
+  </div>
+  <div class="crm-section">
+    <div class="label">{$form.header_after_section.label}</div>
+    <div class="content">{$form.header_after_section.html}</div>
+    <div class="clear"></div>
+  </div>
+  <div class="crm-section">
     <div class="label">{$form.hidden_fields.label}</div>
     <div class="content">{$form.hidden_fields.html}</div>
     <div class="clear"></div>
