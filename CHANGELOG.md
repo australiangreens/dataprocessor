@@ -1,3 +1,6 @@
+# Version 1.10.0 (not yet released)
+
+
 # Version 1.9.0
 
 * Fixed issue with filtering on contact subtype.
