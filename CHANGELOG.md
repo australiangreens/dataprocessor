@@ -1,10 +1,11 @@
-# Version 1.9.0 (not yet released)
+# Version 1.9.0
 
 * Fixed issue with filtering on contact subtype.
 * Fixed issue with returning after a participant task.
 * Added data source for membership payments.
 * Added Contact Checksum Field.
 * Added header fields to the PDF export output
+* Fixed bug in File Download Link Field.
 
 # Version 1.8.0
 
