@@ -83,7 +83,7 @@ class FieldSpecification implements SqlFieldSpecification {
    */
   public function getSqlSelectStatement($table_alias) {
     if ($this->sqlValueFormatFunction) {
-      if (stripos($this->sqlValueFormatFunction, '%1') >= 0 && stripos($this->sqlValueFormatFunction, '%2') >= 0) {
+      if (stripos($this->sqlValueFormatFunction, '%1') !== false && stripos($this->sqlValueFormatFunction, '%2') !== false) {
         return "(".str_replace(['%1', '%2'], [$table_alias, $this->name], $this->sqlValueFormatFunction). ") AS `{$this->alias}`";
       } else {
         return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->name}`) AS `{$this->alias}`";
