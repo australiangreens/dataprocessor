@@ -1,5 +1,6 @@
-# Version 1.10.0 (not yet released)
+# Version 1.9.1
 
+* Fixed regression issue with MySQL function such as Year on the Date Field.
 
 # Version 1.9.0
 
