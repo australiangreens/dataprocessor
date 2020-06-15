@@ -1,4 +1,6 @@
-# Version 1.10.0 (not yet released)
+# Version 1.10.0
+
+* Added option to return URL to File Download Link Field.
 
 # Version 1.9.1
 
