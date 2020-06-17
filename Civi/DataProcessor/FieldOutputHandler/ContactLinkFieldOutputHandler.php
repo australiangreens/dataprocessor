@@ -78,47 +78,8 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
-    $this->contactIdSource = $this->dataProcessor->getDataSourceByName($configuration['contact_id_datasource']);
-    if (!$this->contactIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(
-        1=>$title,
-        2=>$configuration['contact_id_datasource'])
-      ));
-    }
-    $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['contact_id_field']);
-    if (!$this->contactIdField) {
-      $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['contact_id_field']);
-    }
-    if (!$this->contactIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['contact_id_field'],
-        3 => $configuration['contact_id_datasource']
-      )));
-    }
-    $this->contactIdSource->ensureFieldInSource($this->contactIdField);
-
-    $this->contactNameSource = $this->dataProcessor->getDataSourceByName($configuration['contact_name_datasource']);
-    if (!$this->contactIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(
-        1=>$title,
-        2=>$configuration['contact_name_datasource'])
-      ));
-    }
-    $this->contactNameField = $this->contactNameSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['contact_name_field']);
-    if (!$this->contactNameField) {
-      $this->contactNameField = $this->contactNameSource->getAvailableFields()->getFieldSpecificationByName($configuration['contact_name_field']);
-    }
-    if (!$this->contactNameField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['contact_name_field'],
-        3 => $configuration['contact_name_datasource']
-      )));
-    }
-    $this->contactNameSource->ensureFieldInSource($this->contactNameField);
-
+    list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['contact_id_field'], $configuration['contact_id_datasource'], $alias.'_contact_id');
+    list($this->contactNameSource, $this->contactNameSource) = $this->initializeField($configuration['contact_name_field'], $configuration['contact_name_datasource'], $alias.'_contact_name');
     $this->outputFieldSpecification = new FieldSpecification($this->contactIdField->name, 'String', $title, null, $alias);
   }
 

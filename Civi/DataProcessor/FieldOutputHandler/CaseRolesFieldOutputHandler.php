@@ -68,24 +68,7 @@ class CaseRolesFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
-    $this->caseIdSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->caseIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->caseIdField = $this->caseIdSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['field']);
-    if (!$this->caseIdField) {
-      $this->caseIdField = $this->caseIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    }
-    if (!$this->caseIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->caseIdSource->ensureFieldInSource($this->caseIdField);
-
+    list($this->caseIdSource, $this->caseIdField) = $this->initializeField($configuration['field'], $configuration['datasource'], $alias);
     $this->outputFieldSpecification = new FieldSpecification($this->caseIdField->name, 'String', $title, null, $alias);
 
     if (isset($configuration['relationship_types']) && is_array($configuration['relationship_types'])) {

@@ -74,24 +74,7 @@ class RelationshipsFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
-    $this->contactIdSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->contactIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['field']);
-    if (!$this->contactIdField) {
-      $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    }
-    if (!$this->contactIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->contactIdSource->ensureFieldInSource($this->contactIdField);
-
+    list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['field'], $configuration['datasource'], $alias);
     $this->outputFieldSpecification = new FieldSpecification($this->contactIdField->name, 'String', $title, null, $alias);
 
     if (isset($configuration['relationship_types']) && is_array($configuration['relationship_types'])) {

@@ -62,23 +62,7 @@ class AbstractSimpleFieldOutputHandler extends AbstractFieldOutputHandler implem
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->dataSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->dataSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->inputFieldSpec = $this->dataSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['field']);
-    if (!$this->inputFieldSpec) {
-      $this->inputFieldSpec = $this->dataSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    }
-    if (!$this->inputFieldSpec) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->dataSource->ensureFieldInSource($this->inputFieldSpec);
-
+    list($this->dataSource, $this->inputFieldSpec) = $this->initializeField($configuration['field'], $configuration['datasource'], $alias);
     $this->outputFieldSpec = clone $this->inputFieldSpec;
     $this->outputFieldSpec->alias = $alias;
     $this->outputFieldSpec->title = $title;

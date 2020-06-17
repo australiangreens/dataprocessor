@@ -76,45 +76,8 @@ class ManageCaseLinkFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->contactIdSource = $this->dataProcessor->getDataSourceByName($configuration['contact_id_datasource']);
-    if (!$this->contactIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(
-        1=>$title,
-        2=>$configuration['contact_id_datasource'])
-      ));
-    }
-    $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['contact_id_field']);
-    if (!$this->contactIdField) {
-      $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['contact_id_field']);
-    }
-    if (!$this->contactIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['contact_id_field'],
-        3 => $configuration['contact_id_datasource']
-      )));
-    }
-    $this->contactIdSource->ensureFieldInSource($this->contactIdField);
-
-    $this->caseIdSource = $this->dataProcessor->getDataSourceByName($configuration['case_id_datasource']);
-    if (!$this->caseIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(
-        1=>$title,
-        2=>$configuration['case_id_datasource'])
-      ));
-    }
-    $this->caseIdField = $this->caseIdSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['case_id_field']);
-    if (!$this->caseIdField) {
-      $this->caseIdField = $this->caseIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['case_id_field']);
-    }
-    if (!$this->caseIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['case_id_field'],
-        3 => $configuration['case_id_datasource']
-      )));
-    }
-    $this->caseIdSource->ensureFieldInSource($this->caseIdField);
+    list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['contact_id_field'], $configuration['contact_id_datasource'], $alias.'_contact_id');
+    list($this->caseIdSource, $this->caseIdField) = $this->initializeField($configuration['case_id_field'], $configuration['case_id_datasource'], $alias.'_case_id');
 
     $this->linkTitle = E::ts('Manage case');
     if (!empty($configuration['link_title'])) {
