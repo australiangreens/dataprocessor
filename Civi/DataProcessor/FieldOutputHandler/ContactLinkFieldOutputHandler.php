@@ -79,7 +79,7 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    */
   public function initialize($alias, $title, $configuration) {
     list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['contact_id_field'], $configuration['contact_id_datasource'], $alias.'_contact_id');
-    list($this->contactNameSource, $this->contactNameSource) = $this->initializeField($configuration['contact_name_field'], $configuration['contact_name_datasource'], $alias.'_contact_name');
+    list($this->contactNameSource, $this->contactNameField) = $this->initializeField($configuration['contact_name_field'], $configuration['contact_name_datasource'], $alias.'_contact_name');
     $this->outputFieldSpecification = new FieldSpecification($this->contactIdField->name, 'String', $title, null, $alias);
   }
 
@@ -93,14 +93,14 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    */
   public function formatField($rawRecord, $formattedRecord) {
     $contactId = $rawRecord[$this->contactIdField->alias];
-    $contactname = $rawRecord[$this->contactNameField->alias];
+    $contactName = $rawRecord[$this->contactNameField->alias];
     $url = \CRM_Utils_System::url('civicrm/contact/view', array(
       'reset' => 1,
       'cid' => $contactId,
     ));
-    $link = '<a href="'.$url.'">'.$contactname.'</a>';
+    $link = '<a href="'.$url.'">'.$contactName.'</a>';
     $formattedValue = new HTMLFieldOutput($contactId);
-    $formattedValue->formattedValue = $contactname;
+    $formattedValue->formattedValue = $contactName;
     $formattedValue->setHtmlOutput($link);
     return $formattedValue;
   }

@@ -80,6 +80,7 @@ abstract class AbstractDataFlow {
    */
   protected function resetInitializeState() {
     $this->currentRecordIndex = 0;
+    unset($this->_allRecords);
   }
 
   /**
