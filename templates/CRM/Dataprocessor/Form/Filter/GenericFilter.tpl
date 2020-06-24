@@ -23,3 +23,18 @@
 </tr>
 
 {/crmScope}
+
+{literal}
+<script type="text/javascript">
+  CRM.$(function($) {
+    cj("#{/literal}{$fieldOp}{literal}").change(function() {
+      var val = $(this).val();
+      if (val == 'null' || val == 'is null') {
+        cj("#{/literal}{$filterVal}{literal}").addClass('hiddenElement');
+      } else {
+        cj("#{/literal}{$filterVal}{literal}").removeClass('hiddenElement');
+      }
+    }).change();
+  });
+</script>
+{/literal}

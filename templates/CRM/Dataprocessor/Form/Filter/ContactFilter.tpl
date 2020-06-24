@@ -29,7 +29,7 @@
   CRM.$(function($) {
     cj("#{/literal}{$fieldOp}{literal}").change(function() {
       var val = $(this).val();
-      if (val == 'current_user') {
+      if (val == 'current_user' || val == 'null' || val == 'is null') {
         cj("#{/literal}{$filterVal}{literal}").addClass('hiddenElement');
       } else {
         cj("#{/literal}{$filterVal}{literal}").removeClass('hiddenElement');
