@@ -149,7 +149,7 @@ class Factory {
     $this->addFilter('contact_has_membership', new Definition('Civi\DataProcessor\FilterHandler\ContactHasMembershipFilter'), E::ts('Contact has Membership filter'));
     $this->addFilter('contact_type_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactTypeFilter'), E::ts('Contact Type filter'));
     $this->addFilter('permission_to_view_contact', new Definition('Civi\DataProcessor\FilterHandler\PermissionToViewContactFilter'), E::ts('Permission to view contact'));
-    $this->addFilter('case_role_filter', new Definition('Civi\DataProcessor\FilterHandler\CaseRoleFilter'), E::ts('Case Role filter'));
+    $this->addFilter('case_role_filter', new Definition('Civi\DataProcessor\FilterHandler\CaseRoleFilter'), E::ts('Contact has role on case filter'));
     $this->addFilter('in_api_filter', new Definition('Civi\DataProcessor\FilterHandler\InApiFilter'), E::ts('API filter'));
     $this->addjoinType('simple_join', new Definition('Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleJoin'), E::ts('Select fields to join on'));
     $this->addjoinType('simple_non_required_join', new Definition('Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleNonRequiredJoin'), E::ts('Select fields to join on (not required)'));

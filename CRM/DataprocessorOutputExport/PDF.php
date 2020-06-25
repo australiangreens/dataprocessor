@@ -298,19 +298,19 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
 
 
   protected function startBatchJob(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $formValues, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
-    $session = CRM_Core_Session::singleton();
+    $session = \CRM_Core_Session::singleton();
 
-    $name = date('Ymdhis').'_'.$dataProcessor['id'].'_'.$outputBAO['id'].'_'.CRM_Core_Session::getLoggedInContactID().'_'.$dataProcessor['name'];
+    $name = date('Ymdhis').'_'.$dataProcessor['id'].'_'.$outputBAO['id'].'_'.CRM_Core_Session::getLoggedInContactID().'_'.md5($dataProcessor['name']);
 
-    $queue = CRM_Queue_Service::singleton()->create(array(
+    $queue = \CRM_Queue_Service::singleton()->create(array(
       'type' => 'Sql',
       'name' => $name,
       'reset' => TRUE, //do flush queue upon creation
     ));
 
-    $basePath = CRM_Core_Config::singleton()->templateCompileDir . 'dataprocessor_export_pdf';
-    CRM_Utils_File::createDir($basePath);
-    CRM_Utils_File::restrictAccess($basePath.'/');
+    $basePath = \CRM_Core_Config::singleton()->templateCompileDir . 'dataprocessor_export_pdf';
+    \CRM_Utils_File::createDir($basePath);
+    \CRM_Utils_File::restrictAccess($basePath.'/');
     $filename = $basePath.'/'. $name.'.html';
 
     $count = $dataProcessorClass->getDataFlow()->recordCount();
@@ -322,7 +322,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
       ));
 
       //create a task without parameters
-      $task = new CRM_Queue_Task(
+      $task = new \CRM_Queue_Task(
         array(
           'CRM_DataprocessorOutputExport_PDF',
           'exportBatch'
@@ -334,7 +334,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
       $queue->createItem($task);
     }
 
-    $task = new CRM_Queue_Task(
+    $task = new \CRM_Queue_Task(
       array(
         'CRM_DataprocessorOutputExport_PDF',
         'exportBatchFooter'
@@ -347,10 +347,10 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
 
     $url = str_replace("&amp;", "&", $session->readUserContext());
 
-    $runner = new CRM_Queue_Runner(array(
+    $runner = new \CRM_Queue_Runner(array(
       'title' => E::ts('Exporting data'), //title fo the queue
       'queue' => $queue, //the queue object
-      'errorMode'=> CRM_Queue_Runner::ERROR_CONTINUE, //abort upon error and keep task in queue
+      'errorMode'=> \CRM_Queue_Runner::ERROR_CONTINUE, //abort upon error and keep task in queue
       'onEnd' => array('CRM_DataprocessorOutputExport_PDF', 'onEnd'), //method which is called as soon as the queue is finished
       'onEndUrl' => $url,
     ));

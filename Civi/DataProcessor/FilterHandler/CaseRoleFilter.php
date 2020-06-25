@@ -67,10 +67,17 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
     $relationshipFilters = array(
       new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'is_active', '=', '1'),
       new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'case_id', 'IS NOT NULL', 0),
-      new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'contact_id_b', 'IN', $cids),
     );
+    if ($filter['op'] != 'IS NULL') {
+      $relationshipFilters[] = new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'contact_id_b', 'IN', $cids);
+    }
     if (count($this->relationship_type_ids)) {
       $relationshipFilters[] = new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'relationship_type_id', 'IN', $this->relationship_type_ids, 'Integer');
+    }
+
+    $inOperator = $filter['op'];
+    if ($filter['op'] == 'IS NULL') {
+      $inOperator = 'NOT IN';
     }
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
@@ -81,7 +88,7 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
         $relationshipFilters,
         $dataFlow->getName(),
         $this->inputFieldSpecification->name,
-        $filter['op']
+        $inOperator
       );
 
       $dataFlow->addWhereClause($this->whereClause);
@@ -229,6 +236,7 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
     return array(
       'IN' => E::ts('Is one of'),
       'NOT IN' => E::ts('Is not one of'),
+      'null' => E::ts('Is empty'),
     );
   }
 
