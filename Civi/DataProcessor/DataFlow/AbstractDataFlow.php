@@ -148,7 +148,7 @@ abstract class AbstractDataFlow {
    * @return array
    */
   public function allRecords($fieldNameprefix = '') {
-    if (!is_array($this->_allRecords)) {
+    if (!isset($this->_allRecords) || !is_array($this->_allRecords)) {
       $this->_allRecords = [];
       $_allRecords = [];
       try {
