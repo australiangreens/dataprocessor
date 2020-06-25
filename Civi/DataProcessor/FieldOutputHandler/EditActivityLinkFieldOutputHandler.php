@@ -27,6 +27,16 @@ class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
   protected $activityIdField;
 
   /**
+   * @var SourceInterface
+   */
+  protected $contactIdSource;
+
+  /**
+   * @var FieldSpecification
+   */
+  protected $contactIdField;
+
+  /**
    * @var FieldSpecification
    */
   protected $outputFieldSpecification;
@@ -57,6 +67,7 @@ class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
    */
   public function initialize($alias, $title, $configuration) {
     list($this->activityIdSource, $this->activityIdField) = $this->initializeField($configuration['activity_id_field'], $configuration['activity_id_datasource'], $alias.'_activity_id');
+    list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['contact_id_field'], $configuration['contact_id_datasource'], $alias.'_contact_id');
     $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
   }
 
@@ -70,10 +81,12 @@ class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
    */
   public function formatField($rawRecord, $formattedRecord) {
     $activityId = $rawRecord[$this->activityIdField->alias];
+    $contactId = $rawRecord[$this->contactIdField->alias];
     $url = \CRM_Utils_System::url('civicrm/activity/add', array(
       'reset' => 1,
       'action' => 'update',
       'id' => $activityId,
+      'cid' => $contactId,
     ));
     $link = '<a href="'.$url.'">'.E::ts('Edit activity').'</a>';
     $formattedValue = new HTMLFieldOutput($activityId);
@@ -103,7 +116,12 @@ class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
 
     $form->add('select', 'activity_id_field', E::ts('Activity ID Field'), $fieldSelect, true, array(
       'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge data-processor-field-for-name',
+      'class' => 'crm-select2 huge',
+      'placeholder' => E::ts('- select -'),
+    ));
+    $form->add('select', 'contact_id_field', E::ts('Contact ID Field'), $fieldSelect, true, array(
+      'style' => 'min-width:250px',
+      'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
     ));
     if (isset($field['configuration'])) {
@@ -111,6 +129,9 @@ class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
       $defaults = array();
       if (isset($configuration['activity_id_field']) && isset($configuration['activity_id_datasource'])) {
         $defaults['activity_id_field'] = $configuration['activity_id_datasource'] . '::' . $configuration['activity_id_field'];
+      }
+      if (isset($configuration['contact_id_field']) && isset($configuration['contact_id_datasource'])) {
+        $defaults['contact_id_field'] = $configuration['contact_id_datasource'] . '::' . $configuration['contact_id_field'];
       }
       $form->setDefaults($defaults);
     }
@@ -137,6 +158,11 @@ class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
     list($activity_id_datasource, $activity_id_field) = explode('::', $submittedValues['activity_id_field'], 2);
     $configuration['activity_id_field'] = $activity_id_field;
     $configuration['activity_id_datasource'] = $activity_id_datasource;
+
+    list($contact_id_datasource, $contact_id_field) = explode('::', $submittedValues['contact_id_field'], 2);
+    $configuration['contact_id_field'] = $contact_id_field;
+    $configuration['contact_id_datasource'] = $contact_id_datasource;
+
     return $configuration;
   }
 
