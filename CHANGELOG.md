@@ -2,6 +2,7 @@
 
 * Added Field Output Handler for outputting a text when a contact has a certain relationship.
 * Refactored Field Output Handlers and simplified duplicate code for initializing a field.
+* Date filter now also works with Date/Time fields.
 
 # Version 1.10.0
 

@@ -143,7 +143,7 @@ class DateFilter extends AbstractFieldFilterHandler {
    * @return bool
    */
   public static function filterDateFields(FieldSpecification $field) {
-    if ($field->type == 'Date') {
+    if ($field->type == 'Date' || $field->type == 'Timestamp') {
       return true;
     }
     return false;
