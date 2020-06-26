@@ -365,7 +365,16 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     if ($this->usePrevNextCache()) {
       $cacheKey = "civicrm search {$this->controller->_key}";
       CRM_DataprocessorSearch_Utils_PrevNextCache::fillWithArray($cacheKey, $prevnextData);
+    } else {
+      $this->retrieveEntityIds();
     }
+  }
+
+  /**
+   * Function to retrieve the entity ids
+   */
+  protected function retrieveEntityIds() {
+    // Could be overriden in child classes.
   }
 
   /**

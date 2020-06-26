@@ -3,6 +3,9 @@
 * Added Field Output Handler for outputting a text when a contact has a certain relationship.
 * Refactored Field Output Handlers and simplified duplicate code for initializing a field.
 * Date filter now also works with Date/Time fields.
+* Added Is not empty as an operator to the contact filter.
+* Added field to edit activity.
+* Renamed Case Role filter to Contact has role on case and added option to search for case without a role set.
 
 # Version 1.10.0
 

@@ -78,7 +78,6 @@ abstract class SqlDataFlow extends AbstractDataFlow {
     }
 
     try {
-      //$from = $this->getFromStatement();
       $selectAndFrom = $this->getSelectQueryStatement();
       $where = $this->getWhereStatement();
       $groupBy = $this->getGroupByStatement();

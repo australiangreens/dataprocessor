@@ -14,12 +14,17 @@ use Civi\DataProcessor\FieldOutputHandler\FieldOutput;
 use Civi\DataProcessor\Exception\DataSourceNotFoundException;
 use Civi\DataProcessor\Exception\FieldNotFoundException;
 
-class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implements OutputHandlerSortable {
+class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
 
   /**
-   * @var \Civi\DataProcessor\Source\SourceInterface
+   * @var SourceInterface
    */
-  protected $dataSource;
+  protected $activityIdSource;
+
+  /**
+   * @var FieldSpecification
+   */
+  protected $activityIdField;
 
   /**
    * @var SourceInterface
@@ -32,16 +37,6 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
   protected $contactIdField;
 
   /**
-   * @var SourceInterface
-   */
-  protected $contactNameSource;
-
-  /**
-   * @var FieldSpecification
-   */
-  protected $contactNameField;
-
-  /**
    * @var FieldSpecification
    */
   protected $outputFieldSpecification;
@@ -51,13 +46,6 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    */
   public function getOutputFieldSpecification() {
     return $this->outputFieldSpecification;
-  }
-
-  /**
-   * @return \Civi\DataProcessor\DataSpecification\FieldSpecification
-   */
-  public function getSortableInputFieldSpec() {
-    return $this->contactNameField;
   }
 
   /**
@@ -78,9 +66,9 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
+    list($this->activityIdSource, $this->activityIdField) = $this->initializeField($configuration['activity_id_field'], $configuration['activity_id_datasource'], $alias.'_activity_id');
     list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['contact_id_field'], $configuration['contact_id_datasource'], $alias.'_contact_id');
-    list($this->contactNameSource, $this->contactNameField) = $this->initializeField($configuration['contact_name_field'], $configuration['contact_name_datasource'], $alias.'_contact_name');
-    $this->outputFieldSpecification = new FieldSpecification($this->contactIdField->name, 'String', $title, null, $alias);
+    $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
   }
 
   /**
@@ -92,15 +80,17 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    * @return \Civi\DataProcessor\FieldOutputHandler\FieldOutput
    */
   public function formatField($rawRecord, $formattedRecord) {
+    $activityId = $rawRecord[$this->activityIdField->alias];
     $contactId = $rawRecord[$this->contactIdField->alias];
-    $contactName = $rawRecord[$this->contactNameField->alias];
-    $url = \CRM_Utils_System::url('civicrm/contact/view', array(
+    $url = \CRM_Utils_System::url('civicrm/activity/add', array(
       'reset' => 1,
+      'action' => 'update',
+      'id' => $activityId,
       'cid' => $contactId,
     ));
-    $link = '<a href="'.$url.'">'.$contactName.'</a>';
-    $formattedValue = new HTMLFieldOutput($contactId);
-    $formattedValue->formattedValue = $contactName;
+    $link = '<a href="'.$url.'">'.E::ts('Edit activity').'</a>';
+    $formattedValue = new HTMLFieldOutput($activityId);
+    $formattedValue->formattedValue = $url;
     $formattedValue->setHtmlOutput($link);
     return $formattedValue;
   }
@@ -124,12 +114,12 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
   public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
     $fieldSelect = \CRM_Dataprocessor_Utils_DataSourceFields::getAvailableFieldsInDataSources($field['data_processor_id']);
 
-    $form->add('select', 'contact_id_field', E::ts('Contact ID Field'), $fieldSelect, true, array(
+    $form->add('select', 'activity_id_field', E::ts('Activity ID Field'), $fieldSelect, true, array(
       'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge data-processor-field-for-name',
+      'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
     ));
-    $form->add('select', 'contact_name_field', E::ts('Contact Name Field'), $fieldSelect, true, array(
+    $form->add('select', 'contact_id_field', E::ts('Contact ID Field'), $fieldSelect, true, array(
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
@@ -137,11 +127,11 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
       $defaults = array();
+      if (isset($configuration['activity_id_field']) && isset($configuration['activity_id_datasource'])) {
+        $defaults['activity_id_field'] = $configuration['activity_id_datasource'] . '::' . $configuration['activity_id_field'];
+      }
       if (isset($configuration['contact_id_field']) && isset($configuration['contact_id_datasource'])) {
         $defaults['contact_id_field'] = $configuration['contact_id_datasource'] . '::' . $configuration['contact_id_field'];
-      }
-      if (isset($configuration['contact_name_field']) && isset($configuration['contact_name_datasource'])) {
-        $defaults['contact_name_field'] = $configuration['contact_name_datasource'] . '::' . $configuration['contact_name_field'];
       }
       $form->setDefaults($defaults);
     }
@@ -154,7 +144,7 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    * @return false|string
    */
   public function getConfigurationTemplateFileName() {
-    return "CRM/Dataprocessor/Form/Field/Configuration/ContactLinkFieldOutputHandler.tpl";
+    return "CRM/Dataprocessor/Form/Field/Configuration/EditActivityLinkFieldOutputHandler.tpl";
   }
 
 
@@ -165,12 +155,14 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
    * @return array
    */
   public function processConfiguration($submittedValues) {
+    list($activity_id_datasource, $activity_id_field) = explode('::', $submittedValues['activity_id_field'], 2);
+    $configuration['activity_id_field'] = $activity_id_field;
+    $configuration['activity_id_datasource'] = $activity_id_datasource;
+
     list($contact_id_datasource, $contact_id_field) = explode('::', $submittedValues['contact_id_field'], 2);
     $configuration['contact_id_field'] = $contact_id_field;
     $configuration['contact_id_datasource'] = $contact_id_datasource;
-    list($contact_name_datasource, $contact_name_field) = explode('::', $submittedValues['contact_name_field'], 2);
-    $configuration['contact_name_field'] = $contact_name_field;
-    $configuration['contact_name_datasource'] = $contact_name_datasource;
+
     return $configuration;
   }
 

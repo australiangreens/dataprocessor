@@ -149,7 +149,7 @@ class Factory {
     $this->addFilter('contact_has_membership', new Definition('Civi\DataProcessor\FilterHandler\ContactHasMembershipFilter'), E::ts('Contact has Membership filter'));
     $this->addFilter('contact_type_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactTypeFilter'), E::ts('Contact Type filter'));
     $this->addFilter('permission_to_view_contact', new Definition('Civi\DataProcessor\FilterHandler\PermissionToViewContactFilter'), E::ts('Permission to view contact'));
-    $this->addFilter('case_role_filter', new Definition('Civi\DataProcessor\FilterHandler\CaseRoleFilter'), E::ts('Case Role filter'));
+    $this->addFilter('case_role_filter', new Definition('Civi\DataProcessor\FilterHandler\CaseRoleFilter'), E::ts('Contact has role on case filter'));
     $this->addFilter('in_api_filter', new Definition('Civi\DataProcessor\FilterHandler\InApiFilter'), E::ts('API filter'));
     $this->addjoinType('simple_join', new Definition('Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleJoin'), E::ts('Select fields to join on'));
     $this->addjoinType('simple_non_required_join', new Definition('Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleNonRequiredJoin'), E::ts('Select fields to join on (not required)'));
@@ -162,6 +162,7 @@ class Factory {
     $this->addOutputHandler('contact_has_relationship', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactHasRelationshipFieldOutputHandler'), E::ts('Contact has relationship'));
     $this->addOutputHandler('contact_link', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactLinkFieldOutputHandler'), E::ts('Link to view contact'));
     $this->addOutputHandler('contact_checksum', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactChecksumFieldOutputHandler'), E::ts('Contact Checksum'));
+    $this->addOutputHandler('edit_activity_link', new Definition('Civi\DataProcessor\FieldOutputHandler\EditActivityLinkFieldOutputHandler'), E::ts('Link to edit an activity'));
     $this->addOutputHandler('is_active', new Definition('Civi\DataProcessor\FieldOutputHandler\IsActiveFieldOutputHandler'), E::ts('Is Active (based on dates)'));
     $this->addOutputHandler('file_field', new Definition('Civi\DataProcessor\FieldOutputHandler\FileFieldOutputHandler'), E::ts('File download link'));
     $this->addOutputHandler('option_label', new Definition('Civi\DataProcessor\FieldOutputHandler\OptionFieldOutputHandler'), E::ts('Option label'));
