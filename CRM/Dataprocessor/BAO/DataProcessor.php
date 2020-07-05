@@ -54,7 +54,7 @@ class CRM_Dataprocessor_BAO_DataProcessor extends CRM_Dataprocessor_DAO_DataProc
    * Returns a configured data processor instance.
    *
    * @param array $dataProcessor
-   * @param bool $forece
+   * @param bool $force
    *   If set reload the data processor in the cache.
    * @return \Civi\DataProcessor\ProcessorType\AbstractProcessorType
    * @throws \Exception
