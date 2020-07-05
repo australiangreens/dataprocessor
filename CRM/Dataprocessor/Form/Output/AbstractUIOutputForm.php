@@ -25,7 +25,7 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
   protected $dataProcessorId;
 
   /**
-   * @var \CRM_Dataprocessor_BAO_Output
+   * @var \CRM_Dataprocessor_BAO_DataProcessorOutput
    */
   protected $dataProcessorOutput;
 

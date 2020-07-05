@@ -61,6 +61,13 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   protected $entityIDs;
 
   /**
+   * Name of action button
+   *
+   * @var string
+   */
+  protected $_searchButtonName;
+
+  /**
    * Returns the name of the ID field in the dataset.
    *
    * @return string
@@ -446,8 +453,8 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $this->assign('other_outputs', $otherOutputs);
   }
 
-  public function buildQuickform() {
-    parent::buildQuickform();
+  public function buildQuickForm() {
+    parent::buildQuickForm();
 
     $this->buildCriteriaForm();
 
@@ -472,7 +479,6 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   }
 
   public function postProcess() {
-    $values = $this->exportValues();
     if ($this->_done) {
       return;
     }
@@ -481,7 +487,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     //for prev/next pagination
     $crmPID = CRM_Utils_Request::retrieve('crmPID', 'Integer');
 
-    if (array_key_exists($this->_searchButtonName, $_POST) ||
+    if (($this->_searchButtonName && array_key_exists($this->_searchButtonName, $_POST)) ||
       ($this->_force && !$crmPID)
     ) {
       //reset the cache table for new search

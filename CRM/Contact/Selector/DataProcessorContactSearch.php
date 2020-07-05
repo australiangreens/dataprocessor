@@ -5,6 +5,7 @@
  */
 
 class CRM_Contact_Selector_DataProcessorContactSearch {
+
   /**
    * @var \Civi\DataProcessor\ProcessorType\AbstractProcessorType;
    */
@@ -21,7 +22,7 @@ class CRM_Contact_Selector_DataProcessorContactSearch {
   protected $dataProcessor;
 
   /**
-   * @var \CRM_Dataprocessor_BAO_Output
+   * @var \CRM_Dataprocessor_BAO_DataProcessorOutput
    */
   protected $dataProcessorOutput;
 
