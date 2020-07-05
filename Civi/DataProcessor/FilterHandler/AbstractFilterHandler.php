@@ -395,6 +395,10 @@ abstract class AbstractFilterHandler {
     }
     if (isset($submittedValues[$alias.'_value'])) {
       $return['value'] = $submittedValues[$alias . '_value'];
+      if (empty($return['value'])) {
+        // Don't save an empty default criteria to the database or we can't override (eg. via URL)
+        $return = [];
+      }
     }
     if (isset($submittedValues[$alias.'_relative'])) {
       $return['relative'] = $submittedValues[$alias . '_relative'];
