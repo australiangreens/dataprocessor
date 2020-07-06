@@ -116,8 +116,7 @@ class CRM_Contact_Selector_DataProcessorContactSearch {
    */
   protected function loadDataProcessor() {
     if (!$this->dataProcessorId) {
-      $debug = CRM_Utils_Request::retrieve('debug', 'Boolean', $this, FALSE);
-      $doNotUseCache = $debug ? true : false;
+      $doNotUseCache = CRM_Utils_Request::retrieveValue('debug', 'Boolean', FALSE);
 
       $dataProcessorName = $this->getDataProcessorName();
       $sql = "
