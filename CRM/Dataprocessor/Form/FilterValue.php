@@ -95,7 +95,6 @@ class CRM_Dataprocessor_Form_FilterValue extends CRM_Core_Form {
   }
 
   public function postProcess() {
-    $session = CRM_Core_Session::singleton();
     $redirectUrl = CRM_Utils_System::url('civicrm/dataprocessor/form/edit', array('reset' => 1, 'action' => 'update', 'id' => $this->dataProcessorId));
     $values = $this->exportValues();
     $default_filter_value = $this->filterTypeClass->processSubmittedValues($values);

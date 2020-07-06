@@ -175,7 +175,7 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
   /**
    * Process the submitted values and create a configuration array
    *
-   * @param $submittedValues
+   * @param array $submittedValues
    * @return array
    */
   public function processConfiguration($submittedValues) {
