@@ -5,7 +5,7 @@
 * Date filter now also works with Date/Time fields.
 * Added Is not empty as an operator to the contact filter.
 * Added field to edit activity.
-* Renamed Case Role filter to Contact has role on case and added option to search for case without a role set.
+* Renamed Case Role filter to Contact has role on case and added option to search for case without a role set and to search for current user has the role.
 
 # Version 1.10.0
 

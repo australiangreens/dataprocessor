@@ -68,7 +68,7 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
       new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'is_active', '=', '1'),
       new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'case_id', 'IS NOT NULL', 0),
     );
-    if ($filter['op'] != 'IS NULL') {
+    if ($filter['op'] != 'IS NULL' && $filter['op'] != 'IS NOT NULL') {
       $relationshipFilters[] = new SqlDataFlow\SimpleWhereClause($relationshipTableAlias, 'contact_id_b', 'IN', $cids);
     }
     if (count($this->relationship_type_ids)) {
@@ -78,6 +78,8 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
     $inOperator = $filter['op'];
     if ($filter['op'] == 'IS NULL') {
       $inOperator = 'NOT IN';
+    } elseif ($filter['op'] == 'IS NOT NULL') {
+      $inOperator = 'IN';
     }
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
@@ -171,6 +173,36 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
   }
 
   /**
+   * Validate the submitted filter parameters.
+   *
+   * @param $submittedValues
+   * @return array
+   */
+  public function validateSubmittedFilterParams($submittedValues) {
+    $filterSpec = $this->getFieldSpecification();
+    $filterName = $filterSpec->alias;
+    if (isset($submittedValues[$filterName.'_op']) && $submittedValues[$filterName.'_op'] == 'current_user') {
+      $submittedValues[$filterName.'_op'] = 'IN';
+      $submittedValues[$filterName.'_value'] = [\CRM_Core_Session::getLoggedInContactID()];
+    }
+    return parent::validateSubmittedFilterParams($submittedValues);
+  }
+
+  /**
+   * Apply the submitted filter
+   *
+   * @param $submittedValues
+   * @throws \Exception
+   */
+  public function applyFilterFromSubmittedFilterParams($submittedValues) {
+    if (isset($submittedValues['op']) && $submittedValues['op'] == 'current_user') {
+      $submittedValues['op'] = 'IN';
+      $submittedValues['value'] = [\CRM_Core_Session::getLoggedInContactID()];
+    }
+    parent::applyFilterFromSubmittedFilterParams($submittedValues);
+  }
+
+  /**
    * Add the elements to the filter form.
    *
    * @param \CRM_Core_Form $form
@@ -237,6 +269,8 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
       'IN' => E::ts('Is one of'),
       'NOT IN' => E::ts('Is not one of'),
       'null' => E::ts('Is empty'),
+      'not null' => E::ts('Is not empty'),
+      'current_user' => E::ts('Is current user'),
     );
   }
 
