@@ -1,4 +1,4 @@
-# Version 1.11.0 (not yet released)
+# Version 1.11.0
 
 * Added Field Output Handler for outputting a text when a contact has a certain relationship.
 * Refactored Field Output Handlers and simplified duplicate code for initializing a field.
