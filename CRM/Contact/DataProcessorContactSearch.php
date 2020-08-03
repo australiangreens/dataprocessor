@@ -57,7 +57,9 @@ class CRM_Contact_DataProcessorContactSearch implements UIFormOutputInterface {
 
     $form->add('text', 'no_result_text', E::ts('No result text'), array('class' => 'huge'), false);
 
-    $form->add('checkbox', 'expanded_search', E::ts('Expand criteria form initially'));
+    $form->add('checkbox', 'expanded_search', E::ts('Expand criteria form initially?'));
+
+    $form->addYesNo('link_to_view_contact', E::ts('Add link to view contact?'));
 
     // navigation field
     $navigationOptions = $navigation->getNavigationOptions();
@@ -97,6 +99,12 @@ class CRM_Contact_DataProcessorContactSearch implements UIFormOutputInterface {
         if (isset($output['configuration']['expanded_search'])) {
           $defaults['expanded_search'] = $output['configuration']['expanded_search'];
         }
+        if (isset($output['configuration']['link_to_view_contact'])) {
+          $defaults['link_to_view_contact'] = $output['configuration']['link_to_view_contact'];
+        }
+        else {
+          $defaults['link_to_view_contact'] = TRUE;
+        }
       }
     }
     if (!isset($defaults['permission'])) {
@@ -133,6 +141,7 @@ class CRM_Contact_DataProcessorContactSearch implements UIFormOutputInterface {
     $configuration['hide_id_field'] = $submittedValues['hide_id_field'];
     $configuration['help_text'] = $submittedValues['help_text'];
     $configuration['expanded_search'] = isset($submittedValues['expanded_search']) ? $submittedValues['expanded_search'] : false;
+    $configuration['link_to_view_contact'] = $submittedValues['link_to_view_contact'];
     return $configuration;
   }
 

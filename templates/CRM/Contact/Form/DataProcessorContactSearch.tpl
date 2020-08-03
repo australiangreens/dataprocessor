@@ -36,7 +36,9 @@
                                 {/if}
                             </th>
                         {/foreach}
+                      {if $output.configuration.link_to_view_contact}
                         <th scope="col"></th>
+                      {/if}
                     </tr></thead>
 
 
@@ -51,7 +53,7 @@
                                 {assign var=columnValue value=$record.$headerName}
                                 <td>{$columnValue}</td>
                             {/foreach}
-
+                          {if $output.configuration.link_to_view_contact}
                             <td>
                                 {if ($row.url)}
                                     <a href="{$row.url}">
@@ -59,6 +61,7 @@
                                     </a>
                                 {/if}
                             </td>
+                          {/if}
                         </tr>
                     {/foreach}
 
