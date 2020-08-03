@@ -185,7 +185,7 @@ class CRM_Contact_Selector_DataProcessorContactSearch {
   protected function getHiddenFields() {
     $hiddenFields = array();
     if (!$this->isIdFieldVisible()) {
-      $hiddenFields[] = $this->getIdFieldName();
+      $hiddenFields[] = $this->dataProcessorOutput['configuration']['contact_id_field'];
     }
     return $hiddenFields;
   }
