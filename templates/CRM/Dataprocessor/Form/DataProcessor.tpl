@@ -7,7 +7,7 @@
   {* Are you sure to delete form *}
   <h3>{ts}Delete Data Processor{/ts}</h3>
   <div class="crm-block crm-form-block crm-data-processor_label-block">
-    <div class="crm-section">{ts 1=$rule.label}Are you sure to delete data processor '%1'?{/ts}</div>
+    <div class="crm-section">{ts 1=$dataProcessor.title}Are you sure to delete data processor '%1'?{/ts}</div>
   </div>
 
 {else}
