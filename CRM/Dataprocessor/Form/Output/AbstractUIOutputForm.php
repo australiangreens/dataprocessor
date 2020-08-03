@@ -64,7 +64,7 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
   protected function loadDataProcessor() {
     $factory = dataprocessor_get_factory();
     if (!$this->dataProcessorId) {
-      $debug = CRM_Utils_Request::retrieve('debug', 'Boolean', $this, FALSE);
+      $debug = CRM_Utils_Request::retrieve('debug', 'Boolean');
       $doNotUseCache = $debug ? true : false;
 
       $dataProcessorName = $this->getDataProcessorName();

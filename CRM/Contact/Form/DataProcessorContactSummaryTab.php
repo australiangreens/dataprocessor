@@ -118,7 +118,7 @@ class CRM_Contact_Form_DataProcessorContactSummaryTab extends CRM_DataprocessorS
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass
    */
   protected function alterDataProcessor(AbstractProcessorType $dataProcessorClass) {
-    $cid = CRM_Utils_Request::retrieve('contact_id', 'Integer', $this, true);
+    $cid = CRM_Utils_Request::retrieveValue('contact_id', 'Integer', NULL, TRUE);
     CRM_Contact_DataProcessorContactSummaryTab::alterDataProcessor($cid, $this->dataProcessorOutput, $dataProcessorClass);
   }
 }

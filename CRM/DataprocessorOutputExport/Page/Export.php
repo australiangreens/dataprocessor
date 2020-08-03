@@ -60,11 +60,11 @@ class CRM_DataprocessorOutputExport_Page_Export extends CRM_Core_Page {
   }
 
   protected function getDataProcessorName() {
-    return CRM_Utils_Request::retrieve('name', 'String', CRM_Core_DAO::$_nullObject, TRUE);
+    return CRM_Utils_Request::retrieveValue('name', 'String', NULL, TRUE);
   }
 
   protected function getOutputName() {
-    return CRM_Utils_Request::retrieve('type', 'String', CRM_Core_DAO::$_nullObject, TRUE);
+    return CRM_Utils_Request::retrieveValue('type', 'String', NULL, TRUE);
   }
 
   /**
