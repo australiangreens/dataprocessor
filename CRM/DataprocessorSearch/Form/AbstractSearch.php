@@ -168,7 +168,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   public function preProcess() {
     parent::preProcess();
 
-    $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this);
+    $qfKey = CRM_Utils_Request::retrieveValue('qfKey', 'String');
     $urlPath = CRM_Utils_System::currentPath();
     $urlParams = 'force=1';
     if ($qfKey) {
@@ -191,10 +191,10 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $this->defaults = [];
     // we allow the controller to set force/reset externally, useful when we are being
     // driven by the wizard framework
-    $this->_debug = CRM_Utils_Request::retrieve('debug', 'Boolean', $this, FALSE);
-    $this->_reset = CRM_Utils_Request::retrieve('reset', 'Boolean', CRM_Core_DAO::$_nullObject);
-    $this->_force = CRM_Utils_Request::retrieve('force', 'Boolean', $this, FALSE);
-    $this->_context = CRM_Utils_Request::retrieve('context', 'String', $this, FALSE, 'search');
+    $this->_debug = CRM_Utils_Request::retrieveValue('debug', 'Boolean');
+    $this->_reset = CRM_Utils_Request::retrieveValue('reset', 'Boolean');
+    $this->_force = CRM_Utils_Request::retrieveValue('force', 'Boolean');
+    $this->_context = CRM_Utils_Request::retrieveValue('context', 'String', 'search');
     $this->set('context', $this->_context);
     $this->assign("context", $this->_context);
     $this->assign('debug', $this->_debug);
@@ -207,13 +207,13 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
       }
       $this->assign_by_ref('sort', $this->sort);
 
-      $export_id = CRM_Utils_Request::retrieve('export_id', 'Positive');
+      $export_id = CRM_Utils_Request::retrieveValue('export_id', 'Positive');
       if ($export_id) {
         $this->runExport($export_id);
       }
 
-      $limit = CRM_Utils_Request::retrieve('crmRowCount', 'Positive', $this, FALSE, $this->getDefaultLimit());
-      $pageId = CRM_Utils_Request::retrieve('crmPID', 'Positive', $this, FALSE, 1);
+      $limit = CRM_Utils_Request::retrieveValue('crmRowCount', 'Positive', $this->getDefaultLimit());
+      $pageId = CRM_Utils_Request::retrieveValue('crmPID', 'Positive', 1);
       $this->buildRows($pageId, $limit);
       $this->addExportOutputs();
     }

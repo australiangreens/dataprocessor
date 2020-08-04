@@ -26,7 +26,7 @@ class CRM_Dataprocessor_Form_CloneDataProcessor extends CRM_Core_Form {
    * @access public
    */
   function preProcess() {
-    $this->dataProcessorId = CRM_Utils_Request::retrieve('id', 'Integer', $this, true);
+    $this->dataProcessorId = CRM_Utils_Request::retrieveValue('id', 'Integer', NULL, TRUE);
     $this->dataProcessor = civicrm_api3('DataProcessor', 'getsingle', ['id' => $this->dataProcessorId]);
     $this->dataProcessorClass = CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor, true);
     $this->currentUrl = CRM_Utils_System::url('civicrm/dataprocessor/form/edit', array('reset' => 1, 'action' => 'update', 'id' => $this->dataProcessorId));

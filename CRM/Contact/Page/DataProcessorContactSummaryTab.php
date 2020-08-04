@@ -33,8 +33,8 @@ class CRM_Contact_Page_DataProcessorContactSummaryTab extends CRM_Core_Page {
    */
 
   protected function preProcess() {
-    $this->dataProcessorName = CRM_Utils_Request::retrieve('data_processor', 'String', $this, true);
-    $contact_id = CRM_Utils_Request::retrieve('contact_id', 'Integer', $this, true);
+    $this->dataProcessorName = CRM_Utils_Request::retrieveValue('data_processor', 'String', NULL, TRUE);
+    $contact_id = CRM_Utils_Request::retrieveValue('contact_id', 'Integer', NULL, TRUE);
 
     $this->dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('name' => $this->dataProcessorName));
     $this->dataProcessorClass = CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor);
