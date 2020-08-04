@@ -1,6 +1,9 @@
 # Version 1.12.0 (not yet released)
 
-
+* Allow to specify defaults for a search through the URL.(!46)
+* Fixed several notices (!47, !48, !49, !53)
+* Fixed URL of dashlet on non drupal installations (!50)
+* Show title of data processor when asking for a confirmation upon deleting.
 
 # Version 1.11.0
 
