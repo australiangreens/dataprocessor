@@ -4,6 +4,7 @@
 * Fixed several notices (!47, !48, !49, !53)
 * Fixed URL of dashlet on non drupal installations (!50)
 * Show title of data processor when asking for a confirmation upon deleting.
+* Add support for filter defaults to be set using the URL.
 
 # Version 1.11.0
 
