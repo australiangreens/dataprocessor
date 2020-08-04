@@ -106,8 +106,8 @@ class CRM_DataprocessorDashlet_Dashlet implements Civi\DataProcessor\Output\UIOu
   public function processConfiguration($submittedValues, &$output) {
     $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $output['data_processor_id']));
     $dashletName = 'dataprocessor_'.$dataProcessor['name'];
-    $dashletUrl = \CRM_Utils_System::url('civicrm/dataprocessor/page/dashlet', array('data_processor' => $dataProcessor['name']));
-    $fullScreenUrl = \CRM_Utils_System::url('civicrm/dataprocessor/page/dashlet', array('data_processor' => $dataProcessor['name'], 'context' => 'dashletFullscreen'));
+    $dashletUrl = "civicrm/dataprocessor/page/dashlet?data_processor={$dataProcessor['name']}";
+    $fullScreenUrl = "civicrm/dataprocessor/page/dashlet?data_processor={$dataProcessor['name']}&context=dashletFullscreen";
     $dashletParams['url'] = $dashletUrl;
     $dashletParams['fullscreen_url'] = $fullScreenUrl;
     $dashletParams['name'] = $dashletName;
