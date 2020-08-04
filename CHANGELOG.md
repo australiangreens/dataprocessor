@@ -1,6 +1,6 @@
 # Version 1.12.0 (not yet released)
 
-
+* Add support for filter defaults to be set using the URL.
 
 # Version 1.11.0
 
