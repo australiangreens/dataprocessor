@@ -35,7 +35,7 @@ class CRM_DataprocessorOutputExport_CSV implements ExportOutputInterface, Direct
     $form->add('text', 'delimiter', E::ts('Delimiter'), array(), true);
     $form->add('text', 'enclosure', E::ts('Enclosure'), array(), true);
     $form->add('text', 'escape_char', E::ts('Escape char'), array(), true);
-    $form->add('checkbox', 'anonymous', E::ts('Available for anonymous users'), array(), false);
+    $form->add('checkbox', 'anonymous', E::ts('Available for anonymous users'));
 
     $configuration = false;
     if ($output && isset($output['configuration'])) {
@@ -85,7 +85,7 @@ class CRM_DataprocessorOutputExport_CSV implements ExportOutputInterface, Direct
     $configuration['delimiter'] = $submittedValues['delimiter'];
     $configuration['enclosure'] = $submittedValues['enclosure'];
     $configuration['escape_char'] = $submittedValues['escape_char'];
-    $configuration['anonymous'] = $submittedValues['anonymous'];
+    $configuration['anonymous'] = $submittedValues['anonymous'] ?? FALSE;
     return $configuration;
   }
 
