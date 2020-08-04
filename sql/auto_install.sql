@@ -93,12 +93,12 @@ CREATE TABLE `civicrm_data_processor` (
      `storage_type` varchar(255) NULL   ,
      `storage_configuration` text NULL   ,
      `status` int unsigned NULL  DEFAULT 0 ,
-     `source_file` varchar(255) NULL    
+     `source_file` varchar(255) NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
- 
+
+
+
 )    ;
 
 -- /*******************************************************
@@ -115,12 +115,12 @@ CREATE TABLE `civicrm_data_processor_field` (
      `name` varchar(255) NULL   ,
      `title` varchar(255) NOT NULL   ,
      `type` varchar(255) NOT NULL   ,
-     `configuration` text NULL    
+     `configuration` text NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_field_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
+
+
+,          CONSTRAINT FK_civicrm_data_processor_field_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
 )    ;
 
 -- /*******************************************************
@@ -140,12 +140,12 @@ CREATE TABLE `civicrm_data_processor_filter` (
      `is_required` tinyint NULL   ,
      `is_exposed` tinyint NULL  DEFAULT 1 ,
      `configuration` text NULL   ,
-     `filter_value` text NULL    
+     `filter_value` text NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_filter_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
+
+
+,          CONSTRAINT FK_civicrm_data_processor_filter_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
 )    ;
 
 -- /*******************************************************
@@ -163,13 +163,13 @@ CREATE TABLE `civicrm_data_processor_output` (
      `permission` varchar(255) NULL   ,
      `api_entity` varchar(255) NULL   ,
      `api_action` varchar(255) NULL   ,
-     `api_count_action` varchar(255) NULL    
+     `api_count_action` varchar(255) NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_output_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
-) ENGINE=InnoDB   ; 
+
+
+,          CONSTRAINT FK_civicrm_data_processor_output_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
+) ;
 
 -- /*******************************************************
 -- *
@@ -187,12 +187,12 @@ CREATE TABLE `civicrm_data_processor_source` (
      `type` varchar(255) NOT NULL   ,
      `configuration` text NULL   ,
      `join_type` varchar(255) NULL   ,
-     `join_configuration` text NULL    
+     `join_configuration` text NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_source_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
-) ENGINE=InnoDB   ;
 
- 
+
+,          CONSTRAINT FK_civicrm_data_processor_source_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
+) ;
+
+
