@@ -86,6 +86,7 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
       $this->dataProcessorId = $dao->data_processor_id;
 
       $this->dataProcessorOutput = civicrm_api3('DataProcessorOutput', 'getsingle', array('id' => $dao->output_id));
+      $this->dataProcessorOutput = $this->alterDataProcessorOutput($this->dataProcessorOutput);
       $this->assign('output', $this->dataProcessorOutput);
 
       $outputClass = $factory->getOutputByName($this->dataProcessorOutput['type']);
@@ -100,6 +101,17 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
         throw new \Exception('Invalid configuration found of the data processor "' . $dataProcessorName . '"');
       }
     }
+  }
+
+  /**
+   * This function could be overriden in child classes to change default configuration.
+   *
+   * @param $output
+   *
+   * @return array
+   */
+  protected function alterDataProcessorOutput($output) {
+    return $output;
   }
 
   /**

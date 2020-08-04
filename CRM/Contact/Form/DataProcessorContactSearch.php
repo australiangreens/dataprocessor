@@ -19,6 +19,20 @@ class CRM_Contact_Form_DataProcessorContactSearch extends CRM_DataprocessorSearc
   }
 
   /**
+   * This function could be overriden in child classes to change default configuration.
+   *
+   * @param $output
+   *
+   * @return array
+   */
+  protected function alterDataProcessorOutput($output) {
+    /*if (!isset($output['configuration']['link_to_view_contact'])) {
+      $output['configuration']['link_to_view_contact'] = TRUE;
+    }*/
+    return $output;
+  }
+
+  /**
    * Returns the url for view of the record action
    *
    * @param $row
