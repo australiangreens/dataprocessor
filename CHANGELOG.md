@@ -5,6 +5,8 @@
 * Fixed URL of dashlet on non drupal installations (!50)
 * Show title of data processor when asking for a confirmation upon deleting.
 * Add support for filter defaults to be set using the URL.
+* Added Filter for World Region
+* Added Output for World Region
 
 # Version 1.11.0
 
