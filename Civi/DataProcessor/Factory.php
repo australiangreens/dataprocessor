@@ -147,6 +147,7 @@ class Factory {
     $this->addFilter('contact_in_group_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactInGroupFilter'), E::ts('Contact in Group filter'));
     $this->addFilter('contact_with_tag_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactWithTagFilter'), E::ts('Contact has Tag filter'));
     $this->addFilter('contact_has_membership', new Definition('Civi\DataProcessor\FilterHandler\ContactHasMembershipFilter'), E::ts('Contact has Membership filter'));
+    $this->addFilter('worldregion_filter', new Definition('Civi\DataProcessor\FilterHandler\WorldRegionFilter'), E::ts('World Region Filter'));
     $this->addFilter('contact_type_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactTypeFilter'), E::ts('Contact Type filter'));
     $this->addFilter('permission_to_view_contact', new Definition('Civi\DataProcessor\FilterHandler\PermissionToViewContactFilter'), E::ts('Permission to view contact'));
     $this->addFilter('case_role_filter', new Definition('Civi\DataProcessor\FilterHandler\CaseRoleFilter'), E::ts('Contact has role on case filter'));
@@ -156,6 +157,7 @@ class Factory {
     $this->addOutputHandler('raw', new Definition('Civi\DataProcessor\FieldOutputHandler\RawFieldOutputHandler'), E::ts('Raw field value'));
     $this->addOutputHandler('markup', new Definition('Civi\DataProcessor\FieldOutputHandler\MarkupFieldOutputHandler'), E::ts('Markup/Html field value'));
     $this->addOutputHandler('formatted_address', new Definition('Civi\DataProcessor\FieldOutputHandler\FormattedAddressFieldOutputHandler'), E::ts('Formatted Address'));
+    $this->addOutputHandler('worldregion', new Definition('Civi\DataProcessor\FieldOutputHandler\WorldRegionFieldOutputHandler'), E::ts('Worldregion'));
     $this->addOutputHandler('number', new Definition('Civi\DataProcessor\FieldOutputHandler\NumberFieldOutputHandler'), E::ts('Formatted Number field value'));
     $this->addOutputHandler('date', new Definition('Civi\DataProcessor\FieldOutputHandler\DateFieldOutputHandler'), E::ts('Date field value'));
     $this->addOutputHandler('age', new Definition('Civi\DataProcessor\FieldOutputHandler\AgeFieldOutputHandler'), E::ts('Age field value'));
