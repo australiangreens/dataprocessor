@@ -75,3 +75,41 @@ Once I have selected the type of join I can specify what fields I have to join o
 
 ## Fields
 Once you have selected your data source(s) you can then select what fields you want to use from those data sources.
+
+So in my example my data processor form now looks like this with the data sources selected and joind:
+
+![Data Processor Form](docs/images/dp_fields1.png)
+
+I can now select fields from those data sources for my data processor by clicking on the **Add Field** button. In the example I will start with the name of the member:
+
+![Add Member Name](docs/images.dp_fields2.png)
+
+You can see that I have the following bits to select or enter:
+
+* **Select field**: I have selected here _raw field value_, which will display the field as it comes from the database. I could also select an option to format my data, for example when I use a date or when I use an option value from the database but I want to use the label of that value etc.
+* **Field**: this is where I select the relevant field from the data sources on my data processor.
+* I can tick the box at **Aggregate on this field**
+* I can specify a title for the field in my data processor.
+
+In this way I have added a few fields so in the end my data processor form looks like this:
+
+![Data Processor Form with Fields](docs/images/dp_field3.png).
+
+I can click on the dots at the right of each field to either **edit** or **remove** the field.
+And I will now also be presented with some options to sort the data processor data.
+
+## Filters
+
+I can add filters to my data processor, so the user that sees the data can filter the data if needed.
+
+![Add Filter](docs/images/dp_filter1.png)
+
+More about filters will be explained in the How to examples in this documentation.
+
+## Output
+
+Finally I can specify where the output of my data processor should go by clicking on the **Add Input** button. Output could be an API action for a public website, a tab on the CiviCRM contact summary, a custom search on CiviCRM and many other things.
+
+![Add Output](docs/images/dp_output1.png)
+
+See the examples for examples :-)

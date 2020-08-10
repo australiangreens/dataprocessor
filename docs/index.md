@@ -28,6 +28,10 @@ This guide also contains a few examples of use cases:
 
 - [How to publish a list of contact name, country and website on the public website (Drupal 8 website)](usecase1.md)
 
+And some technical information on how to add your own data sources:
+ - [How to add your own data source](HowToDevelopACsvDataSource.md)
+ - [How to add a data source for a CiviCRM entity](add_your_own_datasource.md)
+
 ## CiviCRM versions
 
 The **Data Processor** extension has initially been developed with CiviCRM 4.7 and has been tested with CiviCRM 5.x on various sites.

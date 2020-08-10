@@ -9,8 +9,8 @@ nav:
   - How to create:
       - Website overview of contact, country and website from CiviCRM: usecase1.md
       - Blabla: usercase2.md
-      - Your own data source: add_your_own_datasource.md
-      - Your own CSV data source: HowToDevelopACsvDataSource.md
+      - Your own data source: HowToDevelopACsvDataSource.md
+      - A data source for a CiviCRM entity: add_your_own_datasource.md
 
 markdown_extensions:
   - attr_list
