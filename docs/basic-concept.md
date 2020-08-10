@@ -82,7 +82,7 @@ So in my example my data processor form now looks like this with the data source
 
 I can now select fields from those data sources for my data processor by clicking on the **Add Field** button. In the example I will start with the name of the member:
 
-![Add Member Name](docs/images.dp_fields2.png)
+![Add Member Name](docs/images/dp_fields2.png)
 
 You can see that I have the following bits to select or enter:
 
@@ -93,7 +93,7 @@ You can see that I have the following bits to select or enter:
 
 In this way I have added a few fields so in the end my data processor form looks like this:
 
-![Data Processor Form with Fields](docs/images/dp_field3.png).
+![Data Processor Form with Fields](docs/images/dp_fields3.png).
 
 I can click on the dots at the right of each field to either **edit** or **remove** the field.
 And I will now also be presented with some options to sort the data processor data.
