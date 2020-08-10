@@ -7,6 +7,7 @@
 * Add support for filter defaults to be set using the URL.
 * Added Filter for World Region
 * Added Output for World Region
+* Fixed integration with search action designer extension for the Search/Report output.
 
 # Version 1.11.0
 

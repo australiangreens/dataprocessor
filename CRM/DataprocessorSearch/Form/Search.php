@@ -79,6 +79,30 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
   }
 
   /**
+   * Return altered rows
+   *
+   * Save the ids into the queryParams value. So that when an action is done on the selected record
+   * or on all records, the queryParams will hold all the case ids so that in the next step only the selected record, or the first
+   * all records are populated.
+   */
+  protected function retrieveEntityIds() {
+    $this->dataProcessorClass->getDataFlow()->setLimit(false);
+    $this->dataProcessorClass->getDataFlow()->setOffset(0);
+    $this->entityIDs = [];
+    $id_field = $this->getIdFieldName();
+    try {
+      while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
+        if ($id_field && isset($record[$id_field])) {
+          $this->entityIDs[] = $record[$id_field]->rawValue;
+        }
+      }
+    } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
+      // Do nothing
+    }
+    $this->controller->set('entityIds', $this->entityIDs);
+  }
+
+  /**
    * Builds the list of tasks or actions that a searcher can perform on a result set.
    *
    * @return array
