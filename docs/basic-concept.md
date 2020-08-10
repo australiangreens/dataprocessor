@@ -1,136 +1,77 @@
-# Basic Concept of the Form Processor Extension
+# Basic Concept of the Data Processor Extension
 
-The **Form Processor** extension allows you to specify the data that will be processed with a form on your public website.
-In CiviCRM you specify what data you want to display on the form, if and what default values you want to load and what should happen with the data that is submitted with the form.
+The **Data Processor** extension allows you to select data sources, select what fields you want to use from those datasources, how they should be filtered and sorted, and what kind of output you will then create.
 
-For example: I want a form that allows me to enter my name and email address so I can sign up for the newsletter.
-You can specify all that in the **Form Processor** and also specify that a new contact should be created if one can not be found with the email address, and that the contact found or created should be added to the newsletter group in CiviCRM.
+For example:
+* I want a list of all the active members with their country and website, and publish this on my public website.
+* I want to create a report with some actions
+* I want to export some data to a CSV file
 
-In this chapter we will briefly discuss the forms and screens you need to go through if you are specifying a form with the **Form Processor**.
+In this chapter we will briefly discuss the forms and screens you need to go through if you are creating a **Data Processor**.
 
-!!! Note "Techie stuff"
-    On a technical level: the extension actually generates an API action for the FormProcessor API entity.
+## Menu option Data Processor
 
-## Form Processors Page
+Once you installed the **Data Processor** extension you will have an additional option in the **Administer** menu called **Data Processor**. This menu will have two options, **Manage Data Processors** and **Add Data Processor**. The first will give you view of all the data processors in your installation. The second will allow you to create a new data processor.
 
-Once you installed the **Form Processor** extension you will have an additional option in the **Administer>Automation>Form processors** option which will lead you the the first view of all the form processors in your installation.
-This will be empty if you just installed the extension.
+## Manage Data Processors Page
 
-![Form Processors Page](/images/init-form.png)
+Initially the **Manage Data Processors** will be empty when you have just installed the extension and look like this:
 
-## New Form Processor - define form processor
-On this page you can click on the **New Form Processor** button to create a new form processor. If you do this you will see a form like the one below:
+![Manage Data Processors](/images/manage_dps.png)
 
-![New Form Processor](/images/new-processor.png)
+You can add a new data processor or import a data processor. The latter can be useful if you tried to create one in your test environment and then want to use it on your production environment. With export and import you can easily move data processors between environments.
 
-On the top of the form you can see that there are **two** tabs:
+## Add Data Processor Form
+You can create a new data processor by selecting the menu option **Add Data Processor** (Administer>Data Processor>Add Data Processor) or by clicking the button **Add DataProcessor** on the **Manage Data Processors** page. If you do this you will see a form like the one below. On  this form you can add the _title_ and _description_ for the data processor and then hit **Next** to save and continue.
 
-1. the *Define form processor* tab, which you will see if you start.
-On this tab you specify generic information about your form, the inputs on your form (with defaults values and/or validation if you want to) and what should happen in CiviCRM with the data from the form once it has been submitted.
-1. the *Retrieval of defaults* tab. On this tab you can specify what defaults should be loaded in your form. We will discuss this in the next section.
+![Add Data Processor](/images/add_dp.png)
 
-In this section we will deal with the *define form processor* tab.
+When you have entered the title and description and hit next you will be presented with a form like this:
 
-### General form processor information
+![New Data Processor Form](/images/dp_first.png)
 
-In the top part of the form you can enter the general form processor information:
+On this form you have four elements that you can add: **Data Sources**, **Fields**, **Filters** and **Output**.
+You can check what these elements do in detail in the **How to** examples in this documentation, below is a quick overview.
 
-* have to specify a *title* for the form processor
-* a *name* will be suggested based on the *title* but can be changed if you click on the lock behind the field first!
+### Data Sources
 
-!!! Note
-    A *name* can not contain any spaces! And should be unique!
+!!! Note "You need to build your knowledge of the CiviCRM database"
+    To be able to use the data processor, especially when joining data sources, will require some detailed knowledge on how the CiviCRM database works.
+    Not in very technical detail, but you would for example need to know that memberships are in a separate table and that they are joined with the _contact_id_.
 
-* you can specify a detailed description (and it makes sense to do so if you expect to build a few forms!)
-* you can tick if the form processor should be enabled (on by default)
-* you can select what permissions are required to be able to process the form. For example you could decide you can only send your address details if you have the *CiviCRM:edit my contact* permission.
+Literally the source(s) where your data is coming from. This can be known CiviCRM entities like _Contact_ or _Activity_ but can also be a CSV file or an SQL table that you created yourself. When selecting your data source you can specify filters that will be used when selecting the data from these sources.
 
-It will look something like this:
+!!! Note "For developers...."
+    It is possible to create your own data source if you want to. More information in the section [Add Your Own Data Source](add_your_own_datasource.md)
 
-![Top part of the form](/images/new_first.png)
+For example, I select the data source _Contact_ but only want to see Individuals. I would then filter on _Contact Type is one of Individual_.
 
-### Input fields on your form processor
+![Filter on contact type Individual](/images/dp_data_source_filter.png)
 
-In the next part under the heading **Inputs** you can specify the input fields that should be on your form.
+If you use more than one data source you will have to specify how they are joined. For example, if I add the entity _Activity_ to my data processor that already has the entity _Contact_. I will then have to specify how contact and activity are joined so that I only get the activities for the relevant contacts.
 
-For each field you can select the type of field (short text, numeric no decimal, date, yes/no, option group etc.), specify a title for the input file and add validation if that is required. Let's for example take the first name, last name and email.
+When specifying how data sources are joined I will be presented with this form:
 
-Adding the input field for the *email* will probably have to look like this:
+![Select Join Type](/images/dp_join1.png)
 
-![Input field for email](/images/new-input-email.png)
+ You can see that there are 2 types of joins:
+ 1. Select fields to join on
+ 1. Select fields to join on (not required)
 
-Once I have added all the fields (and as you can see I have added the validation that first and last name should at least have 3 characters) the list will look like this:
+The first option will when joining ONLY select those records where both data sources have data. The second option will always select records from the _first_ data source (where you are joining _from_) and will either show data from the _second_ data source or leave those fields empty.
 
-![List of input fields](/images/new-list-input-fields.png)
+An example to illustrate:
+* I have selected the entities Contact and Membership in that sequence (so Contact is my first)
+* The data looks like this:
 
-What I have done now is specify that I expect my form to show 3 fields for the website visitor to enter: First Name, Last Name and Email.
+![Data for Join Example](/images/join_example.png)
 
-### Actions on your form processor
+* If I use the first type of join my data processor will only show contacts Martha Hamster and Bor de Wolf. Only in those cases do I have data in both of my data sources.
+* If I use the second type of join my data processor will show all contacts but the membership fields will be empty for Ed Bever.
 
-In the final part of the specification of a form processor you can specify what needs to happen once CiviCRM receives the data from the form.
-We do that by adding *actions* to the form processor.
+Once I have selected the type of join I can specify what fields I have to join on. In my example that is the Contact ID from the Membership has to be the same as the Contact ID of the Contact, see:
 
-So in our example, we should find a contact by the email. Next the contact found should be added to the newsletter group.
-Initially the part of the form where we can specify actions will look like this:
+![Join Example](/images/dp_join2.png)
 
-![Action part of the form](/images/new-action-part.png)
-
-If you click on the action select box you will get a list of actions that are already available because some of the funding organizations needed that action.
-As time goes by and more people start using and enhancing the [**Action Provider** extension][actionproviderrepo], the list will grow.
-
-!!! Note "Create your own"
-    It is possible to develop your own specific actions, or indeed generic ones that others can use too! Check the relevant sections in [Example of Email Preferences](email-preferences.md)
-
-In this example we have a first step: find the contact with the data from the form.
-
-![Find contact action](/images/action-find-contact.png)
-
-Once I have found the contact it should be added to the newsletter group.
-If I select the *add to group* action I can select the group and specify that I want to use the contact ID found in the previous action:
-
-![Add to newsletter group action](/images/action-add-to-group.png)
-
-## New Form Processor - retrieval of defaults
-
-With the **Form Processor** extension it is possible to pre-load your form with default data, for example for a *My Address Data* form.
-We could pass a parameter (a checksum for example) in the URL of the form and based on that retrieve the current values from CiviCRM and prepopulate the form with this data.
-
-This can be specified in the *Retrieval of defaults* tab. Once I have ticked the *Enable default data retrieval?* option I will see a form like this:
-
-![New retrieval of defaults](/images/new-retrieval.png)
-
-As you can see the input fields from my form processor have already been loaded.
-I can specify here what criteria I want to use, in this example I have specified a short text named *checksum*.
-
-At the *retrieval methods* part I can select how I want to retrieve my data.
-Here I would like an action called *Find contact with checksum*. Unfortunately that is not available yet because it has not been developed yet, but you get the gist.
-And it will be developed in the section [Email Preferences](email-preferences.md).
-
-For each of my input fields I can finally specify what data should be loaded here, which should come from the result of my action.
-
-!!! Note "Techie stuff"
-    On a technical level: If you have enabled default data retrieval it actually generates an API action for the FormProcessorDefaults API entity.
-
-## Output Handler
-
-At the bottom of the form where you edit or create your form processor there is also a bit about an *output handler*:
-
-![Output Handler](/images/output-handler.png)
-
-This gives you the option to manipulate the output that is sent back to the public website once all the actions have been executed.
-If you do not specify anything, the default value of *send everything* then all the data involved is sent back (inputs, output from actions etc.).
-
-If you decide for example you only want to send the ID of the contact back you can select the *decide what to send* and specify what from all the available data should be send back and how it is called.
-
-## That's it!
-If you click on the *Retrieval of defaults* tab in the **New Form Processor** form you will get a form like this:
-
-And that is all! A form to be used without coding. Once I saved the form processor I can see at the top of the form what API action I can use:
-
-![API to be used](/images/api-to-be-used.png)
-
-So far the basic concept. Obviously the public website part needs to be done too, check the [Example Sign Up Newsletter](sign-up-newsletter.md) section for that part, this section just covers the basis principles.
-
-
-[actionproviderrepo]:https://lab.civicrm.org/extensions/action-provider
-
+## Fields
+Once you have selected your data source(s) you can then select what fields you want to use from those data sources.

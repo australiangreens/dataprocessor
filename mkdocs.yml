@@ -5,11 +5,12 @@ theme:
 
 nav:
   - Introduction: index.md
-  - Requirements: requirements.md
   - Basic Concept: basic-concept.md
   - How to create:
       - Website overview of contact, country and website from CiviCRM: usecase1.md
       - Blabla: usercase2.md
+      - Your own data source: add_your_own_datasource.md
+      - Your own CSV data source: HowToDevelopACsvDataSource.md
 
 markdown_extensions:
   - attr_list

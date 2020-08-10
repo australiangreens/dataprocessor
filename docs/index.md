@@ -1,6 +1,6 @@
 # Introduction
 
-**[Data Processor][dataprocessorrepo]** is an extension originally developed by [CiviCooP][civicoop], mainly funded by [Velt][velt], [Barnekreftforeningen][barnekreft], [NIHR BioResource][bioresource], [Civiservice.de][civiservice] and CiviCooP themselves.
+**[Data Processor][dataprocessorrepo]** is an extension originally developed by [CiviCooP][civicoop], mainly funded by [Velt][velt], [Barnekreftforeningen][barnekreft], [Zorg om Boer en Tuinder][boertuinder], [NIHR BioResource][bioresource], [Civiservice.de][civiservice] and CiviCooP themselves.
 
 The aim of the extension is to create an engine to quickly create data overviews without coding that can be used within CiviCRM but also outside of CiviCRM, like on the public website.
 
@@ -19,9 +19,6 @@ This is not required, you can just as well use the **Data Processor** extension 
 This guide is an attempts to explain the basic concept of the **Data Processor** and a few examples on how to use the data processor.
 
 In some examples other related extensions are required as well, we will mention that in the examples.
-There are a few requirements to be able to get the full benefits of the **Data Processor** extension:
-
-- [Requirements](requirements.md)
 
 The basic concepts of the **Data Processor** are explained on:
 
@@ -47,6 +44,7 @@ In this guide you will find a number of screenshots. These were all taken from a
 [barnekreft]:https://www.barnekreftforeningen.no/
 [civiservice]:https://civiservice.de/
 [bioresource]:https://bioresource.nihr.ac.uk/
+[boertuinder]:https://www.zorgomboerentuinder.nl/
 [cmrf-repo]:https://github.com/CiviMRF
 [dataprocessorrepo]:https://lab.civicrm.org/extensions/dataprocessor
 [mattermost]:https://chat.civicrm.org/civicrm/
