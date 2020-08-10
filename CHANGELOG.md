@@ -1,6 +1,13 @@
 # Version 1.12.0 (not yet released)
 
-
+* Allow to specify defaults for a search through the URL.(!46)
+* Fixed several notices (!47, !48, !49, !53)
+* Fixed URL of dashlet on non drupal installations (!50)
+* Show title of data processor when asking for a confirmation upon deleting.
+* Add support for filter defaults to be set using the URL.
+* Added Filter for World Region
+* Added Output for World Region
+* Fixed integration with search action designer extension for the Search/Report output.
 
 # Version 1.11.0
 

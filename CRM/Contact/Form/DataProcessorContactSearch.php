@@ -19,14 +19,29 @@ class CRM_Contact_Form_DataProcessorContactSearch extends CRM_DataprocessorSearc
   }
 
   /**
+   * This function could be overridden in child classes to change default configuration.
+   *
+   * @param $output
+   *
+   * @return array
+   */
+  protected function alterDataProcessorOutput($output) {
+    // link_to_view_contact option was added in 0.12. So we default to TRUE to match previous behaviour
+    if (!isset($output['configuration']['link_to_view_contact'])) {
+      $output['configuration']['link_to_view_contact'] = TRUE;
+    }
+    return $output;
+  }
+
+  /**
    * Returns the url for view of the record action
    *
-   * @param $row
+   * @param array $row
    *
-   * @return false|string
+   * @return string
    */
   protected function link($row) {
-    return CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid='.$row['id']);
+    return CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid=' . $row['id']);
   }
 
   /**

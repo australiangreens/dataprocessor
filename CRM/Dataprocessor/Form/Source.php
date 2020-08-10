@@ -46,7 +46,7 @@ class CRM_Dataprocessor_Form_Source extends CRM_Core_Form {
     if ($this->snippet) {
       $this->assign('suppressForm', TRUE);
       $this->controller->_generateQFKey = FALSE;
-      $block = CRM_Utils_Request::retrieve('block', 'String', $this, FALSE, 'configuration');
+      $block = CRM_Utils_Request::retrieveValue('block', 'String', 'configuration');
       $this->assign('block', $block);
     }
 

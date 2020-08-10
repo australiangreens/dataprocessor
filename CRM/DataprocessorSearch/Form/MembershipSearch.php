@@ -25,7 +25,16 @@ class CRM_DataprocessorSearch_Form_MembershipSearch extends CRM_DataprocessorSea
    * @return false|string
    */
   protected function link($row) {
-    return CRM_Utils_System::url('civicrm/contact/view/membership', 'reset=1&id='.$row['id'].'&cid='.$row['id'].'&action=view');
+    $contact_id = false;
+    try {
+      $contact_id = civicrm_api3('Membership', 'getvalue', [
+        'return' => 'contact_id',
+        'id' => $row['id']
+      ]);
+    } catch (\CiviCRM_API3_Exception $ex) {
+      // Do nothing.
+    }
+    return CRM_Utils_System::url('civicrm/contact/view/membership', 'reset=1&id='.$row['id'].'&cid='.$contact_id.'&action=view');
   }
 
   /**

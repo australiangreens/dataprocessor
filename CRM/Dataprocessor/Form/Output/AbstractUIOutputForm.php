@@ -64,7 +64,7 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
   protected function loadDataProcessor() {
     $factory = dataprocessor_get_factory();
     if (!$this->dataProcessorId) {
-      $debug = CRM_Utils_Request::retrieve('debug', 'Boolean', $this, FALSE);
+      $debug = CRM_Utils_Request::retrieve('debug', 'Boolean');
       $doNotUseCache = $debug ? true : false;
 
       $dataProcessorName = $this->getDataProcessorName();
@@ -86,6 +86,7 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
       $this->dataProcessorId = $dao->data_processor_id;
 
       $this->dataProcessorOutput = civicrm_api3('DataProcessorOutput', 'getsingle', array('id' => $dao->output_id));
+      $this->dataProcessorOutput = $this->alterDataProcessorOutput($this->dataProcessorOutput);
       $this->assign('output', $this->dataProcessorOutput);
 
       $outputClass = $factory->getOutputByName($this->dataProcessorOutput['type']);
@@ -100,6 +101,17 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
         throw new \Exception('Invalid configuration found of the data processor "' . $dataProcessorName . '"');
       }
     }
+  }
+
+  /**
+   * This function could be overriden in child classes to change default configuration.
+   *
+   * @param $output
+   *
+   * @return array
+   */
+  protected function alterDataProcessorOutput($output) {
+    return $output;
   }
 
   /**
@@ -162,12 +174,36 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
         if ($filter->isExposed()) {
           $filterValues = $filter->processSubmittedValues($submittedValues);
           if (empty($filterValues)) {
-            $filterValues = $filter->getDefaultFilterValues();
+            $filterValues = self::getDefaultFilterValues($filter);
           }
           $filter->applyFilterFromSubmittedFilterParams($filterValues);
         }
       }
     }
+  }
+
+  /**
+   * Get the default filter values for a filter. If there is no default value we allow the value to be set by a URL parameter of the same name as the filter.
+   *
+   * @param \Civi\DataProcessor\FilterHandler\AbstractFilterHandler $filterHandler
+   *
+   * @return array
+   * @throws \CRM_Core_Exception
+   */
+  public static function getDefaultFilterValues(\Civi\DataProcessor\FilterHandler\AbstractFilterHandler $filterHandler) {
+    $filterValues = $filterHandler->getDefaultFilterValues();
+    if (empty($filterValues)) {
+      $type = ($filterHandler->getFieldSpecification()->type === 'Int') ? 'CommaSeparatedIntegers' : $filterHandler->getFieldSpecification()->type;
+
+      $valueFromURL = \CRM_Utils_Request::retrieveValue($filterHandler->getFieldSpecification()->alias, $type, NULL, FALSE, 'GET');
+      if ($valueFromURL) {
+        $filterValues = [
+          'op' => 'IN',
+          'value' => $valueFromURL,
+        ];
+      }
+    }
+    return $filterValues;
   }
 
   /**
@@ -181,7 +217,7 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
         if (!$fieldSpec || !$filterHandler->isExposed()) {
           continue;
         }
-        $filterElements[$fieldSpec->alias]['filter'] = $filterHandler->addToFilterForm($this, $filterHandler->getDefaultFilterValues(), $this->getCriteriaElementSize());
+        $filterElements[$fieldSpec->alias]['filter'] = $filterHandler->addToFilterForm($this, self::getDefaultFilterValues($filterHandler), $this->getCriteriaElementSize());
         $filterElements[$fieldSpec->alias]['template'] = $filterHandler->getTemplateFileName();
       }
       $this->assign('filters', $filterElements);
