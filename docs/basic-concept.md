@@ -17,7 +17,7 @@ Once you installed the **Data Processor** extension you will have an additional 
 
 Initially the **Manage Data Processors** will be empty when you have just installed the extension and look like this:
 
-![Manage Data Processors](docs/images/manage_dps.png)
+![General Settings Data Processor](docs/images/manage_dps.png)
 
 You can add a new data processor or import a data processor. The latter can be useful if you tried to create one in your test environment and then want to use it on your production environment. With export and import you can easily move data processors between environments.
 
