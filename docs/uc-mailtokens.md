@@ -6,6 +6,7 @@ This use case describes how to create the API with the Data Processor that a web
 ## Requirements
 * CiviCRM installed
 * The Data Processor Extension installed (https://lab.civicrm.org/extensions/dataprocessor)
+* The Data Processor Token Output extension installed (	https://lab.civicrm.org/extensions/dataprocessor-token-output)
 
 ## Setting up the Data Processor for Member publication
 ### Datasources
@@ -36,7 +37,7 @@ Note: if you want users on the website to be able to sort or filter, add filters
 ### Output (API)
 The output we're creating is an API that can be used by the webdeveloper that is creating the page with the member organisations on it.
 1. Go to the Output part of the Dataprocessor and choose "Add Output"
-1. From the "Select output*" dropdown, select "API" 
+1. From the "Select output*" dropdown, select "API" (which will only be available if you have isntalled the The Data Processor Token Output extension  (	https://lab.civicrm.org/extensions/dataprocessor-token-output)
 1. Enter a name in the API Entity field - keep that simple and do not use spaces in between characters; this is the name the webdeveloper will use to call the API;
 1. leave the aPI Action Name and API GetCount Action Name with their default values
 1. define the CiviCRM permission that is required to enable the use of this API; teh default value is perfect for this purpose.
