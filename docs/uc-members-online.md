@@ -42,7 +42,7 @@ The output we're creating is an API that can be used by the webdeveloper that is
 1. leave the aPI Action Name and API GetCount Action Name with their default values
 1. define the CiviCRM permission that is required to enable the use of this API; teh default value is perfect for this purpose.
 1. Save the Data Processor Output
-1. provide the API Enitity field value to the webdeveloper
+1. provide the API Enitity field value to the webdeveloper:
 ![Source Settings Website](docs/images/DP_API_output.png)
 
 Note: your webdeveloper will also need a Sitekey and API key in order to access CiviCRM data in the first place. Find out in CiviCRM manuals how to provide those.
