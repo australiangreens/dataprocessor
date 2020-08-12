@@ -9,6 +9,9 @@ This use case describes how to create the API with the Data Processor that a web
 * The Data Processor Token Output extension installed (	https://lab.civicrm.org/extensions/dataprocessor-token-output)
 
 ## Setting up the Data Processor for Member publication
+1. In CiviCRM go to Administer / DataProcessor / Add DataProcessor
+1. Enter basic information on your Data Processor (Name, description)
+![General Settings Data Processor](docs/images/dps_name_description.png)
 
 
 The **Data Processor** extension allows you to select data sources, select what fields you want to use from those datasources, how they should be filtered and sorted, and what kind of output you will then create.
