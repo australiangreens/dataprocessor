@@ -12,6 +12,10 @@ This use case describes how to create the API with the Data Processor that a web
 1. In CiviCRM go to Administer / DataProcessor / Add DataProcessor
 1. Enter basic information on your Data Processor (Name, description)
 ![General Settings Data Processor](docs/images/dps_name_description.png)
+1. Add Datasource "Organisation" - no need to add filters
+1. Add datasource "Address" - leave default values for filters (primary address is 'yes' - Join type "Select fields to join on - not required" since we may not have address data of this organisation and in that case the organisation would not be shown at all. Join on field "Contact ID" and "Organisation :: Contact ID"
+![Source Settings](docs/images/dp_source_settings.png)
+
 
 
 The **Data Processor** extension allows you to select data sources, select what fields you want to use from those datasources, how they should be filtered and sorted, and what kind of output you will then create.
