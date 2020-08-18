@@ -43,12 +43,19 @@ class WorldRegionFieldOutputHandler extends AbstractSimpleFieldOutputHandler {
             JOIN   civicrm_country c on (c.region_id = wr.id)
             WHERE  c.id = %1';
     $countryId = $rawRecord[$this->inputFieldSpec->alias];
-
-    $regionName = \CRM_Core_DAO::singleValueQuery($sql, [ 1 => [$countryId,'Integer']]);
+    if (isset($countryId)) {
+      $regionName = \CRM_Core_DAO::singleValueQuery($sql, [
+        1 => [
+          $countryId,
+          'Integer',
+        ],
+      ]);
+    }
+    else {
+      $regionName = "";
+    }
     $formattedValue = new HTMLFieldOutput();
     $formattedValue->setHtmlOutput($regionName);
     return $formattedValue;
   }
-
-
 }
