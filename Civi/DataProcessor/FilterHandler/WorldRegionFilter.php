@@ -151,11 +151,11 @@ class WorldRegionFilter extends AbstractFieldFilterHandler {
       'multiple' => false,
       'placeholder' => E::ts('- select -'),
     ]);
-    $form->add('select', "{$fieldSpec->alias}_value",  E::ts('World Regions:'), $this->worldRegions(), true, [
-      'placeholder' => E::ts('Select worldregion'),
+    $form->add('select', "{$fieldSpec->alias}_value",  E::ts('World Regions:'), $this->worldRegions(), false , [
+      'style' => $minWidth,
       'class' => 'crm-select2 '.$sizeClass,
       'multiple' => true,
-      'select' => ['minimumInputLength' => 0],
+      'placeholder' => E::ts('- select -'),
     ]);
 
     if (isset($defaultFilterValue['op'])) {
@@ -190,8 +190,8 @@ class WorldRegionFilter extends AbstractFieldFilterHandler {
 
   protected function getOperatorOptions(\Civi\DataProcessor\DataSpecification\FieldSpecification $fieldSpec) {
     return array(
-      'IN' => E::ts('Address in Worldregions'),
-      'NOT IN' => E::ts('Address outside Worldregions'),
+      'IN' => E::ts('Address is inside'),
+      'NOT IN' => E::ts('Address is outside'),
     );
   }
 
