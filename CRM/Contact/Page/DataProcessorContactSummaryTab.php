@@ -40,7 +40,7 @@ class CRM_Contact_Page_DataProcessorContactSummaryTab extends CRM_Core_Page {
     $this->dataProcessorClass = CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor);
     $this->assign('dataProcessorName', $this->dataProcessorName);
     $this->assign('contact_id', $contact_id);
-    $this->assign('url', CRM_Utils_System::url("civicrm/dataprocessor_contact_summary/{$this->dataProcessorName}", array('contact_id' => $contact_id, 'reset' => '1', 'snippet' => 'json')));
+    $this->assign('url', CRM_Utils_System::url("civicrm/dataprocessor_contact_summary/{$this->dataProcessorName}", array('contact_id' => $contact_id, 'reset' => '1', 'snippet' => 'json'), FALSE , NULL , FALSE ));
   }
 
   /**
