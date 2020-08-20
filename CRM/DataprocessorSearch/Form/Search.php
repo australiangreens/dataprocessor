@@ -173,6 +173,19 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
   }
 
   /**
+   * Returns whether the search has required filters.
+   *
+   * @return bool
+   */
+  protected function hasExposedFilters() {
+    $return = parent::hasExposedFilters();
+    if (!$return && isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
+      $return = true;
+    }
+    return $return;
+  }
+
+  /**
    * Alter the data processor.
    *
    * Use this function in child classes to add for example additional filters.
