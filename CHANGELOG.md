@@ -1,4 +1,4 @@
-# Version 1.12.0 (not yet released)
+# Version 1.12.0
 
 * Allow to specify defaults for a search through the URL.(!46)
 * Fixed several notices (!47, !48, !49, !53)
