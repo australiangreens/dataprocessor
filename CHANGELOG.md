@@ -1,3 +1,7 @@
+# Version 1.13.0 (not yet released)
+
+
+
 # Version 1.12.0
 
 * Allow to specify defaults for a search through the URL.(!46)
