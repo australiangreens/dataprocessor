@@ -30,6 +30,11 @@
       <div class="clear"></div>
     </div>
   <div class="crm-section">
+    <div class="label">{$form.expose_hidden_fields.label}</div>
+    <div class="content">{$form.expose_hidden_fields.html}</div>
+    <div class="clear"></div>
+  </div>
+  <div class="crm-section">
     <div class="label">{$form.expose_aggregate.label}</div>
     <div class="content">{$form.expose_aggregate.html}</div>
     <div class="clear"></div>

@@ -60,6 +60,7 @@ class CRM_DataprocessorSearch_Search implements UIFormOutputInterface {
     $form->add('text', 'no_result_text', E::ts('No result text'), array('class' => 'huge'), false);
     $form->add('checkbox', 'expanded_search', E::ts('Expand criteria form initially'));
     $form->add('checkbox', 'expose_aggregate', E::ts('Expose aggregate options'));
+    $form->add('checkbox', 'expose_hidden_fields', E::ts('Expose hidden field options'));
 
     // navigation field
     $navigationOptions = $navigation->getNavigationOptions();
@@ -101,6 +102,9 @@ class CRM_DataprocessorSearch_Search implements UIFormOutputInterface {
         if (isset($output['configuration']['expose_aggregate'])) {
           $defaults['expose_aggregate'] = $output['configuration']['expose_aggregate'];
         }
+        if (isset($output['configuration']['expose_hidden_fields'])) {
+          $defaults['expose_hidden_fields'] = $output['configuration']['expose_hidden_fields'];
+        }
       }
     }
     if (!isset($defaults['permission'])) {
@@ -136,6 +140,7 @@ class CRM_DataprocessorSearch_Search implements UIFormOutputInterface {
     $configuration['help_text'] = $submittedValues['help_text'];
     $configuration['expanded_search'] = isset($submittedValues['expanded_search']) ? $submittedValues['expanded_search'] : false;
     $configuration['expose_aggregate'] = isset($submittedValues['expose_aggregate']) ? $submittedValues['expose_aggregate'] : false;
+    $configuration['expose_hidden_fields'] = isset($submittedValues['expose_hidden_fields']) ? $submittedValues['expose_hidden_fields'] : false;
     return $configuration;
   }
 

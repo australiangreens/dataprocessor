@@ -17,7 +17,11 @@
                       {foreach from=$filters key=filterName item=filter}
                           {include file=$filter.template filterName=$filter.alias filter=$filter.filter}
                       {/foreach}
-                      {if $additional_criteria_template}
+                      {if $additional_criteria_template && is_array($additional_criteria_template)}
+                        {foreach from=$additional_criteria_template item=template}
+                          {include file=$template}
+                        {/foreach}
+                      {elseif $additional_criteria_template}
                         {include file=$additional_criteria_template}
                       {/if}
                   </table>

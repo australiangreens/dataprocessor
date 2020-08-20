@@ -9,6 +9,7 @@
 * Added Output for World Region
 * Fixed integration with search action designer extension for the Search/Report output.
 * Fixed bug with aggregation fields (#44)
+* Added option to expose the hide fields setting to the user at Search/Report output (#34)
 
 # Version 1.11.0
 
