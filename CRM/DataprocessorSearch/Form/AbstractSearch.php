@@ -238,6 +238,19 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   }
 
   /**
+   * Returns whether the search has required filters.
+   *
+   * @return bool
+   */
+  protected function hasExposedFilters() {
+    $return = parent::hasExposedFilters();
+    if (!$return && isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
+      $return = true;
+    }
+    return $return;
+  }
+
+  /**
    * Returns the default row limit.
    *
    * @return int

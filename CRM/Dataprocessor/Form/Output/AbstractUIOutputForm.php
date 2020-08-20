@@ -221,8 +221,8 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
         $filterElements[$fieldSpec->alias]['template'] = $filterHandler->getTemplateFileName();
       }
       $this->assign('filters', $filterElements);
-      $this->assign('additional_criteria_template', $this->getAdditionalCriteriaTemplate());
     }
+    $this->assign('additional_criteria_template', $this->getAdditionalCriteriaTemplate());
   }
 
   /**

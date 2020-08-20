@@ -8,6 +8,7 @@
 * Added Filter for World Region
 * Added Output for World Region
 * Fixed integration with search action designer extension for the Search/Report output.
+* Fixed bug with aggregation fields (#44)
 
 # Version 1.11.0
 

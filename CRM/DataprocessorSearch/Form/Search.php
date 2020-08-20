@@ -183,7 +183,7 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass
    */
   protected function alterDataProcessor(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass) {
-    if (isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
+    if ($this->isSubmitted() && isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
       $aggregateFields = isset($this->_formValues['aggregateFields']) ? $this->_formValues['aggregateFields'] : array();
       foreach ($this->dataProcessorClass->getDataFlow()->getOutputFieldHandlers() as $outputFieldHandler) {
         if ($outputFieldHandler instanceof \Civi\DataProcessor\FieldOutputHandler\OutputHandlerAggregate) {
