@@ -1,4 +1,4 @@
-# Version 1.13.0 (not yet released)
+# Version 1.13.0
 
 * Added Checksum filter.
 
