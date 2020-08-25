@@ -143,6 +143,7 @@ class Factory {
     $this->addFilter('multiple_field_filter', new Definition('Civi\DataProcessor\FilterHandler\MultipleFieldFilter'), E::ts('Text in multiple fields Filter'));
     $this->addFilter('activity_filter', new Definition('Civi\DataProcessor\FilterHandler\ActivityFilter'), E::ts('Activity filter'));
     $this->addFilter('event_filter', new Definition('Civi\DataProcessor\FilterHandler\EventFilter'), E::ts('Event filter'));
+    $this->addFilter('checksum_filter', new Definition('Civi\DataProcessor\FilterHandler\ChecksumFilter'), E::ts('Checksum filter'));
     $this->addFilter('contact_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactFilter'), E::ts('Contact filter'));
     $this->addFilter('contact_in_group_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactInGroupFilter'), E::ts('Contact in Group filter'));
     $this->addFilter('contact_with_tag_filter', new Definition('Civi\DataProcessor\FilterHandler\ContactWithTagFilter'), E::ts('Contact has Tag filter'));

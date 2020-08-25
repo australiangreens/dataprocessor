@@ -1,6 +1,6 @@
 # Version 1.13.0 (not yet released)
 
-
+* Added Checksum filter.
 
 # Version 1.12.0
 

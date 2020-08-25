@@ -555,7 +555,7 @@ abstract class AbstractFilterHandler {
           if (isset($defaultFilterValue['op']) && $defaultFilterValue['op']) {
             $defaults[$alias . '_op'] = $defaultFilterValue['op'];
           } else {
-            $defaults[$alias . '_op'] = 'has'; // Contains
+            $defaults[$alias . '_op'] = key($operations);
           }
           if (isset($defaultFilterValue['value'])) {
             $defaults[$alias.'_value'] = $defaultFilterValue['value'];
@@ -612,9 +612,9 @@ abstract class AbstractFilterHandler {
         break;
     }
     return array(
+      'has' => E::ts('Contains'),
       '=' => E::ts('Is equal to'),
       '!=' => E::ts('Is not equal to'),
-      'has' => E::ts('Contains'),
       'sw' => E::ts('Starts with'),
       'ew' => E::ts('Ends with'),
       'nhas' => E::ts('Does not contain'),

@@ -8,7 +8,7 @@ namespace Civi\DataProcessor\DataFlow;
 
 use CRM_Dataprocessor_ExtensionUtil as E;
 
-class CsvDataFlow extends AbstractDataFlow {
+class CsvDataFlow extends InMemoryDataFlow {
 
   protected $data = [];
 
@@ -116,17 +116,21 @@ class CsvDataFlow extends AbstractDataFlow {
    */
   public function retrieveNextRecord($fieldNameprefix='') {
     $this->initialize();
-    $row = fgetcsv($this->uriHandle, 0, $this->delimiter, $this->enclosure, $this->escape);
-    if (!$row) {
-      throw new EndOfFlowException();
-    }
 
-    $record = array();
-    foreach($this->dataSpecification->getFields() as $field) {
-      $alias = $field->alias;
-      $col_index = str_replace("col_", "", $field->name);
-      $record[$fieldNameprefix.$alias] = $row[$col_index];
-    }
+    do {
+      $row = fgetcsv($this->uriHandle, 0, $this->delimiter, $this->enclosure, $this->escape);
+      if (!$row) {
+        throw new EndOfFlowException();
+      }
+
+      $record = array();
+      foreach($this->dataSpecification->getFields() as $field) {
+        $alias = $field->alias;
+        $col_index = str_replace("col_", "", $field->name);
+        $record[$fieldNameprefix.$alias] = $row[$col_index];
+      }
+    } while (!$this->filterRecord($record));
+
     return $record;
   }
 
