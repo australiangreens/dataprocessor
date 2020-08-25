@@ -97,7 +97,7 @@ class ChecksumFilter extends AbstractFieldFilterHandler {
 
     $form->add('select', 'field', E::ts('Contact ID Field'), $fieldSelect, true, array(
       'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge data-processor-field-for-name',
+      'class' => 'crm-select2 huge',
       'placeholder' => E::ts('- select -'),
     ));
 
