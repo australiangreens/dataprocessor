@@ -43,6 +43,14 @@
       {/if}
       {literal}showHideMaxMinVal( "{/literal}{$filterName}{literal}", val );{/literal}
       {literal}initializeOperator( "{/literal}{$filterName}{literal}");{/literal}
+      {literal}
+        CRM.$(function($) {
+          cj("#{/literal}{$fieldOp}{literal}").change(function() {
+            var val = $(this).val();
+            showHideMaxMinVal("{/literal}{$filter.alias}{literal}", val );
+          });
+        });
+      {/literal}
       {/foreach}
 
       {literal}

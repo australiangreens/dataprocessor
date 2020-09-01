@@ -23,8 +23,8 @@
     {/if}
     showHideMaxMinVal("{$filter.alias}", val );
     initializeOperator("{$filter.alias}");
-
     {literal}
+
     function showHideMaxMinVal( field, val ) {
       var fldVal    = field + "_value_cell";
       var fldMinMax = field + "_min_max_cell";
@@ -53,6 +53,13 @@
         cj('.filter-processor-show-close.'+filterName).addClass('hiddenElement');
       });
     }
+
+    CRM.$(function($) {
+      cj("#{/literal}{$fieldOp}{literal}").change(function() {
+        var val = $(this).val();
+        showHideMaxMinVal("{/literal}{$filter.alias}{literal}", val );
+      });
+    });
     {/literal}
   </script>
 {/crmScope}

@@ -512,6 +512,7 @@ abstract class AbstractFilterHandler {
           break;
         case \CRM_Utils_Type::T_INT:
         case \CRM_Utils_Type::T_FLOAT:
+        case \CRM_Utils_Type::T_MONEY:
           $form->add('select', "{$alias}_op", E::ts('Operator:'), $operations, true, [
             'onchange' => "return showHideMaxMinVal( '$alias', this.value );",
             'style' => $minWidth,
@@ -597,6 +598,7 @@ abstract class AbstractFilterHandler {
         break;
       case \CRM_Utils_Type::T_INT:
       case \CRM_Utils_Type::T_FLOAT:
+      case \CRM_Utils_Type::T_MONEY:
         return array(
           '=' => E::ts('Is equal to'),
           '<=' => E::ts('Is less than or equal to'),

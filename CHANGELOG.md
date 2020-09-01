@@ -1,6 +1,7 @@
 # Version 1.13.0 (not yet released)
 
 * Added Checksum filter.
+* Fixed filter options for money fields. See issue #50
 
 # Version 1.12.0
 
