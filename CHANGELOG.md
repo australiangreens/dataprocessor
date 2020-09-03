@@ -1,6 +1,7 @@
 # Version 1.14.0 (not yet released)
 
 * Fixed filter options for money fields. See issue #50
+* Added Field Output handler for Custom Links. !57
 
 # Version 1.13.0
 
