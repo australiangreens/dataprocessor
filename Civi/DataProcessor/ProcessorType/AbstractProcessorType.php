@@ -128,6 +128,9 @@ abstract class AbstractProcessorType {
    * @return \Civi\DataProcessor\FilterHandler\AbstractFilterHandler[]
    */
   public function getFilterHandlers() {
+    if (!$this->filterHandlers || !is_array($this->filterHandlers)) {
+      $this->filterHandlers = array();
+    }
     return $this->filterHandlers;
   }
 

@@ -28,19 +28,19 @@ class NumberFieldOutputHandler extends AbstractSimpleFieldOutputHandler implemen
    * @return \Civi\DataProcessor\FieldOutputHandler\FieldOutput
    */
   public function formatField($rawRecord, $formattedRecord) {
-    $value = $rawRecord[$this->inputFieldSpec->alias];
+    $value = (float) $rawRecord[$this->inputFieldSpec->alias];
 
     $formattedValue = $value;
     if (is_numeric($this->number_of_decimals) && $value != null) {
-      $formattedValue = number_format($value, $this->number_of_decimals, $this->decimal_sep, $this->thousand_sep);
+      $formattedValue = number_format((float) $value, $this->number_of_decimals, $this->decimal_sep, $this->thousand_sep);
     } elseif ($this->inputFieldSpec->type == 'Money') {
-      $formattedValue = \CRM_Utils_Money::format($value);
+      $formattedValue = \CRM_Utils_Money::format((float) $value);
     }
     if ($formattedValue != null) {
       $formattedValue = $this->prefix . $formattedValue . $this->suffix;
     }
 
-    $output = new FieldOutput($rawRecord[$this->inputFieldSpec->alias]);
+    $output = new FieldOutput((float) $rawRecord[$this->inputFieldSpec->alias]);
     $output->formattedValue = $formattedValue;
     return $output;
   }
@@ -55,6 +55,7 @@ class NumberFieldOutputHandler extends AbstractSimpleFieldOutputHandler implemen
    */
   public function initialize($alias, $title, $configuration) {
     parent::initialize($alias, $title, $configuration);
+    $this->outputFieldSpec->type = 'String';
     $this->isAggregateField = isset($configuration['is_aggregate']) ? $configuration['is_aggregate'] : false;
 
     if ($this->isAggregateField) {
