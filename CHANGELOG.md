@@ -3,6 +3,7 @@
 # Version 1.14.1
 
 * Fixed issue with shoreditch theme #49
+* Fixed issue with custom fields with the same name as an entity field.
 
 # Version 1.14.0
 

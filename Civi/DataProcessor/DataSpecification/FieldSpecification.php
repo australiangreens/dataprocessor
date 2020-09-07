@@ -84,12 +84,12 @@ class FieldSpecification implements SqlFieldSpecification {
   public function getSqlSelectStatement($table_alias) {
     if ($this->sqlValueFormatFunction) {
       if (stripos($this->sqlValueFormatFunction, '%1') !== false && stripos($this->sqlValueFormatFunction, '%2') !== false) {
-        return "(".str_replace(['%1', '%2'], [$table_alias, $this->name], $this->sqlValueFormatFunction). ") AS `{$this->alias}`";
+        return "(".str_replace(['%1', '%2'], [$table_alias, $this->getName()], $this->sqlValueFormatFunction). ") AS `{$this->alias}`";
       } else {
-        return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->name}`) AS `{$this->alias}`";
+        return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->getName()}`) AS `{$this->alias}`";
       }
     }
-    return "`{$table_alias}`.`{$this->name}` AS `{$this->alias}`";
+    return "`{$table_alias}`.`{$this->getName()}` AS `{$this->alias}`";
   }
 
   /**
@@ -101,9 +101,9 @@ class FieldSpecification implements SqlFieldSpecification {
    */
   public function getSqlColumnName($table_alias) {
     if ($this->sqlValueFormatFunction) {
-      return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->name}`)";
+      return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->getName()}`)";
     }
-    return "`{$table_alias}`.`{$this->name}`";
+    return "`{$table_alias}`.`{$this->getName()}`";
   }
 
   /**
@@ -117,12 +117,19 @@ class FieldSpecification implements SqlFieldSpecification {
   public function getSqlGroupByStatement($table_alias) {
     if ($this->sqlValueFormatFunction) {
       if (stripos($this->sqlValueFormatFunction, '%1') >= 0 && stripos($this->sqlValueFormatFunction, '%2') >= 0) {
-        return "(".str_replace(['%1', '%2'], [$table_alias, $this->name], $this->sqlValueFormatFunction). ")";
+        return "(".str_replace(['%1', '%2'], [$table_alias, $this->getName()], $this->sqlValueFormatFunction). ")";
       } else {
-        return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->name}`)";
+        return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->getName()}`)";
       }
     }
-    return "`{$table_alias}`.`{$this->name}`";
+    return "`{$table_alias}`.`{$this->getName()}`";
+  }
+
+  /**
+   * @return String
+   */
+  public function getName() {
+    return $this->name;
   }
 
 }
