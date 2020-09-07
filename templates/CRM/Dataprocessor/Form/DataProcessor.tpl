@@ -157,4 +157,14 @@
 <div class="crm-submit-buttons">
   {include file="CRM/common/formButtons.tpl" location="bottom"}
 </div>
+
+<style type="text/css">
+  {literal}
+  .crm-container .CRM_Dataprocessor_Form_DataProcessor .crm-configure-actions .btn-slide {
+    padding-right: 15px !important;
+    text-indent: initial;
+    width: auto;
+  }
+  {/literal}
+</style>
 {/crmScope}

@@ -1,5 +1,8 @@
 # Version 1.15.0 (not yet released)
 
+# Version 1.14.1
+
+* Fixed issue with shoreditch theme #49
 
 # Version 1.14.0
 
