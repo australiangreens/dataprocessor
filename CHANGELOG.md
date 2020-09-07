@@ -1,3 +1,6 @@
+# Version 1.15.0 (not yet released)
+
+
 # Version 1.14.0
 
 * Fixed filter options for money fields. See issue #50
