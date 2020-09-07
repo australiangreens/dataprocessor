@@ -100,6 +100,7 @@
                             {/if}
                         </td>
                       <td class="right nowrap" style="width: 100px;">
+                        <div class="crm-configure-actions">
                         <span class="btn-slide crm-hover-button">{ts}Actions{/ts}
                         <ul class="panel">
                           <li><a class="action-item crm-hover-button" href="{crmURL p='civicrm/dataprocessor/form/edit' q="reset=1&action=update&id=`$data_processor.id`"}"title="{ts}Edit Data Processor{/ts}">{ts}Edit{/ts}</a></li>
@@ -108,6 +109,7 @@
                           <li><a class="action-item crm-hover-button" href="{crmURL p='civicrm/dataprocessor/form/edit' q="reset=1&action=delete&id=`$data_processor.id`"}" title="{ts}Delete Data Processor{/ts}">{ts}Delete{/ts}</a></li>
                         </ul>
                         </span>
+                        </div>
                         </td>
                     </tr>
                 {/foreach}
@@ -117,4 +119,13 @@
         {include file="CRM/common/pager.tpl" location="bottom"}
     </div>
 </div>
+<style type="text/css">
+{literal}
+.crm-container .CRM_Dataprocessor_Form_ManageDataProcessors .crm-configure-actions .btn-slide {
+  padding-right: 15px !important;
+  text-indent: initial;
+  width: auto;
+}
+{/literal}
+</style>
 {/crmScope}

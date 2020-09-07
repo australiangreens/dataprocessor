@@ -2,6 +2,7 @@
 
 * Fixed filter options for money fields. See issue #50
 * Added Field Output handler for Custom Links. !57
+* Fixed issue with shoreditch theme #49
 
 # Version 1.13.0
 
