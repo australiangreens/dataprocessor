@@ -107,7 +107,7 @@ class AggregateFunctionFieldOutputHandler extends AbstractSimpleFieldOutputHandl
     $this->outputFieldSpec = clone $this->inputFieldSpec;
     $this->outputFieldSpec->alias = $alias;
     $this->outputFieldSpec->title = $title;
-    $this->outputFieldSpec->type = 'Float';
+    $this->outputFieldSpec->type = 'String';
 
     if (isset($configuration['number_of_decimals'])) {
       $this->number_of_decimals = $configuration['number_of_decimals'];
