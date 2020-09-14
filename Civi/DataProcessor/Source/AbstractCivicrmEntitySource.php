@@ -264,6 +264,7 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
       new SqlTableDataFlow($customGroupTableName, $customGroupTableAlias, new DataSpecification()),
       $join
     );
+    $this->dataProcessor->resetDataFlow();
     return $this->customGroupDataFlowDescriptions[$customGroupName]->getDataFlow();
   }
 

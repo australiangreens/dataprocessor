@@ -10,6 +10,7 @@ use Civi\DataProcessor\DataFlow\SqlDataFlow\AndClause;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\OrClause;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
+use Civi\DataProcessor\DataSpecification\Utils as DataSpecificationUtils;
 use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 
 use CRM_Dataprocessor_ExtensionUtil as E;
@@ -43,9 +44,29 @@ class ContactSource extends AbstractCivicrmEntitySource {
       $this->availableFilterFields = new DataSpecification();
       $this->loadFields($this->availableFilterFields);
       $this->loadCustomGroupsAndFields($this->availableFilterFields, true);
+      $this->loadCustomGroupsAndFields($this->availableFilterFields, true, 'Individual');
+      $this->loadCustomGroupsAndFields($this->availableFilterFields, true, 'Household');
+      $this->loadCustomGroupsAndFields($this->availableFilterFields, true, 'Organization');
     }
     return $this->availableFilterFields;
   }
+
+  /**
+   * @return \Civi\DataProcessor\DataSpecification\DataSpecification
+   * @throws \Exception
+   */
+  public function getAvailableFields() {
+    if (!$this->availableFields) {
+      $this->availableFields = new DataSpecification();
+      $this->loadFields($this->availableFields, array());
+      $this->loadCustomGroupsAndFields($this->availableFields, false);
+      $this->loadCustomGroupsAndFields($this->availableFields, false, 'Individual');
+      $this->loadCustomGroupsAndFields($this->availableFields, false, 'Household');
+      $this->loadCustomGroupsAndFields($this->availableFields, false, 'Organization');
+    }
+    return $this->availableFields;
+  }
+
 
   /**
    * Returns the default configuration for this data source

@@ -52,7 +52,7 @@ class WorldRegionFilter extends AbstractFieldFilterHandler {
         $countryTableAlias,
         $countryFilters,
         $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
 

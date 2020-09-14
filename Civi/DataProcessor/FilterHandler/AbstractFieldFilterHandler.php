@@ -110,10 +110,10 @@ abstract class AbstractFieldFilterHandler extends AbstractFilterHandler {
       if (!is_array($value)) {
         $value = explode(",", $value);
       }
-      $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->name, $filter['op'], $value, $this->inputFieldSpecification->type);
+      $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $value, $this->inputFieldSpecification->type);
       $dataFlow->addWhereClause($this->whereClause);
     } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow) {
-      $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->name, $filter['op'], $filter['value']);
+      $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->getName(), $filter['op'], $filter['value']);
       $dataFlow->addFilter($this->filterClass);
     }
   }

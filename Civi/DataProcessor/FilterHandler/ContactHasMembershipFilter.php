@@ -62,7 +62,7 @@ class ContactHasMembershipFilter extends AbstractFieldFilterHandler {
         $membershipTableAlias,
         $embershipFilters,
         $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
 

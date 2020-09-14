@@ -89,7 +89,7 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
         $relationshipTableAlias,
         $relationshipFilters,
         $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $this->inputFieldSpecification->getName(),
         $inOperator
       );
 

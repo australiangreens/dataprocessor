@@ -51,7 +51,7 @@ class ContactWithTagFilter extends AbstractFieldFilterHandler {
         $tagTableAlias,
         $tagFilters,
         $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
 

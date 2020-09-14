@@ -55,7 +55,7 @@ class PermissionToViewContactFilter extends AbstractFieldFilterHandler {
           $contactTableAlias,
           $contactFilters,
           $dataFlow->getName(),
-          $this->inputFieldSpecification->name,
+          $this->inputFieldSpecification->getName(),
           'IN'
         );
 

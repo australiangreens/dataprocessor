@@ -1,4 +1,7 @@
-# Version 1.15.0 (not yet released)
+# Version 1.14.2
+
+* Fixed issue with broken filter #51
+* Added all contact types customf fields to contact data source.
 
 # Version 1.14.1
 

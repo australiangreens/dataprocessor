@@ -38,13 +38,13 @@ class SimpleSqlFilter extends AbstractFieldFilterHandler {
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
       if ($this->isMultiValueField()) {
-        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($dataFlow->getName(), $this->inputFieldSpecification->name, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       } else {
-        $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->name, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       }
       $dataFlow->addWhereClause($this->whereClause);
     } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow && !$this->isMultiValueField()) {
-      $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->name, $filter['op'], $filter['value']);
+      $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->getName(), $filter['op'], $filter['value']);
       $dataFlow->addFilter($this->filterClass);
     }
   }

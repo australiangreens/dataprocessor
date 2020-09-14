@@ -50,7 +50,7 @@ class DateFilter extends AbstractFieldFilterHandler {
         $value = $dateTime->format('Y-m-d');
       }
 
-      $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->name, $filter['op'], $value, 'String');
+      $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $value, 'String');
       $dataFlow->addWhereClause($this->whereClause);
     }
   }

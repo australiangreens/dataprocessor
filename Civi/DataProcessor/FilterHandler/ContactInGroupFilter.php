@@ -74,7 +74,7 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
         $groupTableAlias,
         $groupFilters,
         $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
       $whereClauses[] = $this->whereClause;
@@ -93,7 +93,7 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
         $groupTableAlias,
         $groupFilters,
         $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
 

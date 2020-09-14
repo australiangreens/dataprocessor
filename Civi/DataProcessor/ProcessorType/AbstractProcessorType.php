@@ -202,4 +202,8 @@ abstract class AbstractProcessorType {
     }
   }
 
+  public function resetDataFlow() {
+    $this->dataflow = null;
+  }
+
 }

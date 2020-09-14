@@ -60,7 +60,7 @@ class ContactTypeFilter extends AbstractFieldFilterHandler {
           $contactTableAlias,
           array($contactTypeClause),
           $dataFlow->getName(),
-          $this->inputFieldSpecification->name,
+          $this->inputFieldSpecification->getName(),
           $filter['op']
         );
 
