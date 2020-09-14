@@ -1,3 +1,6 @@
+# Version 1.15 (not yet released)
+
+
 # Version 1.14.2
 
 * Fixed issue with broken filter #51
