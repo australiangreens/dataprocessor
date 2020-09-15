@@ -101,7 +101,11 @@ class Utils {
             $field,
             $alias
           );
-          $dataSpecification->addFieldSpecification($customFieldSpec->name, $customFieldSpec);
+          try {
+            $dataSpecification->addFieldSpecification($customFieldSpec->name, $customFieldSpec);
+          } catch (FieldExistsException $ex) {
+            // Do nothing.
+          }
         }
       }
     }
