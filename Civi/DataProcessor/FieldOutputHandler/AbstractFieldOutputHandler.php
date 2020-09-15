@@ -88,7 +88,7 @@ abstract class AbstractFieldOutputHandler {
    * @throws \Civi\DataProcessor\Exception\DataSourceNotFoundException
    * @throws \Civi\DataProcessor\Exception\FieldNotFoundException
    */
-  protected function initializeField($fieldAlias, $datasourceName, $newAlias) {
+  protected function initializeField($fieldAlias, $datasourceName, $newAlias='') {
     $dataSource = $this->dataProcessor->getDataSourceByName($datasourceName);
     if (!$dataSource) {
       throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$newAlias, 2=>$datasourceName)));
@@ -106,7 +106,9 @@ abstract class AbstractFieldOutputHandler {
     }
 
     $inputFieldSpec = clone $inputFieldSpec;
-    $inputFieldSpec->alias = $newAlias;
+    if ($newAlias) {
+      $inputFieldSpec->alias = $newAlias;
+    }
     $dataSource->ensureFieldInSource($inputFieldSpec);
     return [$dataSource, $inputFieldSpec];
   }

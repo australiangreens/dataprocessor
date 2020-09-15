@@ -36,10 +36,11 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
   protected $thousand_sep = '';
 
   /**
-   * @param array $values
+   * @param array $rawRecord,
+   * @param array $formattedRecord
    * @return int|float
    */
-  abstract protected function doCalculation($values);
+  abstract protected function doCalculation($rawRecord, $formattedRecord);
 
   /**
    * @return \Civi\DataProcessor\DataSpecification\FieldSpecification
@@ -54,7 +55,7 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
    * @return String
    */
   protected function getType() {
-    return 'Float';
+    return 'String';
   }
 
   /**
@@ -66,26 +67,27 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    foreach($configuration['fields'] as $fieldAndDataSource) {
-      list($datasourceName, $field) = explode('::', $fieldAndDataSource, 2);
-      $dataSource = $this->dataProcessor->getDataSourceByName($datasourceName);
-      if (!$dataSource) {
-        throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$datasourceName)));
+    if (isset($configuration['fields']) && !isset($configuration['fields_0'])) {
+      $configuration['fields_0'] = $configuration['fields'];
+    }
+    $fieldSelectConfigurations = $this->getFieldSelectConfigurations();
+    for($i=0; $i<count($fieldSelectConfigurations); $i++) {
+      if (is_array($configuration['fields_'.$i])) {
+        $j = 0;
+        foreach($configuration['fields_'.$i] as $fieldAndDataSource) {
+          list($datasourceName, $field) = explode('::', $fieldAndDataSource, 2);
+          list($dataSource, $inputFieldSpec) = $this->initializeField($field, $datasourceName, $alias.'_'.$i.'_'.$j);
+          $this->inputFieldSpecs[$i][] = $inputFieldSpec;
+          $j++;
+        }
+      } else {
+        list($datasourceName, $field) = explode('::', $configuration['fields_' . $i], 2);
+        list($dataSource, $inputFieldSpec) = $this->initializeField($field, $datasourceName, $alias.'_'.$i);
+        $this->inputFieldSpecs[$i] = $inputFieldSpec;
       }
-      $inputFieldSpec = $dataSource->getAvailableFields()
-        ->getFieldSpecificationByName($field);
-      if (!$inputFieldSpec) {
-        throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", [
-          1 => $title,
-          2 => $field,
-          3 => $datasourceName
-        ]));
-      }
-      $dataSource->ensureFieldInSource($inputFieldSpec);
-      $this->inputFieldSpecs[] = $inputFieldSpec;
     }
 
-    $this->outputFieldSpec = new FieldSpecification($alias, 'Float', $title, null, $alias);
+    $this->outputFieldSpec = new FieldSpecification($alias, 'String', $title, null, $alias);
 
     if (isset($configuration['number_of_decimals'])) {
       $this->number_of_decimals = $configuration['number_of_decimals'];
@@ -123,12 +125,19 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
   public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
     $fieldSelect = $this->getFieldOptions($field['data_processor_id']);
 
-    $form->add('select', 'fields', E::ts('Fields'), $fieldSelect, true, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge data-processor-field-for-name',
-      'placeholder' => E::ts('- select -'),
-      'multiple' => true,
-    ));
+    $fieldSelectConfigurations = $this->getFieldSelectConfigurations();
+    $fieldSelects = [];
+    for($i=0; $i<count($fieldSelectConfigurations); $i++) {
+      $form->add('select', 'fields_'.$i, $fieldSelectConfigurations[$i]['title'], $fieldSelect, true, array(
+        'style' => 'min-width:250px',
+        'class' => 'crm-select2 huge data-processor-field-for-name',
+        'placeholder' => E::ts('- select -'),
+        'multiple' => $fieldSelectConfigurations[$i]['multiple'],
+      ));
+      $fieldSelects[] = 'fields_'.$i;
+    }
+    $form->assign('fieldSelects', $fieldSelects);
+
     $form->add('text', 'number_of_decimals', E::ts('Number of decimals'), false);
     $form->add('text', 'decimal_separator', E::ts('Decimal separator'), false);
     $form->add('text', 'thousand_separator', E::ts('Thousand separator'), false);
@@ -137,8 +146,15 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
       $defaults = array();
+
       if (isset($configuration['fields'])) {
-        $defaults['fields'] = $configuration['fields'];
+        // Backwards compatibility.
+        $defaults['fields_0'] = $configuration['fields'];
+      }
+      for($i=0; $i<count($fieldSelectConfigurations); $i++) {
+        if (isset($configuration['fields_'.$i])) {
+          $defaults['fields_'.$i] = $configuration['fields_'.$i];
+        }
       }
       if (isset($configuration['number_of_decimals'])) {
         $defaults['number_of_decimals'] = $configuration['number_of_decimals'];
@@ -159,6 +175,12 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
     }
   }
 
+  protected function getFieldSelectConfigurations() {
+    return array(
+      ['title' => E::ts('Fields'), 'multiple' => true],
+    );
+  }
+
   /**
    * When this handler has configuration specify the template file name
    * for the configuration form.
@@ -177,7 +199,10 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
    * @return array
    */
   public function processConfiguration($submittedValues) {
-    $configuration['fields'] = $submittedValues['fields'];
+    $fieldSelectConfigurations = $this->getFieldSelectConfigurations();
+    for($i=0; $i<count($fieldSelectConfigurations); $i++) {
+      $configuration['fields_'.$i] = $submittedValues['fields_'.$i];
+    }
     $configuration['number_of_decimals'] = $submittedValues['number_of_decimals'];
     $configuration['decimal_separator'] = $submittedValues['decimal_separator'];
     $configuration['thousand_separator'] = $submittedValues['thousand_separator'];
@@ -218,11 +243,7 @@ abstract class CalculationFieldOutputHandler extends AbstractFieldOutputHandler 
    * @return \Civi\DataProcessor\FieldOutputHandler\FieldOutput
    */
   public function formatField($rawRecord, $formattedRecord) {
-    $values = array();
-    foreach($this->inputFieldSpecs as $inputFieldSpec) {
-      $values[] = $rawRecord[$inputFieldSpec->alias];
-    }
-    $value = $this->doCalculation($values);
+    $value = $this->doCalculation($rawRecord, $formattedRecord);
     $formattedValue = $value;
     if (is_numeric($this->number_of_decimals) && $value != null) {
       $formattedValue = number_format($value, $this->number_of_decimals, $this->decimal_sep, $this->thousand_sep);

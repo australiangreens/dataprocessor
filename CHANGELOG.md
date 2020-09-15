@@ -1,5 +1,6 @@
 # Version 1.15 (not yet released)
 
+* Added percentage calculation field to calculate the difference in percentage between two fields.
 
 # Version 1.14.2
 

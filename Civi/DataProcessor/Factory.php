@@ -178,6 +178,7 @@ class Factory {
     $this->addOutputHandler('event_participants', new Definition('Civi\DataProcessor\FieldOutputHandler\EventParticipantsFieldOutputHandler'), E::ts('List participants'));
     $this->addOutputHandler('calculations_substract', new Definition('Civi\DataProcessor\FieldOutputHandler\Calculations\SubtractFieldOutputHandler'), E::ts('Calculations (on multiple fields): Subtract'));
     $this->addOutputHandler('calculations_total', new Definition('Civi\DataProcessor\FieldOutputHandler\Calculations\TotalFieldOutputHandler'), E::ts('Calculations (on multiple fields): Adding up'));
+    $this->addOutputHandler('calculations_percentage', new Definition('Civi\DataProcessor\FieldOutputHandler\Calculations\PercentageFieldOutputHandler'), E::ts('Calculations (on multiple fields): Percentage'));
     $this->addOutputHandler('aggregation_function', new Definition('Civi\DataProcessor\FieldOutputHandler\AggregateFunctionFieldOutputHandler'), E::ts('Aggregation function'));
   }
 
