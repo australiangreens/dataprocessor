@@ -133,7 +133,7 @@ class CaseSource extends AbstractCivicrmEntitySource {
       return $this->primaryDataFlow;
     }
     foreach($this->additionalDataFlowDescriptions as $additionalDataFlowDescription) {
-      if ($additionalDataFlowDescription->getDataFlow()->getTable() == $this->getTable()) {
+      if ($additionalDataFlowDescription->getDataFlow() instanceof SqlTableDataFlow && $additionalDataFlowDescription->getDataFlow()->getTable() == $this->getTable()) {
         return $additionalDataFlowDescription->getDataFlow();
       }
     }

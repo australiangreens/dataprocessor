@@ -397,7 +397,7 @@ abstract class AbstractFilterHandler {
       $return['value'] = $submittedValues[$alias . '_value'];
       if (empty($return['value'])) {
         // Don't save an empty default criteria to the database or we can't override (eg. via URL)
-        $return = [];
+        unset($return['value']);
       }
     }
     if (isset($submittedValues[$alias.'_relative'])) {
@@ -577,6 +577,22 @@ abstract class AbstractFilterHandler {
     return $filter;
   }
 
+  /**
+   * Get the default operator
+   * @return string
+   */
+  public function getDefaultOperator() {
+    $operators = $this->getOperatorOptions($this->getFieldSpecification());
+    return key($operators);
+  }
+
+  /**
+   * Get a list of possible operator options.
+   *
+   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $fieldSpec
+   *
+   * @return array
+   */
   protected function getOperatorOptions(\Civi\DataProcessor\DataSpecification\FieldSpecification $fieldSpec) {
     if ($fieldSpec->getOptions()) {
       return array(

@@ -191,17 +191,18 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
    * @throws \CRM_Core_Exception
    */
   public static function getDefaultFilterValues(\Civi\DataProcessor\FilterHandler\AbstractFilterHandler $filterHandler) {
-    $filterValues = $filterHandler->getDefaultFilterValues();
-    if (empty($filterValues)) {
-      $type = ($filterHandler->getFieldSpecification()->type === 'Int') ? 'CommaSeparatedIntegers' : $filterHandler->getFieldSpecification()->type;
+    $defaultOp = $filterHandler->getDefaultOperator();
+    $type = ($filterHandler->getFieldSpecification()->type === 'Int') ? 'CommaSeparatedIntegers' : $filterHandler->getFieldSpecification()->type;
 
-      $valueFromURL = \CRM_Utils_Request::retrieveValue($filterHandler->getFieldSpecification()->alias, $type, NULL, FALSE, 'GET');
-      if ($valueFromURL) {
-        $filterValues = [
-          'op' => 'IN',
-          'value' => $valueFromURL,
-        ];
-      }
+    $valueFromURL = \CRM_Utils_Request::retrieveValue($filterHandler->getFieldSpecification()->alias, $type, NULL, FALSE, 'GET');
+    if ($valueFromURL) {
+      $filterValues = [
+        'op' => $defaultOp,
+        'value' => $valueFromURL,
+      ];
+    }
+    if (empty($filterValues)) {
+      $filterValues = $filterHandler->getDefaultFilterValues();
     }
     return $filterValues;
   }
