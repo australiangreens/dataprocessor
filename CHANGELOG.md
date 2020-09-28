@@ -2,6 +2,7 @@
 
 * Added percentage calculation field to calculate the difference in percentage between two fields.
 * Fixed issue with saving default filter values.
+* Fixed issue with filter for multiple select fields.
 
 # Version 1.14.2
 
