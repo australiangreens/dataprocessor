@@ -49,45 +49,6 @@ class Utils {
    * @throws \Exception
    */
   public static function addCustomFieldsToDataSpecification($entity, DataSpecification $dataSpecification, $onlySearchAbleFields, $aliasPrefix = '') {
-    $customGroupToReturnParam = [
-      'custom_field' => [
-        'id',
-        'name',
-        'label',
-        'column_name',
-        'data_type',
-        'html_type',
-        'default_value',
-        'attributes',
-        'is_required',
-        'is_view',
-        'is_searchable',
-        'help_pre',
-        'help_post',
-        'options_per_line',
-        'start_date_years',
-        'end_date_years',
-        'date_format',
-        'time_format',
-        'option_group_id',
-        'in_selector',
-      ],
-      'custom_group' => [
-        'id',
-        'name',
-        'table_name',
-        'title',
-        'help_pre',
-        'help_post',
-        'collapse_display',
-        'style',
-        'is_multiple',
-        'extends',
-        'extends_entity_column_id',
-        'extends_entity_column_value',
-        'max_multiple',
-      ],
-    ];
     $customGroups = self::getTree($entity);//, $customGroupToReturnParam, , NULL, NULL, NULL, TRUE, FALSE, FALSE);
     foreach ($customGroups as $cgId => $customGroup) {
       if ($cgId == 'info') {
@@ -175,6 +136,7 @@ class Utils {
         'time_format',
         'option_group_id',
         'in_selector',
+        'serialize',
       ],
       'custom_group' => [
         'id',

@@ -51,10 +51,10 @@ class CustomFieldSpecification extends FieldSpecification {
     if ($this->type == 'Boolean') {
       return false;
     }
-    if ($this->customField['html_type'] == 'Radio') {
+    if ($this->customField['html_type'] == 'Radio' && empty($this->customField['serialize'])) {
       return false;
     }
-    if ($this->customField['html_type'] == 'Select') {
+    if ($this->customField['html_type'] == 'Select' && empty($this->customField['serialize'])) {
       return false;
     }
     return true;
