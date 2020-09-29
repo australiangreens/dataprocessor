@@ -18,7 +18,9 @@ class SimpleWhereClause implements WhereClauseInterface {
 
   protected $isJoinClause = FALSE;
 
-  public function __construct($table_alias, $field, $operator, $value, $valueType = 'String', $isJoinClause=FALSE) {
+  protected $sqlFunction = null;
+
+  public function __construct($table_alias, $field, $operator, $value, $valueType = 'String', $isJoinClause=FALSE, $sqlFunction=null) {
     if (is_array($value)) {
       switch ($operator) {
         case '=':
@@ -80,6 +82,10 @@ class SimpleWhereClause implements WhereClauseInterface {
           break;
       }
     }
+
+    if ($sqlFunction) {
+      $this->sqlFunction = $sqlFunction;
+    }
   }
 
   /**
@@ -102,11 +108,15 @@ class SimpleWhereClause implements WhereClauseInterface {
     if ($this->isJoinClause()) {
       return "`{$this->table_alias}`.`{$this->field}` {$this->operator} {$this->value}";
     }
+    $fieldStatement = "`{$this->table_alias}`.`{$this->field}`";
+    if ($this->sqlFunction) {
+      $fieldStatement = sprintf($this->sqlFunction, $fieldStatement);
+    }
     switch ($this->operator) {
       case 'NOT IN':
       case 'NOT LIKE':
       case '!=':
-        return "(`{$this->table_alias}`.`{$this->field}` {$this->operator} {$this->value} OR `{$this->table_alias}`.`{$this->field}` IS NULL)";
+        return "({$fieldStatement} {$this->operator} {$this->value} OR `{$this->table_alias}`.`{$this->field}` IS NULL)";
         break;
       case 'IS NULL':
         return "(`{$this->table_alias}`.`{$this->field}` {$this->operator} OR `{$this->table_alias}`.`{$this->field}` = '')";
@@ -115,7 +125,7 @@ class SimpleWhereClause implements WhereClauseInterface {
         return "(`{$this->table_alias}`.`{$this->field}` {$this->operator} AND `{$this->table_alias}`.`{$this->field}` != '')";
         break;
       default:
-        return "`{$this->table_alias}`.`{$this->field}` {$this->operator} {$this->value}";
+        return "{$fieldStatement} {$this->operator} {$this->value}";
         break;
     }
   }

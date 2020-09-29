@@ -14,7 +14,9 @@ class SimpleFilter implements FilterInterface {
 
   protected $value;
 
-  public function __construct($field, $operator, $value) {
+  protected $valueCallBackFunction;
+
+  public function __construct($field, $operator, $value, $valueCallBackFunction=null) {
     if (is_array($value)) {
       switch ($operator) {
         case '=':
@@ -33,6 +35,10 @@ class SimpleFilter implements FilterInterface {
     } else {
       $this->value = $value;
     }
+
+    if ($valueCallBackFunction) {
+      $this->valueCallBackFunction = $valueCallBackFunction;
+    }
   }
 
   /**
@@ -44,6 +50,9 @@ class SimpleFilter implements FilterInterface {
    * @return bool
    */
   public function filterRecord($record) {
+    if (isset($record[$this->field]) && is_callable($this->valueCallBackFunction)) {
+      $record[$this->field] = call_user_func($this->valueCallBackFunction, $record[$this->field]);
+    }
     switch ($this->operator) {
       case 'IS NULL':
         return !(isset($record[$this->field]) && $record[$this->field]!='');

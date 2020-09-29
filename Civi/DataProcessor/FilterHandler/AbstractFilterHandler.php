@@ -484,8 +484,8 @@ abstract class AbstractFilterHandler {
       switch ($type) {
         case \CRM_Utils_Type::T_DATE:
         case \CRM_Utils_Type::T_TIMESTAMP:
-          $additionalOp['null'] = E::ts('Not set');
-          \CRM_Core_Form_Date::buildDateRange($form, $alias, $count, '_from', '_to', E::ts('From:'), $this->isRequired(), $additionalOp, 'searchDate', FALSE, ['class' => 'crm-select2 '.$sizeClass]);
+          $additionalOptions['null'] = E::ts('Not set');
+          $form->addDatePickerRange($alias, $title, FALSE, $this->isRequired(), E::ts('From'), E::ts('To'), $additionalOptions, '_from', '_to');
           if (isset($defaultFilterValue['op'])) {
             $defaults[$alias . '_op'] = $defaultFilterValue['op'];
           }
