@@ -135,8 +135,7 @@ class Utils {
         'date_format',
         'time_format',
         'option_group_id',
-        'in_selector',
-        'serialize',
+        'in_selector'
       ],
       'custom_group' => [
         'id',
@@ -154,6 +153,10 @@ class Utils {
         'max_multiple',
       ],
     ];
+    $civiVersion = \CRM_Core_BAO_Domain::version();
+    if (version_compare($civiVersion, '5.27', '>=')) {
+      $toReturn['custom_field'][] = 'serialize';
+    }
 
     // create select
     $select = [];

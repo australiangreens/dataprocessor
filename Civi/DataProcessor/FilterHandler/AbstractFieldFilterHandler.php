@@ -87,7 +87,7 @@ abstract class AbstractFieldFilterHandler extends AbstractFilterHandler {
       return;
     }
     $dataFlow  = $this->dataSource->ensureField($this->fieldSpecification);
-    if ($dataFlow && $dataFlow instanceof SqlDataFlow && $this->whereClause) {
+    if ($dataFlow && $dataFlow instanceof SqlDataFlow && isset($this->whereClause)) {
       $dataFlow->removeWhereClause($this->whereClause);
       unset($this->whereClause);
     } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow && $this->filterClass) {
