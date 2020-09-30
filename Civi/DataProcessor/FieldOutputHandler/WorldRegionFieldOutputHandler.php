@@ -54,7 +54,7 @@ class WorldRegionFieldOutputHandler extends AbstractSimpleFieldOutputHandler {
     else {
       $regionName = "";
     }
-    $formattedValue = new HTMLFieldOutput();
+    $formattedValue = new HTMLFieldOutput($regionName);
     $formattedValue->setHtmlOutput($regionName);
     return $formattedValue;
   }
