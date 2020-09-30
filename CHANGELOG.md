@@ -1,3 +1,5 @@
+# Version 1.16 (not yet released)
+
 # Version 1.15.1
 
 * Fixed backwards compatibility issue.
