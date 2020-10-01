@@ -1,4 +1,4 @@
-# Version 1.16 (not yet released)
+# Version 1.16
 
 * Fixed blank worldregion in CVS output #52
 * Fixed issue with not empty case role filter.
