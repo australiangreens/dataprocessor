@@ -1,3 +1,5 @@
+# Version 1.17 (not yet released)
+
 # Version 1.16
 
 * Fixed blank worldregion in CVS output #52
