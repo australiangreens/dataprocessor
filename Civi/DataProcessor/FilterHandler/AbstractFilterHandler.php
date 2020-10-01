@@ -333,24 +333,20 @@ abstract class AbstractFilterHandler {
           break;
 
         case 'null':
-          if (empty($submittedValues['value'])) {
-            $filterParams = [
-              'op' => 'IS NULL',
-              'value' => '',
-            ];
-            $this->setFilter($filterParams);
-            $isFilterSet = TRUE;
-          }
+          $filterParams = [
+            'op' => 'IS NULL',
+            'value' => '',
+          ];
+          $this->setFilter($filterParams);
+          $isFilterSet = TRUE;
           break;
         case 'not null':
-          if (empty($submittedValues['value'])) {
-            $filterParams = [
-              'op' => 'IS NOT NULL',
-              'value' => '',
-            ];
-            $this->setFilter($filterParams);
-            $isFilterSet = TRUE;
-          }
+          $filterParams = [
+            'op' => 'IS NOT NULL',
+            'value' => '',
+          ];
+          $this->setFilter($filterParams);
+          $isFilterSet = TRUE;
           break;
         case 'bw':
           if (isset($submittedValues['min']) && $submittedValues['min'] && isset($submittedValues['max']) && $submittedValues['max']) {
