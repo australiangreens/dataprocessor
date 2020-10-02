@@ -1,5 +1,7 @@
 # Version 1.17 (not yet released)
 
+* Fix for Field filter. It did not work on a custom field that has the type country.
+
 # Version 1.16
 
 * Fixed blank worldregion in CVS output #52
