@@ -11,6 +11,7 @@ use Civi\API\Event\RespondEvent;
 use Civi\API\Events;
 use Civi\API\Provider\ProviderInterface as API_ProviderInterface;
 use Civi\DataProcessor\FieldOutputHandler\arrayFieldOutput;
+use Civi\DataProcessor\FieldOutputHandler\HTMLFieldOutput;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -423,6 +424,8 @@ abstract class AbstractApi implements API_ProviderInterface, EventSubscriberInte
     foreach($record as $fieldname => $field) {
       if ($field instanceof arrayFieldOutput) {
         $data[$fieldname] = $field->getArrayData();
+      } else if ($field instanceof HTMLFieldOutput) {
+        $data[$fieldname] = $field->getMarkupOut();
       } else {
         $data[$fieldname] = $field->formattedValue;
       }
