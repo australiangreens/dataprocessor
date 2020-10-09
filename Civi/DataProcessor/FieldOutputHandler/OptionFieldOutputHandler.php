@@ -11,7 +11,7 @@ use Civi\DataProcessor\Source\SourceInterface;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\FieldOutputHandler\FieldOutput;
 
-class OptionFieldOutputHandler extends AbstractSimpleFieldOutputHandler implements OutputHandlerAggregate {
+class OptionFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler implements OutputHandlerAggregate {
 
   /**
    * @var bool

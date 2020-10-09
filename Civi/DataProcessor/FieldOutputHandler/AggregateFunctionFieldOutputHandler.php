@@ -14,7 +14,7 @@ use Civi\DataProcessor\FieldOutputHandler\FieldOutput;
 use Civi\DataProcessor\FieldOutputHandler\RawFieldOutputHandler;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
-class AggregateFunctionFieldOutputHandler extends AbstractSimpleFieldOutputHandler {
+class AggregateFunctionFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler {
 
   /**
    * @var \Civi\DataProcessor\DataSpecification\FieldSpecification

@@ -13,7 +13,7 @@ use CRM_Dataprocessor_ExtensionUtil as E;
 use Civi\DataProcessor\Source\SourceInterface;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 
-class AbstractSimpleFieldOutputHandler extends AbstractFieldOutputHandler implements OutputHandlerSortable {
+class AbstractSimpleFieldOutputHandler extends AbstractFieldOutputHandler {
 
   /**
    * @var \Civi\DataProcessor\DataSpecification\FieldSpecification
@@ -35,13 +35,6 @@ class AbstractSimpleFieldOutputHandler extends AbstractFieldOutputHandler implem
    */
   public function getOutputFieldSpecification() {
     return $this->outputFieldSpec;
-  }
-
-  /**
-   * @return \Civi\DataProcessor\DataSpecification\FieldSpecification
-   */
-  public function getSortableInputFieldSpec() {
-    return $this->inputFieldSpec;
   }
 
   /**

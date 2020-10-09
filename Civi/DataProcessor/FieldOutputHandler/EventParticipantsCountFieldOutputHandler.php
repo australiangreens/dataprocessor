@@ -12,7 +12,7 @@ use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Exception\DataSourceNotFoundException;
 use Civi\DataProcessor\Exception\FieldNotFoundException;
 
-class EventParticipantsCountFieldOutputHandler extends AbstractSimpleFieldOutputHandler implements OutputHandlerSortable{
+class EventParticipantsCountFieldOutputHandler extends AbstractSimpleFieldOutputHandler{
 
   /**
    * @var array

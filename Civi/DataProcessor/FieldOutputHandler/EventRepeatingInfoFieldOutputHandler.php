@@ -12,7 +12,7 @@ use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Exception\DataSourceNotFoundException;
 use Civi\DataProcessor\Exception\FieldNotFoundException;
 
-class EventRepeatingInfoFieldOutputHandler extends AbstractSimpleFieldOutputHandler implements OutputHandlerSortable{
+class EventRepeatingInfoFieldOutputHandler extends AbstractSimpleFieldOutputHandler {
 
   /**
    * Returns the data type of this field

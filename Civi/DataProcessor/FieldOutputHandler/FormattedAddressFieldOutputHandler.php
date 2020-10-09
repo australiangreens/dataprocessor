@@ -8,7 +8,7 @@ namespace Civi\DataProcessor\FieldOutputHandler;
 
 use CRM_Dataprocessor_ExtensionUtil as E;
 
-class FormattedAddressFieldOutputHandler extends AbstractSimpleFieldOutputHandler {
+class FormattedAddressFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler {
 
   /**
    * Returns the label of the field for selecting a field.

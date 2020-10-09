@@ -12,7 +12,7 @@ use CRM_Dataprocessor_ExtensionUtil as E;
 use Civi\DataProcessor\Source\SourceInterface;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 
-class NumberFieldOutputHandler extends AbstractSimpleFieldOutputHandler implements OutputHandlerAggregate {
+class NumberFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler implements OutputHandlerAggregate {
 
   /**
    * @var bool
