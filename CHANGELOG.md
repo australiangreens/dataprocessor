@@ -1,5 +1,6 @@
 # Version 1.17 (not yet released)
 
+* Fixed custom link field so that the raw value also contains the html link (#55).
 * Fix for Field filter. It did not work on a custom field that has the type country.
 
 # Version 1.16
