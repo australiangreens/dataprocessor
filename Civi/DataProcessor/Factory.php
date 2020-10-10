@@ -182,6 +182,7 @@ class Factory {
     $this->addOutputHandler('calculations_total', new Definition('Civi\DataProcessor\FieldOutputHandler\Calculations\TotalFieldOutputHandler'), E::ts('Calculations (on multiple fields): Adding up'));
     $this->addOutputHandler('calculations_percentage', new Definition('Civi\DataProcessor\FieldOutputHandler\Calculations\PercentageFieldOutputHandler'), E::ts('Calculations (on multiple fields): Percentage'));
     $this->addOutputHandler('aggregation_function', new Definition('Civi\DataProcessor\FieldOutputHandler\AggregateFunctionFieldOutputHandler'), E::ts('Aggregation function'));
+    $this->addOutputHandler('image', new Definition('Civi\DataProcessor\FieldOutputHandler\ImageFieldOutputHandler'), E::ts('Image'));
   }
 
   /**
