@@ -25,7 +25,35 @@ class CRM_DataprocessorSearch_Form_ActivitySearch extends CRM_DataprocessorSearc
    * @return false|string
    */
   protected function link($row) {
-    return CRM_Utils_System::url('civicrm/activity', 'reset=1&action=view&id='.$row['id']);
+    $activity = civicrm_api3('Activity', 'getsingle', ['id' => $row['id'], "return" => ["target_contact_id", "source_record_id", "activity_type_id"]]);
+    $activity['cid'] = reset($activity['target_contact_id']);
+    unset($activity['target_contact_id']);
+    unset($activity['target_contact_name']);
+    unset($activity['target_contact_sort_name']);
+    $activity['cxt'] = '';
+    // CRM-3553
+    $accessMailingReport = FALSE;
+    if (!empty($activity['mailingId'])) {
+      $accessMailingReport = TRUE;
+    }
+
+    $actionLinks = \CRM_Activity_Selector_Activity::actionLinks(CRM_Utils_Array::value('activity_type_id', $activity),
+      CRM_Utils_Array::value('source_record_id', $activity),
+      $accessMailingReport,
+      CRM_Utils_Array::value('activity_id', $activity)
+    );
+    $link = $actionLinks[\CRM_Core_Action::VIEW];
+
+    $values = $activity;
+    $extra = isset($link['extra']) ? \CRM_Core_Action::replace($link['extra'], $values) : NULL;
+    $frontend = isset($link['fe']);
+    if (isset($link['qs']) && !\CRM_Utils_System::isNull($link['qs'])) {
+      $urlPath = \CRM_Utils_System::url(\CRM_Core_Action::replace($link['url'], $values), \CRM_Core_Action::replace($link['qs'], $values), FALSE, NULL, TRUE, $frontend);
+    }
+    else {
+      $urlPath = \CRM_Utils_Array::value('url', $link, '#');
+    }
+    return $urlPath;
   }
 
   /**

@@ -4,6 +4,7 @@
 * Fixed custom link field so that the raw value also contains the html link (#55).
 * Fix for Field filter. It did not work on a custom field that has the type country.
 * Added image field output handler (!61)
+* Fixed issue with View and Edit an activity in Activity Search.
 
 # Version 1.16
 
