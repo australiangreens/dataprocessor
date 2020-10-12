@@ -1,4 +1,4 @@
-# Version 1.17 (not yet released)
+# Version 1.17
 
 * Added participant count field
 * Fixed custom link field so that the raw value also contains the html link (#55).
