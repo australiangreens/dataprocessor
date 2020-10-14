@@ -10,9 +10,12 @@
       }
       $('.crm-search-tasks .action-links .action-link .other-output-button').on('click', function() {
         var output_id = $(this).data('output-id');
-        $('input[name=export_id]').val(output_id);
-        $('form').submit();
-        $('input[name=export_id]').val('');
+        var $form = $(this).closest('form');
+        $form.find('input[name=export_id]').val(output_id);
+        $form.submit();
+        // The form triggers a download, therefore the following code continues
+        // to run as the page is still loaded.
+        $form.find('input[name=export_id]').val('');
         return false;
       });
       $('.crm-form-submit').on('click', function() {
