@@ -481,7 +481,7 @@ abstract class AbstractFilterHandler {
         case \CRM_Utils_Type::T_DATE:
         case \CRM_Utils_Type::T_TIMESTAMP:
           $additionalOptions['null'] = E::ts('Not set');
-          $form->addDatePickerRange($alias, $title, FALSE, $this->isRequired(), E::ts('From'), E::ts('To'), $additionalOptions, '_from', '_to');
+          $form->addDatePickerRange($alias, $title, FALSE, FALSE, E::ts('From'), E::ts('To'), $additionalOptions, '_from', '_to');
           if (isset($defaultFilterValue['op'])) {
             $defaults[$alias . '_op'] = $defaultFilterValue['op'];
           }
