@@ -1,6 +1,7 @@
 # Version 1.18 (not yet released)
 
 * Fix broken CSV (etc) download buttons (!62)
+* Fix unable to select relative date value in filter #56
 
 # Version 1.17
 
