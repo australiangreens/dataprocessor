@@ -1,5 +1,7 @@
 # Version 1.18 (not yet released)
 
+* Fix broken CSV (etc) download buttons (!62)
+
 # Version 1.17
 
 * Added participant count field
