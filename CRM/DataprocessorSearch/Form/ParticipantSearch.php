@@ -91,7 +91,7 @@ class CRM_DataprocessorSearch_Form_ParticipantSearch extends CRM_DataprocessorSe
    * @return bool
    */
   protected function usePrevNextCache() {
-    return true;
+    return false;
   }
 
   /**

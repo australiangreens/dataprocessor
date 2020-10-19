@@ -2,6 +2,7 @@
 
 * Fix broken CSV (etc) download buttons (!62)
 * Fix unable to select relative date value in filter #56
+* Fix issue with tasks after an Participant Search.
 
 # Version 1.17
 
