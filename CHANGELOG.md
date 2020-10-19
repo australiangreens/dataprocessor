@@ -1,3 +1,7 @@
+# Version 1.19 (not yet released)
+
+
+
 # Version 1.18
 
 * Fix broken CSV (etc) download buttons (!62)
