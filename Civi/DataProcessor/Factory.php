@@ -124,6 +124,7 @@ class Factory {
     $this->addDataSource('membership_status', new Definition('Civi\DataProcessor\Source\Member\MembershipStatusSource'), E::ts('Membership Status'));
     $this->addDataSource('membership_payment', new Definition('Civi\DataProcessor\Source\Member\MembershipPaymentSource'), E::ts('Membership Payment'));
     $this->addDataSource('note', new Definition('Civi\DataProcessor\Source\Note\NoteSource'), E::ts('Note'));
+    $this->addDataSource('file', new Definition('Civi\DataProcessor\Source\File\FileSource'), E::ts('File'));
     $this->addDataSource('csv', new Definition('Civi\DataProcessor\Source\CSV'), E::ts('CSV File'));
     $this->addDataSource('sqltable', new Definition('Civi\DataProcessor\Source\SQLTable'), E::ts('SQL Table'));
     $this->addOutput('api', new Definition('Civi\DataProcessor\Output\Api'), E::ts('API'));

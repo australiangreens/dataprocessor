@@ -193,9 +193,8 @@ function _dataprocessor_civix_civicrm_disable() {
  * @param $op string, the type of operation being performed; 'check' or 'enqueue'
  * @param $queue CRM_Queue_Queue, (for 'enqueue') the modifiable list of pending up upgrade tasks
  *
- * @return mixed
- *   based on op. for 'check', returns array(boolean) (TRUE if upgrades are pending)
- *   for 'enqueue', returns void
+ * @return mixed  based on op. for 'check', returns array(boolean) (TRUE if upgrades are pending)
+ *                for 'enqueue', returns void
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_upgrade
  */
@@ -226,7 +225,7 @@ function _dataprocessor_civix_upgrader() {
  * @param string $dir base dir
  * @param string $pattern , glob pattern, eg "*.txt"
  *
- * @return array
+ * @return array(string)
  */
 function _dataprocessor_civix_find_files($dir, $pattern) {
   if (is_callable(['CRM_Utils_File', 'findFiles'])) {
@@ -245,7 +244,7 @@ function _dataprocessor_civix_find_files($dir, $pattern) {
     if ($dh = opendir($subdir)) {
       while (FALSE !== ($entry = readdir($dh))) {
         $path = $subdir . DIRECTORY_SEPARATOR . $entry;
-        if ($entry[0] == '.') {
+        if ($entry{0} == '.') {
         }
         elseif (is_dir($path)) {
           $todos[] = $path;
@@ -256,7 +255,6 @@ function _dataprocessor_civix_find_files($dir, $pattern) {
   }
   return $result;
 }
-
 /**
  * (Delegated) Implements hook_civicrm_managed().
  *
@@ -364,7 +362,7 @@ function _dataprocessor_civix_civicrm_themes(&$themes) {
  * @link http://php.net/glob
  * @param string $pattern
  *
- * @return array
+ * @return array, possibly empty
  */
 function _dataprocessor_civix_glob($pattern) {
   $result = glob($pattern);
@@ -472,32 +470,38 @@ function _dataprocessor_civix_civicrm_alterSettingsFolders(&$metaDataFolders = N
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_entityTypes
  */
+
 function _dataprocessor_civix_civicrm_entityTypes(&$entityTypes) {
-  $entityTypes = array_merge($entityTypes, [
-    'CRM_Dataprocessor_DAO_DataProcessor' => [
+  $entityTypes = array_merge($entityTypes, array (
+    'CRM_Dataprocessor_DAO_DataProcessor' => 
+    array (
       'name' => 'DataProcessor',
       'class' => 'CRM_Dataprocessor_DAO_DataProcessor',
       'table' => 'civicrm_data_processor',
-    ],
-    'CRM_Dataprocessor_DAO_DataProcessorField' => [
+    ),
+    'CRM_Dataprocessor_DAO_DataProcessorField' => 
+    array (
       'name' => 'DataProcessorField',
       'class' => 'CRM_Dataprocessor_DAO_DataProcessorField',
       'table' => 'civicrm_data_processor_field',
-    ],
-    'CRM_Dataprocessor_DAO_DataProcessorFilter' => [
+    ),
+    'CRM_Dataprocessor_DAO_DataProcessorFilter' => 
+    array (
       'name' => 'DataProcessorFilter',
       'class' => 'CRM_Dataprocessor_DAO_DataProcessorFilter',
       'table' => 'civicrm_data_processor_filter',
-    ],
-    'CRM_Dataprocessor_DAO_DataProcessorOutput' => [
+    ),
+    'CRM_Dataprocessor_DAO_DataProcessorOutput' => 
+    array (
       'name' => 'DataProcessorOutput',
       'class' => 'CRM_Dataprocessor_DAO_DataProcessorOutput',
       'table' => 'civicrm_data_processor_output',
-    ],
-    'CRM_Dataprocessor_DAO_DataProcessorSource' => [
+    ),
+    'CRM_Dataprocessor_DAO_DataProcessorSource' => 
+    array (
       'name' => 'DataProcessorSource',
       'class' => 'CRM_Dataprocessor_DAO_DataProcessorSource',
       'table' => 'civicrm_data_processor_source',
-    ],
-  ]);
+    ),
+  ));
 }

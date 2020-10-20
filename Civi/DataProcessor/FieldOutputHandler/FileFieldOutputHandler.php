@@ -34,16 +34,18 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
    */
   public function formatField($rawRecord, $formattedRecord) {
     $rawValue = $rawRecord[$this->inputFieldSpec->alias];
-    $output = new FieldOutput($rawValue);
+    if ($this->returnUrl) {
+      $output = new FieldOutput($rawValue);
+    } else {
+      $output = new HTMLFieldOutput($rawValue);
+    }
     if ($rawValue) {
       $attachment = civicrm_api3('Attachment', 'getsingle', array('id' => $rawValue));
       if (!isset($attachment['is_error']) || $attachment['is_error'] == '0') {
-        if ($this->returnUrl) {
-          $formattedValue = $attachment['url'];
-        } else {
-          $formattedValue = '<a href="' . $attachment['url'] . '">' . $attachment['name'] . '</a>';
+        $output->formattedValue = $attachment['url'];
+        if (!$this->returnUrl) {
+          $output->setHtmlOutput('<a href="' . $attachment['url'] . '">' . $attachment['name'] . '</a>');
         }
-        $output->formattedValue = $formattedValue;
       }
     }
     return $output;
