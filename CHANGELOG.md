@@ -1,4 +1,4 @@
-# Version 1.19 (not yet released)
+# Version 1.19
 
 * Added File Data Source
 
