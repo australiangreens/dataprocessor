@@ -1,3 +1,5 @@
+# Version 1.20 (not yet released)
+
 # Version 1.19.1
 
 * Fixed issue with install sql and innodb.
