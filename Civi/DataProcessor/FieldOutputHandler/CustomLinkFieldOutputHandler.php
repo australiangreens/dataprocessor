@@ -90,7 +90,6 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
     $url = str_replace('%1',$linkField,$this->linkTemplate);
     $link = '<a href="'.$url.'">'.$this->linkText.'</a>';
     $formattedValue = new HTMLFieldOutput($link);
-    $formattedValue->formattedValue = $this->linkText;
     $formattedValue->setHtmlOutput($link);
     return $formattedValue;
   }
