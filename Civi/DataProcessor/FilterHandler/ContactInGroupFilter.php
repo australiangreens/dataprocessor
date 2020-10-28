@@ -48,6 +48,15 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
    * @return mixed
    */
   public function setFilter($filter) {
+    switch ($filter['op']) {
+      case '=':
+        $filter['op'] = 'IN';
+        break;
+
+      case '!=':
+        $filter['op'] = 'NOT IN';
+        break;
+    }
     $this->resetFilter();
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     $group_ids = $filter['value'];
