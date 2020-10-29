@@ -1,5 +1,7 @@
 # Version 1.20 (not yet released)
 
+* ContactInGroup filter only supports IN/NOT IN so map =/!= !65
+
 # Version 1.19.1
 
 * Fixed issue with install sql and innodb.
