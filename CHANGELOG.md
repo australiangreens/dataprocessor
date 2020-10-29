@@ -1,3 +1,5 @@
+# Version 1.21 (not yet released)
+
 # Version 1.20
 
 * ContactInGroup filter only supports IN/NOT IN so map =/!= !65
