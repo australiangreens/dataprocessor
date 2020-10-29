@@ -1,4 +1,4 @@
-# Version 1.20 (not yet released)
+# Version 1.20
 
 * ContactInGroup filter only supports IN/NOT IN so map =/!= !65
 * Fixed issue with multiple Custom Group as data source and additional filters.
