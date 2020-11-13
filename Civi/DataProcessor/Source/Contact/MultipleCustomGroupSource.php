@@ -6,6 +6,7 @@
 
 namespace Civi\DataProcessor\Source\Contact;
 
+use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\FieldExistsException;
@@ -58,6 +59,7 @@ class MultipleCustomGroupSource extends AbstractSource {
   public function initialize() {
     if (!$this->dataFlow) {
       $this->dataFlow = new SqlTableDataFlow($this->custom_group_table_name, $this->getSourceName());
+      $this->addFilters($this->configuration);
     }
   }
 
@@ -128,6 +130,42 @@ class MultipleCustomGroupSource extends AbstractSource {
       // Do nothing.
     }
     return $this;
+  }
+
+  /**
+   * Add the filters to the where clause of the data flow
+   *
+   * @param $configuration
+   * @throws \Exception
+   */
+  protected function addFilters($configuration) {
+    if (isset($configuration['filter']) && is_array($configuration['filter'])) {
+      foreach($configuration['filter'] as $filter_alias => $filter_field) {
+        $this->addFilter($filter_alias, $filter_field['op'], $filter_field['value']);
+      }
+    }
+  }
+
+  /**
+   * Adds an inidvidual filter to the data source
+   *
+   * @param $filter_field_alias
+   * @param $op
+   * @param $values
+   *
+   * @throws \Exception
+   */
+  protected function addFilter($filter_field_alias, $op, $values) {
+    $spec = null;
+    if ($this->getAvailableFilterFields()->doesAliasExists($filter_field_alias)) {
+      $spec = $this->getAvailableFilterFields()->getFieldSpecificationByAlias($filter_field_alias);
+    } elseif ($this->getAvailableFilterFields()->doesFieldExist($filter_field_alias)) {
+      $spec = $this->getAvailableFilterFields()->getFieldSpecificationByName($filter_field_alias);
+    }
+
+    if ($spec) {
+      $this->dataFlow->addWhereClause(new SimpleWhereClause($this->getSourceName(), $spec->getName(),$op, $values, $spec->type, TRUE));
+    }
   }
 
 
