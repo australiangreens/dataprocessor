@@ -1,11 +1,11 @@
 # Version 1.21 (not yet released)
 
+* Added contribution ID to the participant data source so that you can link a contribution and an event registration.
+
 # Version 1.20
 
 * ContactInGroup filter only supports IN/NOT IN so map =/!= !65
 * Fixed issue with multiple Custom Group as data source and additional filters.
-
-* Added contribution ID to the participant data source so that you can link a contribution and an event registration.
 
 # Version 1.19.1
 
