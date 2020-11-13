@@ -1,5 +1,7 @@
 # Version 1.20 (not yet released)
 
+* Added contribution ID to the participant data source so that you can link a contribution and an event registration.
+
 # Version 1.19.1
 
 * Fixed issue with install sql and innodb.
