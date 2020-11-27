@@ -1,6 +1,8 @@
-# Version 1.21 (not yet released)
+# Version 1.21
 
 * Added contribution ID to the participant data source so that you can link a contribution and an event registration.
+* Added a field for contact tags.
+* Added a data source for entity tag and tag.
 
 # Version 1.20
 

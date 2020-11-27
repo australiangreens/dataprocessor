@@ -102,6 +102,8 @@ class Factory {
     $this->addDataSource('group', new Definition('Civi\DataProcessor\Source\Group\GroupSource'), E::ts('Group'));
     $this->addDataSource('group_contact', new Definition('Civi\DataProcessor\Source\Group\GroupContactSource'), E::ts('Contacts in a group'));
     $this->addDataSource('group_contact_cache', new Definition('Civi\DataProcessor\Source\Group\SmartGroupContactSource'), E::ts('Contacts in a smart group'));
+    $this->addDataSource('tag', new Definition('Civi\DataProcessor\Source\Tag\TagSource'), E::ts('Tag'));
+    $this->addDataSource('entity_tag', new Definition('Civi\DataProcessor\Source\Tag\EntityTagSource'), E::ts('Entity Tag (Link between an entity and a tag)'));
     $this->addDataSource('email', new Definition('Civi\DataProcessor\Source\Contact\EmailSource'), E::ts('E-mail'));
     $this->addDataSource('address', new Definition('Civi\DataProcessor\Source\Contact\AddressSource'), E::ts('Address'));
     $this->addDataSource('phone', new Definition('Civi\DataProcessor\Source\Contact\PhoneSource'), E::ts('Phone'));
@@ -176,6 +178,7 @@ class Factory {
     $this->addOutputHandler('case_roles', new Definition('Civi\DataProcessor\FieldOutputHandler\CaseRolesFieldOutputHandler'), E::ts('Case Roles'));
     $this->addOutputHandler('manage_case_link', new Definition('Civi\DataProcessor\FieldOutputHandler\ManageCaseLinkFieldOutputHandler'), E::ts('Link to manage case'));
     $this->addOutputHandler('groups_of_contact', new Definition('Civi\DataProcessor\FieldOutputHandler\GroupsOfContactFieldOutputHandler'), E::ts('Display the groups of a contact'));
+    $this->addOutputHandler('tags_of_contact', new Definition('Civi\DataProcessor\FieldOutputHandler\TagsOfContactFieldOutputHandler'), E::ts('Display the tags of a contact'));
     $this->addOutputHandler('event_repeating_info', new Definition('Civi\DataProcessor\FieldOutputHandler\EventRepeatingInfoFieldOutputHandler'), E::ts('Display info about repeating event'));
     $this->addOutputHandler('event_participants', new Definition('Civi\DataProcessor\FieldOutputHandler\EventParticipantsFieldOutputHandler'), E::ts('List participants'));
     $this->addOutputHandler('event_participant_count', new Definition('Civi\DataProcessor\FieldOutputHandler\EventParticipantsCountFieldOutputHandler'), E::ts('Participant Count'));
