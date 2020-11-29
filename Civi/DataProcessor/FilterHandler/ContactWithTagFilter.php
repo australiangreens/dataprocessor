@@ -36,7 +36,7 @@ class ContactWithTagFilter extends AbstractFieldFilterHandler {
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     $tag_ids = $filter['value'];
     if (!is_array($tag_ids)) {
-      $tag_ids = array($tag_ids);
+      $tag_ids = explode(',', $tag_ids);
     }
     $tagTableAlias = 'civicrm_entity_tag_'.$this->inputFieldSpecification->alias;
     $tagFilters = array(
