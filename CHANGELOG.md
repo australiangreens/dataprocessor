@@ -1,5 +1,6 @@
 # Version 1.22 (not yet released)
 
+* Fix issue filtering for multiple tags !66
 
 # Version 1.21
 
