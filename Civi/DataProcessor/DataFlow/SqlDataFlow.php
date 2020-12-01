@@ -10,6 +10,8 @@ use Civi\DataProcessor\DataFlow\Sort\SortSpecification;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\WhereClauseInterface;
 use Civi\DataProcessor\DataFlow\Utils\Aggregator;
 use \Civi\DataProcessor\DataSpecification\DataSpecification;
+use Civi\DataProcessor\DataSpecification\FieldExistsException;
+use Civi\DataProcessor\FieldOutputHandler\OutputHandlerAggregate;
 
 abstract class SqlDataFlow extends AbstractDataFlow {
 
@@ -30,6 +32,11 @@ abstract class SqlDataFlow extends AbstractDataFlow {
   protected $sqlCountStatements = array();
 
   /**
+   * @var \Civi\DataProcessor\DataSpecification\DataSpecification
+   */
+  protected $groupByDataSpecification;
+
+  /**
    * Returns an array with the fields for in the select statement in the sql query.
    *
    * @return string[]
@@ -45,10 +52,42 @@ abstract class SqlDataFlow extends AbstractDataFlow {
    */
   public function getFieldsForGroupByStatement() {
     $fields = array();
-    foreach($this->aggregateOutputHandlers as $outputHandler) {
-      $fields[] = $outputHandler->getAggregateFieldSpec()->getSqlGroupByStatement($this->getName());
+    foreach($this->getGroupByDataSpecification()->getFields() as $fieldSpec) {
+      $fields[] = $fieldSpec->getSqlGroupByStatement($this->getName());
     }
     return $fields;
+  }
+
+  /**
+   * @param \Civi\DataProcessor\DataFlow\OutputHandlerAggregate $aggregateOutputHandler
+   */
+  public function addAggregateOutputHandler(OutputHandlerAggregate $aggregateOutputHandler) {
+    parent::addAggregateOutputHandler($aggregateOutputHandler);
+    $fieldSpec = $aggregateOutputHandler->getAggregateFieldSpec();
+    try {
+      $this->getGroupByDataSpecification()->addFieldSpecification($fieldSpec->name, $fieldSpec);
+    } catch (FieldExistsException $e) {
+      // Do nothing.
+    }
+  }
+
+  /**
+   * @param \Civi\DataProcessor\DataFlow\OutputHandlerAggregate $aggregateOutputHandler
+   */
+  public function removeAggregateOutputHandler(OutputHandlerAggregate $aggregateOutputHandler) {
+    parent::removeAggregateOutputHandler($aggregateOutputHandler);
+    $fieldSpec = $aggregateOutputHandler->getAggregateFieldSpec();
+    $this->getGroupByDataSpecification()->removeFieldSpecification($fieldSpec);
+  }
+
+  /**
+   * @return DataSpecification
+   */
+  public function getGroupByDataSpecification() {
+    if (!$this->groupByDataSpecification) {
+      $this->groupByDataSpecification = new DataSpecification();
+    }
+    return $this->groupByDataSpecification;
   }
 
   /**

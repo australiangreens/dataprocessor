@@ -447,5 +447,37 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
     return "{$this->type} JOIN {$tablePart} {$joinClause} ";
   }
 
+  public function getLeftTable() {
+    return $this->left_table;
+  }
+
+  public function getLeftPrefix() {
+    return $this->left_prefix;
+  }
+
+  public function setLeftTable($table) {
+    $this->left_table = $table;
+  }
+
+  public function setLeftPrefix($prefix) {
+    $this->left_prefix = $prefix;
+  }
+
+  public function getRightTable() {
+    return $this->right_table;
+  }
+
+  public function getRightPrefix() {
+    return $this->right_prefix;
+  }
+
+  public function setRightTable($table) {
+    $this->right_table = $table;
+  }
+
+  public function setRightPrefix($prefix) {
+    $this->right_prefix = $prefix;
+  }
+
 
 }

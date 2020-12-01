@@ -1,6 +1,7 @@
 # Version 1.22 (not yet released)
 
 * Fix issue filtering for multiple tags !66
+* Added aggregation for membership data source so you can aggregate on the most recent, the least recent memberships.
 
 # Version 1.21
 

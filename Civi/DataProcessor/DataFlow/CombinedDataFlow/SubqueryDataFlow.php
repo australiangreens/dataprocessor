@@ -64,9 +64,9 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
     }
 
     $from = implode(" ", $fromStatements);
-
     $select = implode(", ", $fields);
-    return "(SELECT {$select} {$from}) `{$this->getPrimaryTableAlias()}`";
+    $groupBy = $this->getGroupByStatement();
+    return "(SELECT {$select} {$from} {$groupBy}) `{$this->getPrimaryTableAlias()}`";
   }
 
   /**

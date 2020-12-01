@@ -37,6 +37,18 @@ class DataSpecification {
   }
 
   /**
+   * Removes a field from the specification
+   *
+   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $field
+   */
+  public function removeFieldSpecification(FieldSpecification $field) {
+    $key = array_search($field, $this->fields);
+    if ($key !== false) {
+      unset($this->fields[$key]);
+    }
+  }
+
+  /**
    * @return \Civi\DataProcessor\DataSpecification\FieldSpecification[]
    */
   public function getFields() {
@@ -49,7 +61,7 @@ class DataSpecification {
    */
   public function getFieldSpecificationByName($name) {
     foreach($this->fields as $field) {
-      if ($field->name == $name) {
+      if ($field->getName() == $name) {
         return $field;
       }
     }

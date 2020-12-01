@@ -86,7 +86,7 @@ class FieldSpecification implements SqlFieldSpecification {
       if (stripos($this->sqlValueFormatFunction, '%1') !== false && stripos($this->sqlValueFormatFunction, '%2') !== false) {
         return "(".str_replace(['%1', '%2'], [$table_alias, $this->getName()], $this->sqlValueFormatFunction). ") AS `{$this->alias}`";
       } else {
-        return "{$this->sqlValueFormatFunction} (`{$table_alias}`.`{$this->getName()}`) AS `{$this->alias}`";
+        return "{$this->sqlValueFormatFunction}(`{$table_alias}`.`{$this->getName()}`) AS `{$this->alias}`";
       }
     }
     return "`{$table_alias}`.`{$this->getName()}` AS `{$this->alias}`";
