@@ -63,6 +63,8 @@ class DataSpecification {
     foreach($this->fields as $field) {
       if ($field->getName() == $name) {
         return $field;
+      } elseif ($field->name == $name) {
+        return $field;
       }
     }
     return null;
@@ -89,7 +91,7 @@ class DataSpecification {
    */
   public function doesFieldExist($name) {
     foreach($this->fields as $field) {
-      if ($field->name == $name) {
+      if ($field->getName() == $name || $field->name == $name) {
         return true;
       }
     }
