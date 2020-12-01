@@ -2,6 +2,7 @@
 
 * Fix issue filtering for multiple tags !66
 * Added aggregation for membership data source so you can aggregate on the most recent, the least recent memberships.
+* Fixed issue with Field filter and operator is not one of on a multi value field.
 
 # Version 1.21
 
