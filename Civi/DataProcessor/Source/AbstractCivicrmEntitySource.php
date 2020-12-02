@@ -331,9 +331,11 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
    * @throws \Exception
    */
   protected function ensureEntity() {
-    if ($this->entityDataFlow && $this->entityDataFlow->getTable() === $this->getTable()) {
+    if ($this->primaryDataFlow && $this->primaryDataFlow instanceof SqlTableDataFlow && $this->primaryDataFlow->getTable() === $this->getTable()) {
       return $this->entityDataFlow;
-    } elseif (empty($this->entityDataFlow)) {
+    } elseif ($this->primaryDataFlow && $this->primaryDataFlow instanceof CombinedSqlDataFlow && $this->primaryDataFlow->getPrimaryTable() === $this->getTable()) {
+      return $this->entityDataFlow;
+    } elseif (empty($this->primaryDataFlow)) {
       $this->getEntityDataFlow();
       return $this->entityDataFlow;
     }
@@ -343,7 +345,7 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
       }
     }
     $entityDataFlow = $this->getEntityDataFlow();
-    $join = new SimpleJoin($this->getSourceName(), 'id', $this->entityDataFlow->getTableAlias(), 'entity_id', 'LEFT');
+    $join = new SimpleJoin($this->getSourceName(), 'id', $this->primaryDataFlow->getTableAlias(), 'entity_id', 'LEFT');
     $join->setDataProcessor($this->dataProcessor);
     $additionalDataFlowDescription = new DataFlowDescription($entityDataFlow,$join);
     $this->additionalDataFlowDescriptions[] = $additionalDataFlowDescription;
