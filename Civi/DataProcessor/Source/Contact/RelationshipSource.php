@@ -11,10 +11,10 @@ use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
-
+use Civi\DataProcessor\Utils\AlterExportInterface;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
-class RelationshipSource extends AbstractCivicrmEntitySource {
+class RelationshipSource extends AbstractCivicrmEntitySource implements AlterExportInterface {
 
   /**
    * Returns the entity name
@@ -46,7 +46,7 @@ class RelationshipSource extends AbstractCivicrmEntitySource {
       $options = array();
       $relationship_types = civicrm_api3('RelationshipType', 'get', array('options' => array('limit' => 0)));
       foreach($relationship_types['values'] as $rel_type) {
-        $options[$rel_type['name_a_b']] = $rel_type['label_a_b'];
+        $options[$rel_type['id']] = $rel_type['label_a_b'];
       }
       $fieldSpec = new FieldSpecification('relationship_type_id', 'Integer', E::ts('Relationship type'), $options, $alias);
       $this->availableFilterFields->addFieldSpecification($fieldSpec->name, $fieldSpec);
@@ -55,18 +55,6 @@ class RelationshipSource extends AbstractCivicrmEntitySource {
       $this->loadCustomGroupsAndFields($this->availableFilterFields, true);
     }
     return $this->availableFilterFields;
-  }
-
-  /**
-   * Returns an array with the names of required configuration filters.
-   * Those filters are displayed as required to the user
-   *
-   * @return array
-   */
-  protected function requiredConfigurationFilters() {
-    return array(
-      'relationship_type_id',
-    );
   }
 
   /**
@@ -92,24 +80,77 @@ class RelationshipSource extends AbstractCivicrmEntitySource {
           $relationship_types = civicrm_api3('RelationshipType', 'get', array('options' => array('limit' => 0)));
           $selectedRelationShipTypeIds = array();
           foreach($relationship_types['values'] as $rel_type) {
-            if (in_array($rel_type['name_a_b'], $values)) {
+            if (in_array($rel_type['name_a_b'], $values) || in_array($rel_type['id'], $values)) {
               $selectedRelationShipTypeIds[] = $rel_type['id'];
             }
           }
           $values = $selectedRelationShipTypeIds;
-        } else {
-          $relationship_types = civicrm_api3('RelationshipType', 'get', array('options' => array('limit' => 0)));
-          foreach($relationship_types['values'] as $rel_type) {
-            if ($rel_type['name_a_b'] == $values) {
-              $values = $rel_type['id'];
-              break;
-            }
-          }
         }
         $entityDataFlow = $this->ensureEntity();
         $entityDataFlow->addWhereClause(new SimpleWhereClause($this->getSourceName(), $spec->name,$op, $values, $spec->type, TRUE));
       }
     }
   }
+
+  /**
+   * Function to alter the export data.
+   * E.g. use this to convert ids to names
+   *
+   * @param array $data
+   *
+   * @return array
+   */
+  public function alterExportData($data) {
+    if (isset($data['configuration']['filter']['relationship_type_id']['value'])) {
+      $relationship_types = civicrm_api3('RelationshipType', 'get', ['options' => ['limit' => 0]]);
+      $selectedRelationShipTypeIds = [];
+      foreach ($relationship_types['values'] as $rel_type) {
+        if (in_array($rel_type['name_a_b'], $data['configuration']['filter']['relationship_type_id']['value'])
+          || in_array($rel_type['id'], $data['configuration']['filter']['relationship_type_id']['value'])) {
+          $selectedRelationShipTypeIds[] = $rel_type['name_a_b'];
+        }
+      }
+      $data['configuration']['filter']['relationship_type_id']['value'] = $selectedRelationShipTypeIds;
+    }
+    return $data;
+  }
+
+  /**
+   * Function to alter the export data.
+   * E.g. use this to convert names to ids
+   *
+   * @param array $data
+   *
+   * @return array
+   */
+  public function alterImportData($data) {
+    if (isset($data['configuration']['filter']['relationship_type_id']['value'])) {
+      $relationship_types = civicrm_api3('RelationshipType', 'get', ['options' => ['limit' => 0]]);
+      $selectedRelationShipTypeIds = [];
+      foreach ($relationship_types['values'] as $rel_type) {
+        if (in_array($rel_type['name_a_b'], $data['configuration']['filter']['relationship_type_id']['value'])
+          || in_array($rel_type['id'], $data['configuration']['filter']['relationship_type_id']['value'])) {
+          $selectedRelationShipTypeIds[] = $rel_type['id'];
+        }
+      }
+      $data['configuration']['filter']['relationship_type_id']['value'] = $selectedRelationShipTypeIds;
+    }
+    return $data;
+  }
+
+  /**
+   * When this source has additional configuration you can add
+   * the fields on the form with this function.
+   *
+   * @param \CRM_Core_Form $form
+   * @param array $source
+   */
+  public function buildConfigurationForm(\CRM_Core_Form $form, $source=array()) {
+    if (isset($source['configuration'])) {
+      $source = $this->alterImportData($source);
+    }
+    parent::buildConfigurationForm($form, $source);
+  }
+
 
 }
