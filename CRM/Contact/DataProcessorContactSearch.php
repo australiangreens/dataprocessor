@@ -167,6 +167,28 @@ class CRM_Contact_DataProcessorContactSearch implements UIFormOutputInterface {
   }
 
   /**
+   * Returns the data processor name from a url.
+   *
+   * @param $url
+   *
+   * @return string
+   */
+  public function getDataProcessorNameFromUrl($url) {
+    $dataProcessorName = str_replace('civicrm/dataprocessor_contact_search/', '', $url);
+    return $dataProcessorName;
+  }
+
+  /**
+   * Returns the name of the contact id field.
+   *
+   * @param $config
+   * @return string
+   */
+  public function getContactIdFieldNameFromConfig($config) {
+    return $config['contact_id_field'];
+  }
+
+  /**
    * Returns the url for the page/form this output will show to the user
    *
    * @param array $output

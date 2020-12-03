@@ -3,6 +3,7 @@
 * Fix issue filtering for multiple tags !66
 * Added aggregation for membership data source so you can aggregate on the most recent, the least recent memberships.
 * Fixed issue with Field filter and operator is not one of on a multi value field.
+* Contact Search Output is now also able to create smart groups and send bulk mails (with a hidden smarty group). See #32.
 
 # Version 1.21
 
