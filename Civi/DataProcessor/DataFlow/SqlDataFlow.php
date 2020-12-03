@@ -124,8 +124,6 @@ abstract class SqlDataFlow extends AbstractDataFlow {
       $countName = 'count_'.$this->getName();
       $sql = "{$selectAndFrom} {$where} {$groupBy} {$orderBy}";
       $countSql = "SELECT COUNT(*) AS count FROM ({$sql}) `{$countName}`";
-
-      //$countSql = "SELECT COUNT(*) AS `count` {$from} {$where} {$groupBy}";
       $this->sqlCountStatements[] = $countSql;
       $countDao = \CRM_Core_DAO::executeQuery($countSql);
       $this->count = 0;
@@ -243,7 +241,9 @@ abstract class SqlDataFlow extends AbstractDataFlow {
   public function getWhereStatement() {
     $clauses = array("1");
     foreach($this->getWhereClauses() as $clause) {
-      $clauses[] = $clause->getWhereClause();
+      if (!$clause->isJoinClause()) {
+        $clauses[] = $clause->getWhereClause();
+      }
     }
     return "WHERE ". implode(" AND ", $clauses);
   }

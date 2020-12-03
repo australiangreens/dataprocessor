@@ -7,6 +7,7 @@
 namespace Civi\DataProcessor\DataFlow\CombinedDataFlow;
 
 use Civi\DataProcessor\DataFlow\EndOfFlowException;
+use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\SqlFieldSpecification;
 
@@ -58,15 +59,16 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
           $fromStatements[] = $joinStatement;
         }
       }
-      if ($sourceDataFlowDescription->getDataFlow() instanceof CombinedSqlDataFlow) {
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
         $fromStatements = array_merge($fromStatements, $sourceDataFlowDescription->getDataFlow()->getJoinStatement(0));
       }
     }
 
     $from = implode(" ", $fromStatements);
     $select = implode(", ", $fields);
+    $where = $this->getWhereStatement();
     $groupBy = $this->getGroupByStatement();
-    return "(SELECT {$select} {$from} {$groupBy}) `{$this->getPrimaryTableAlias()}`";
+    return "(SELECT {$select} {$from} {$where} {$groupBy}) `{$this->getPrimaryTableAlias()}`";
   }
 
   /**
@@ -120,5 +122,6 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
     }
     return $record;
   }
+
 
 }

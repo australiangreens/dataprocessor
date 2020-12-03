@@ -2,6 +2,7 @@
 
 * Fix issue filtering for multiple tags !66
 * Added aggregation for membership data source so you can aggregate on the most recent, the least recent memberships.
+* Added aggregation for activity data source so you can aggregate on the most recent, the least recent activity.
 * Fixed issue with Field filter and operator is not one of on a multi value field.
 * Contact Search Output is now also able to create smart groups and send bulk mails (with a hidden smarty group). See #32.
 * Fixed issue with Field Filter on relationship type and also made relationship type a non required filter on the data source.

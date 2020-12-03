@@ -146,6 +146,17 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
     return parent::setSourceName($name);
   }
 
+  protected function getEntityTableAlias() {
+    if ($this->entityDataFlow instanceof SqlTableDataFlow) {
+      $entityTableAlias = $this->entityDataFlow->getTableAlias();
+    } elseif ($this->entityDataFlow instanceof CombinedSqlDataFlow) {
+      $entityTableAlias = $this->entityDataFlow->getPrimaryTableAlias();
+    } else {
+      throw new \Exception('No entity data flow set.');
+    }
+    return $entityTableAlias;
+  }
+
   /**
    * @return \Civi\DataProcessor\DataFlow\SqlDataFlow
    */
@@ -154,44 +165,69 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
       $this->entityDataFlow = new SqlTableDataFlow($this->getTable(), $this->getSourceName());
     }
     if ($this->isAggregationEnabled()) {
-      $start_date_field_spec = clone $this->getAvailableFields()->getFieldSpecificationByName($this->getAggregateField());
-      $start_date_field_spec->setMySqlFunction($this->getAggregateFunction());
-      $start_date_field_spec->alias = $this->getAggregateField();
+      $this->getAggregationDataFlow();
 
-      $groupByFields = array();
-      foreach($this->configuration['aggregate_by'] as $aggregate_by) {
-        $field = clone $this->getAvailableFields()->getFieldSpecificationByName($aggregate_by);
-        $field->alias = $aggregate_by;
-        $groupByFields[] = $field;
-      }
-
-      if (!$this->aggregationDateFlow) {
-        $aggretaed_membership_table_dataflow = new SqlTableDataFlow($this->getTable(), '_aggregated_'.$this->getSourceName());
-        $this->aggregationDateFlow = new SubqueryDataFlow('', $this->getTable(), '_aggregated_'.$this->getSourceName());
-        $this->aggregationDateFlow->addSourceDataFlow(new DataFlowDescription($aggretaed_membership_table_dataflow));
-        $aggretaed_membership_table_dataflow->getDataSpecification()->addFieldSpecification($start_date_field_spec->name, $start_date_field_spec);
-
-        foreach($groupByFields as $groupByField) {
-          $aggretaed_membership_table_dataflow->getDataSpecification()
-            ->addFieldSpecification($groupByField->name, $groupByField);
-          $aggretaed_membership_table_dataflow->getGroupByDataSpecification()
-            ->addFieldSpecification($groupByField->name, $groupByField);
-        }
-      }
-
-      $dataFlow = new CombinedSqlDataFlow('', $aggretaed_membership_table_dataflow->getTable(), $aggretaed_membership_table_dataflow->getTableAlias());
+      $dataFlow = new CombinedSqlDataFlow('', $this->aggregationDateFlow->getPrimaryTable(), $this->aggregationDateFlow->getPrimaryTableAlias());
       $dataFlow->addSourceDataFlow(new DataFlowDescription($this->aggregationDateFlow));
-      $join = new SimpleNonRequiredJoin($this->entityDataFlow->getTableAlias(), $this->getAggregateField(), $aggretaed_membership_table_dataflow->getTableAlias(), $this->getAggregateField(), 'INNER');
-      foreach($groupByFields as $groupByField) {
-        $join->addFilterClause(new PureSqlStatementClause("`{$this->entityDataFlow->getTableAlias()}`.`{$groupByField->alias}` = `{$aggretaed_membership_table_dataflow->getTableAlias()}`.`{$groupByField->alias}`", TRUE));
-      }
-      $join->setDataProcessor($this->dataProcessor);
-      $dataFlowDescription = new DataFlowDescription($this->entityDataFlow, $join);
+      $dataFlowDescription = new DataFlowDescription($this->entityDataFlow, $this->getAggregationJoin($this->getEntityTableAlias()));
       $dataFlow->addSourceDataFlow($dataFlowDescription);
       return $dataFlow;
     } else {
       return $this->entityDataFlow;
     }
+  }
+
+  protected function getAggregationDataFlow() {
+    $groupByFields = array();
+    foreach($this->configuration['aggregate_by'] as $aggregate_by) {
+      $field = clone $this->getAvailableFields()->getFieldSpecificationByName($aggregate_by);
+      $field->alias = $aggregate_by;
+      $groupByFields[] = $field;
+    }
+
+    if (!$this->aggregationDateFlow) {
+      $aggrgeate_field_spec = clone $this->getAvailableFields()->getFieldSpecificationByName($this->getAggregateField());
+      $aggrgeate_field_spec->setMySqlFunction($this->getAggregateFunction());
+      $aggrgeate_field_spec->alias = $this->getAggregateField();
+
+      $aggretated_table_dataflow = new SqlTableDataFlow($this->getTable(), '_aggregated_'.$this->getSourceName());
+      $aggretated_table_dataflow->getDataSpecification()->addFieldSpecification($aggrgeate_field_spec->name, $aggrgeate_field_spec);
+      foreach ($groupByFields as $groupByField) {
+        $aggretated_table_dataflow->getDataSpecification()
+          ->addFieldSpecification($groupByField->name, $groupByField);
+        $aggretated_table_dataflow->getGroupByDataSpecification()
+          ->addFieldSpecification($groupByField->name, $groupByField);
+      }
+
+      $this->aggregationDateFlow = new SubqueryDataFlow('', $this->getTable(), '_aggregated_' . $this->getSourceName());
+      $this->aggregationDateFlow->addSourceDataFlow(new DataFlowDescription($aggretated_table_dataflow));
+    }
+
+    return $this->aggregationDateFlow;
+  }
+
+  /**
+   * Returns JOIN specification for joining on the aggregation source.
+   *
+   * @param $entityTableAlias
+   *
+   * @return \Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleNonRequiredJoin
+   * @throws \Exception
+   */
+  protected function getAggregationJoin($entityTableAlias) {
+    $groupByFields = array();
+    foreach($this->configuration['aggregate_by'] as $aggregate_by) {
+      $field = clone $this->getAvailableFields()->getFieldSpecificationByName($aggregate_by);
+      $field->alias = $aggregate_by;
+      $groupByFields[] = $field;
+    }
+
+    $join = new SimpleNonRequiredJoin($entityTableAlias, $this->getAggregateField(), $this->aggregationDateFlow->getPrimaryTableAlias(), $this->getAggregateField(), 'INNER');
+    foreach($groupByFields as $groupByField) {
+      $join->addFilterClause(new PureSqlStatementClause("`{$entityTableAlias}`.`{$groupByField->alias}` = `{$this->aggregationDateFlow->getPrimaryTableAlias()}`.`{$groupByField->alias}`", TRUE));
+    }
+    $join->setDataProcessor($this->dataProcessor);
+    return $join;
   }
 
   /**
@@ -269,9 +305,23 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
           new SimpleWhereClause($customGroupTableAlias, $spec->customFieldColumnName, $op, $values, $spec->type, TRUE)
         );
       } else {
-        $entityDataFlow = $this->ensureEntity();
-        $entityDataFlow->addWhereClause(new SimpleWhereClause($this->getSourceName(), $spec->name,$op, $values, $spec->type, TRUE));
+        $this->ensureEntity();
+        $this->entityDataFlow->addWhereClause(new SimpleWhereClause($this->getSourceName(), $spec->name,$op, $values, $spec->type, TRUE));
+        $this->addFilterToAggregationDataFlow($spec, $op, $values);
       }
+    }
+  }
+
+  /**
+   * Add a filter to the aggregation data flow.
+   *
+   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $filter
+   * @param $op
+   * @param $values
+   */
+  protected function addFilterToAggregationDataFlow(FieldSpecification $filter, $op, $values) {
+    if ($this->aggregationDateFlow) {
+      $this->aggregationDateFlow->addWhereClause(new SimpleWhereClause($this->aggregationDateFlow->getPrimaryTableAlias(), $filter->name,$op, $values, $filter->type, FALSE));
     }
   }
 
@@ -367,12 +417,13 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
         unset($this->dataFlow);
       }
     }
+
     if ($this->isAggregationEnabled()) {
-      if ($join instanceof SimpleJoin && $join->getLeftTable() == $this->entityDataFlow->getTableAlias()) {
+      if ($join instanceof SimpleJoin && $join->getLeftTable() == $this->getEntityTableAlias()) {
         $join->setLeftTable($this->aggregationDateFlow->getPrimaryTableAlias());
         $join->setLeftPrefix($this->aggregationDateFlow->getPrimaryTableAlias());
       }
-      elseif ($join instanceof SimpleJoin && $join->getRightTable() == $this->entityDataFlow->getTableAlias()) {
+      elseif ($join instanceof SimpleJoin && $join->getRightTable() == $this->getEntityTableAlias()) {
         $join->setRightTable($this->aggregationDateFlow->getPrimaryTableAlias());
         $join->setRightPrefix($this->aggregationDateFlow->getPrimaryTableAlias());
       }
@@ -427,8 +478,8 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
           $dataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification->alias, $fieldSpecification);
         }
       } elseif ($originalFieldSpecification) {
-        $dataFlow = $this->ensureEntity();
-        $dataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification->alias, $fieldSpecification);
+        $this->ensureEntity();
+        $this->entityDataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification->alias, $fieldSpecification);
       }
     } catch (FieldExistsException $e) {
       // Do nothing.
@@ -516,7 +567,9 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
       $fields[$field->getName()] = $field->title;
     }
     $aggregateFunctions = $this->getPossibleAggregateFunctions();
+    $form->assign('aggregation_available', false);
     if (is_array($aggregateFunctions)) {
+      $form->assign('aggregation_available', true);
       $form->add('select', "aggregate_function", E::ts('Aggregate function'), $aggregateFunctions, FALSE, [
         'style' => 'min-width:250px',
         'class' => 'crm-select2 huge',

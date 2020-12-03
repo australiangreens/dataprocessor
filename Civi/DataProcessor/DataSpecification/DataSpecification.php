@@ -130,4 +130,11 @@ class DataSpecification {
     return $this;
   }
 
+  /**
+   * Remove all fields from this specification.
+   */
+  public function clear() {
+    $this->fields = array();
+  }
+
 }

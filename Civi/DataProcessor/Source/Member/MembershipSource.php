@@ -54,12 +54,14 @@ class MembershipSource extends AbstractCivicrmEntitySource {
    */
   protected function getPossibleAggregateFunctions() {
     return [
-      'max_start_date' => E::ts('Most recent by start date'),
-      'min_start_date' => E::ts('Least recent by start date'),
-      'max_end_date' => E::ts('Most recent by start date'),
-      'min_end_date' => E::ts('Least recent by start date'),
-      'max_join_date' => E::ts('Most recent by start date'),
-      'min_join_date' => E::ts('Least recent by start date'),
+      'max_start_date' => E::ts('Last one by start date'),
+      'min_start_date' => E::ts('First one by start date'),
+      'max_end_date' => E::ts('Last one by start date'),
+      'min_end_date' => E::ts('First one by start date'),
+      'max_join_date' => E::ts('Last one by start date'),
+      'min_join_date' => E::ts('First one by start date'),
+      'max_id' => E::ts('Last one by membership id'),
+      'min_id' => E::ts('Fist one by membership id'),
     ];
   }
 
