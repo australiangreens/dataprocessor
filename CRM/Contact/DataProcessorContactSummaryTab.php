@@ -227,6 +227,29 @@ class CRM_Contact_DataProcessorContactSummaryTab implements UIFormOutputInterfac
   }
 
   /**
+   * Returns the data processor name from a url.
+   *
+   * @param $url
+   *
+   * @return string
+   */
+  public function getDataProcessorNameFromUrl($url) {
+    return str_replace('civicrm/dataprocessor_contact_summary/', '', $url);
+  }
+
+  /**
+   * Returns the name of the contact id field.
+   *
+   * @param $config
+   *
+   * @return string|false
+   */
+  public function getContactIdFieldNameFromConfig($config) {
+    return false;
+  }
+
+
+  /**
    * Returns the url for the page/form this output will show to the user
    *
    * @param array $output
