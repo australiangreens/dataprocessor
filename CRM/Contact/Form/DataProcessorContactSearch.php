@@ -146,6 +146,7 @@ class CRM_Contact_Form_DataProcessorContactSearch extends CRM_DataprocessorSearc
   public function buildTaskList() {
     if (!$this->_taskList) {
       $taskParams['deletedContacts'] = FALSE;
+      $taskParams['ssID'] = $this->_ssID ?? NULL;
       $this->_taskList = CRM_Contact_Task::permissionedTaskTitles(CRM_Core_Permission::getPermission(), $taskParams);
     }
     return $this->_taskList;

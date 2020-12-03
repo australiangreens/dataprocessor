@@ -180,8 +180,15 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
 
     if (!empty($_POST) && !$this->controller->isModal()) {
       $this->_formValues = $this->controller->exportValues($this->_name);
-    }
-    else {
+    } elseif (CRM_Utils_Request::retrieve('ssID', 'Integer')) {
+      $savedSearchDao = new CRM_Contact_DAO_SavedSearch();
+      $savedSearchDao->id = CRM_Utils_Request::retrieve('ssID', 'Integer');
+      if ($savedSearchDao->find(TRUE) && !empty($savedSearchDao->form_values)) {
+        $this->_formValues = unserialize($savedSearchDao->form_values);
+        $this->_submitValues = $this->_formValues;
+        $this->controller->set('formValue', $this->_formValues);
+      }
+    } else {
       $this->_formValues = $this->getSubmitValues();
     }
 

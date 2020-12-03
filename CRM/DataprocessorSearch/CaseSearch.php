@@ -213,4 +213,26 @@ class CRM_DataprocessorSearch_CaseSearch implements UIFormOutputInterface {
     ));
   }
 
+  /**
+   * Returns the data processor name from a url.
+   *
+   * @param $url
+   *
+   * @return string
+   */
+  public function getDataProcessorNameFromUrl($url) {
+    $dataProcessorName = str_replace('civicrm/dataprocessor_case_search/', '', $url);
+    return $dataProcessorName;
+  }
+
+  /**
+   * Returns the name of the contact id field.
+   *
+   * @param $config
+   * @return string
+   */
+  public function getContactIdFieldNameFromConfig($config) {
+    return false;
+  }
+
 }

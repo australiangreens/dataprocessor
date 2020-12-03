@@ -30,7 +30,16 @@ function dataprocessor_civicrm_container(ContainerBuilder $container) {
   $apiProviderDefinition = new Definition('Civi\DataProcessor\Output\Api');
   $apiKernelDefinition->addMethodCall('registerApiProvider', array($apiProviderDefinition));
 
+  // Add the data source for custom groups with multiple set.
+  // This will add a data source for each custom group.
   $container->addCompilerPass(new \Civi\DataProcessor\Source\CompilerPass\MultipleCustomGroupSource());
+
+  // Add event listeners so we can integrate a data processor search with smart groups.
+  // Insert event listener for altering saved search so we can save smart groups.
+  $container->findDefinition('dispatcher')
+    ->addMethodCall('addListener', array('civi.dao.preUpdate', ['CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegration', 'alterSavedSearch']))
+    ->addMethodCall('addListener', array('civi.dao.preInsert', ['CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegration', 'alterSavedSearch']))
+  ;
 }
 
 /**
@@ -153,6 +162,7 @@ function dataprocessor_civicrm_tabset($tabsetName, &$tabs, $context) {
  */
 function dataprocessor_civicrm_config(&$config) {
   _dataprocessor_civix_civicrm_config($config);
+  CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegration::redirectCustomSearchToDataProcessorSearch(CRM_Utils_System::currentPath());
 }
 
 /**
