@@ -6,10 +6,13 @@
 
 namespace Civi\DataProcessor\FilterHandler;
 
+use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
 use Civi\DataProcessor\DataFlow\InMemoryDataFlow;
 use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\Exception\InvalidConfigurationException;
+use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
 class SimpleSqlFilter extends AbstractFieldFilterHandler {
@@ -37,10 +40,11 @@ class SimpleSqlFilter extends AbstractFieldFilterHandler {
     $this->resetFilter();
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       if ($this->isMultiValueField()) {
-        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($tableAlias, $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       } else {
-        $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\SimpleWhereClause($tableAlias, $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       }
       $dataFlow->addWhereClause($this->whereClause);
     } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow && !$this->isMultiValueField()) {

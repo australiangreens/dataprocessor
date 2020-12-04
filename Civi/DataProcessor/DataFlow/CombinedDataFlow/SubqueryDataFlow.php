@@ -64,11 +64,15 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
       }
     }
 
+    $alias = $this->getName();
+    if (empty($alias)) {
+      $alias = $this->getPrimaryTableAlias();
+    }
     $from = implode(" ", $fromStatements);
     $select = implode(", ", $fields);
     $where = $this->getWhereStatement();
     $groupBy = $this->getGroupByStatement();
-    return "(SELECT {$select} {$from} {$where} {$groupBy}) `{$this->getPrimaryTableAlias()}`";
+    return "(SELECT {$select} {$from} {$where} {$groupBy}) `{$alias}`";
   }
 
   /**
@@ -81,9 +85,9 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
     $fields = array();
     foreach($this->getDataSpecification()->getFields() as $field) {
       if ($field instanceof SqlFieldSpecification) {
-        $fields[] = $field->getSqlSelectStatement($this->primary_table_alias);
+        $fields[] = $field->getSqlSelectStatement($this->name);
       } else {
-        $fields[] = "`{$this->primary_table_alias}`.`{$field->name}` AS `{$field->alias}`";
+        $fields[] = "`{$this->name}`.`{$field->name}` AS `{$field->alias}`";
       }
     }
     return $fields;
