@@ -41,10 +41,16 @@ class SimpleSqlFilter extends AbstractFieldFilterHandler {
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
       $tableAlias = $this->getTableAlias($dataFlow);
+      $fieldName = $this->inputFieldSpecification->getName();
+      // special handling for activity contact fields added to filter
+      if (stripos($fieldName, 'activity_contact_') === 0) {
+        $tableAlias = '_activity_contact';
+        $fieldName = substr($fieldName, 17);
+      }
       if ($this->isMultiValueField()) {
-        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($tableAlias, $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($tableAlias, $fieldName, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       } else {
-        $this->whereClause = new SqlDataFlow\SimpleWhereClause($tableAlias, $this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\SimpleWhereClause($tableAlias, $fieldName, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       }
       $dataFlow->addWhereClause($this->whereClause);
     } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow && !$this->isMultiValueField()) {
