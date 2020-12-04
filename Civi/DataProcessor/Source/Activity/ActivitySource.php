@@ -11,6 +11,7 @@ use Civi\DataProcessor\DataFlow\MultipleDataFlows\DataFlowDescription;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\JoinInterface;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleJoin;
 use Civi\DataProcessor\DataFlow\CombinedDataFlow\SubqueryDataFlow;
+use Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleNonRequiredJoin;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
@@ -37,6 +38,21 @@ class ActivitySource extends AbstractCivicrmEntitySource {
    * @var SqlTableDataFlow
    */
   protected $activityCaseDataFlow;
+
+  /**
+   * @var SqlTableDataFlow
+   */
+  protected $activityAggregationDataFlow;
+
+  /**
+   * @var SqlTableDataFlow
+   */
+  protected $activityAggregationContactDataFlow;
+
+  /**
+   * @var SqlTableDataFlow
+   */
+  protected $activityAggregationCaseDataFlow;
 
   public function __construct() {
     parent::__construct();
@@ -136,7 +152,7 @@ class ActivitySource extends AbstractCivicrmEntitySource {
       $caseJoin->setDataProcessor($this->dataProcessor);
       $activityCaseDataDescription = new DataFlowDescription($this->activityCaseDataFlow, $caseJoin);
 
-      $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->getTable(), $this->getSourceName());
+      $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->activityDataFlow->getTable(), $this->activityDataFlow->getTableAlias());
       $this->entityDataFlow->addSourceDataFlow($activityDataDescription);
       $this->entityDataFlow->addSourceDataFlow($activityContactDataDescription);
       $this->entityDataFlow->addSourceDataFlow($activityCaseDataDescription);
@@ -156,29 +172,6 @@ class ActivitySource extends AbstractCivicrmEntitySource {
     }
   }
 
-  /**
-   * Sets the join specification to connect this source to other data sources.
-   *
-   * @param \Civi\DataProcessor\DataFlow\MultipleDataFlows\JoinInterface $join
-   *
-   * @return \Civi\DataProcessor\Source\SourceInterface
-   */
-  public function setJoin(JoinInterface $join) {
-    parent::setJoin($join);
-
-    if (!empty($this->configuration['aggregate_function'])) {
-      if ($join instanceof SimpleJoin && $join->getLeftTable() == $this->getEntityTableAlias()) {
-        $join->setLeftTable($this->aggregationDateFlow->getPrimaryTableAlias());
-        $join->setLeftPrefix($this->aggregationDateFlow->getPrimaryTableAlias());
-      }
-      elseif ($join instanceof SimpleJoin && $join->getRightTable() == $this->getEntityTableAlias()) {
-        $join->setRightTable($this->aggregationDateFlow->getPrimaryTableAlias());
-        $join->setRightPrefix($this->aggregationDateFlow->getPrimaryTableAlias());
-      }
-    }
-    return $this;
-  }
-
   protected function getAggregationDataFlow() {
     $groupByFields = array();
     foreach($this->configuration['aggregate_by'] as $aggregate_by) {
@@ -191,40 +184,74 @@ class ActivitySource extends AbstractCivicrmEntitySource {
     }
 
     if (!$this->aggregationDateFlow) {
-      $activityDataFlow = new SqlTableDataFlow($this->getTable(), $this->getSourceName().'_activity_aggregate_');
-      $activityContactDataFlow = new SqlTableDataFlow('civicrm_activity_contact', $this->getSourceName().'_activity_contact_aggregate_');
+      $this->activityAggregationDataFlow = new SqlTableDataFlow($this->getTable(), $this->getSourceName().'_activity_aggregate_');
+      $this->activityAggregationContactDataFlow = new SqlTableDataFlow('civicrm_activity_contact', $this->getSourceName().'_activity_contact_aggregate_');
+      $this->activityAggregationCaseDataFlow = new SqlTableDataFlow('civicrm_case_activity', $this->getSourceName().'_activity_case_aggregate_');
 
-      $activityDataDescription = new DataFlowDescription($activityDataFlow);
-      $contactJoin = new SimpleJoin($activityDataFlow->getTableAlias(), 'id', $activityContactDataFlow->getTableAlias(), 'activity_id');
+      $activityDataDescription = new DataFlowDescription($this->activityAggregationDataFlow);
+      $contactJoin = new SimpleNonRequiredJoin($this->activityAggregationDataFlow->getTableAlias(), 'id', $this->activityAggregationContactDataFlow->getTableAlias(), 'activity_id', 'LEFT');
       $contactJoin->setDataProcessor($this->dataProcessor);
-      $activityContactDataDescription = new DataFlowDescription($activityContactDataFlow, $contactJoin);
+      $activityContactDataDescription = new DataFlowDescription($this->activityAggregationContactDataFlow, $contactJoin);
+
+      $caseJoin = new SimpleNonRequiredJoin($this->activityAggregationDataFlow->getTableAlias(), 'id', $this->activityAggregationCaseDataFlow->getTableAlias(), 'activity_id', 'LEFT');
+      $caseJoin->setDataProcessor($this->dataProcessor);
+      $activityCaseDataDescription = new DataFlowDescription($this->activityAggregationCaseDataFlow, $caseJoin);
 
       $aggrgeate_field_spec = clone $this->getAvailableFields()->getFieldSpecificationByName($this->getAggregateField());
       $aggrgeate_field_spec->setMySqlFunction($this->getAggregateFunction());
       $aggrgeate_field_spec->alias = $this->getAggregateField();
 
-      $aggretated_table_dataflow = new CombinedSqlDataFlow('', $this->getTable(), '_aggregated_'.$this->getSourceName());
+      $aggretated_table_dataflow = new CombinedSqlDataFlow('', $this->activityAggregationDataFlow->getTable(),$this->activityAggregationDataFlow->getTableAlias());
       $aggretated_table_dataflow->addSourceDataFlow($activityDataDescription);
       $aggretated_table_dataflow->addSourceDataFlow($activityContactDataDescription);
-      $activityDataFlow->getDataSpecification()->addFieldSpecification($aggrgeate_field_spec->name, $aggrgeate_field_spec);
+      $aggretated_table_dataflow->addSourceDataFlow($activityCaseDataDescription);
+      $this->activityAggregationDataFlow->getDataSpecification()->addFieldSpecification($aggrgeate_field_spec->name, $aggrgeate_field_spec);
       foreach ($groupByFields as $groupByField) {
         if (stripos($groupByField->alias, 'activity_contact_') === 0) {
-          $activityContactDataFlow->getDataSpecification()
+          $this->activityAggregationContactDataFlow->getDataSpecification()
             ->addFieldSpecification($groupByField->name, $groupByField);
-          $activityContactDataFlow->getGroupByDataSpecification()
+          $this->activityAggregationContactDataFlow->getGroupByDataSpecification()
+            ->addFieldSpecification($groupByField->name, $groupByField);
+        } elseif (stripos($groupByField->alias, 'activity_case_') === 0) {
+          $this->activityAggregationCaseDataFlow->getDataSpecification()
+            ->addFieldSpecification($groupByField->name, $groupByField);
+          $this->activityAggregationCaseDataFlow->getGroupByDataSpecification()
             ->addFieldSpecification($groupByField->name, $groupByField);
         } else {
-          $activityDataFlow->getDataSpecification()
+          $this->activityAggregationDataFlow->getDataSpecification()
             ->addFieldSpecification($groupByField->name, $groupByField);
-          $activityDataFlow->getGroupByDataSpecification()
+          $this->activityAggregationDataFlow->getGroupByDataSpecification()
             ->addFieldSpecification($groupByField->name, $groupByField);
         }
       }
-      $this->aggregationDateFlow = new SubqueryDataFlow('', $activityDataFlow->getTable(), $activityDataFlow->getTableAlias());
+      $this->aggregationDateFlow = new SubqueryDataFlow('', $this->activityAggregationDataFlow->getTable(), $this->activityAggregationDataFlow->getTableAlias());
       $this->aggregationDateFlow->addSourceDataFlow(new DataFlowDescription($aggretated_table_dataflow));
     }
 
     return $this->aggregationDateFlow;
+  }
+
+  /**
+   * Returns the aggregation data flow for a specific field.
+   * This could be used to set additional filters on both flows.
+   * So that aggregation even works when user enters certain filter criteria.
+   *
+   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $field
+   *
+   * @return \Civi\DataProcessor\DataFlow\CombinedDataFlow\SubqueryDataFlow|null
+   * @throws \Exception
+   */
+  public function getAggregationDataFlowForField(FieldSpecification $field) {
+    if ($this->isAggregationEnabled()) {
+      $this->ensureEntity();
+      if (stripos($field->name, 'activity_contact_')===0) {
+        return $this->activityAggregationContactDataFlow;
+      } elseif (stripos($field->name, 'activity_case_')===0) {
+        return $this->activityAggregationContactDataFlow;
+      }
+      return $this->activityAggregationDataFlow;
+    }
+    return null;
   }
 
   /**
@@ -238,20 +265,14 @@ class ActivitySource extends AbstractCivicrmEntitySource {
     if ($this->aggregationDateFlow) {
       if (stripos($filter->name, 'activity_contact_') === 0) {
         $name = str_replace('activity_contact_', '', $filter->name);
-        $this->aggregationDateFlow->addWhereClause(new SimpleWhereClause($this->getSourceName().'_activity_contact_aggregate_', $name, $op, $values, $filter->type, FALSE));
+        $this->activityAggregationContactDataFlow->addWhereClause(new SimpleWhereClause($this->activityAggregationContactDataFlow->getTableAlias(), $name, $op, $values, $filter->type, FALSE));
+      } elseif (stripos($filter->name, 'activity_case_') === 0) {
+        $name = str_replace('activity_case_', '', $filter->name);
+        $this->activityAggregationCaseDataFlow->addWhereClause(new SimpleWhereClause($this->activityAggregationCaseDataFlow->getTableAlias(), $name, $op, $values, $filter->type, FALSE));
       } else {
-        $this->aggregationDateFlow->addWhereClause(new SimpleWhereClause($this->aggregationDateFlow->getPrimaryTableAlias(), $filter->name, $op, $values, $filter->type, FALSE));
+        $this->activityAggregationDataFlow->addWhereClause(new SimpleWhereClause($this->activityAggregationDataFlow->getTableAlias(), $filter->name, $op, $values, $filter->type, FALSE));
       }
     }
-  }
-
-  /**
-   * Returns true when aggregation is enabled for this data source.
-   *
-   * @return bool
-   */
-  protected function isAggregationEnabled() {
-    return false;
   }
 
   /**

@@ -320,8 +320,15 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
    * @param $values
    */
   protected function addFilterToAggregationDataFlow(FieldSpecification $filter, $op, $values) {
-    if ($this->aggregationDateFlow) {
-      $this->aggregationDateFlow->addWhereClause(new SimpleWhereClause($this->aggregationDateFlow->getPrimaryTableAlias(), $filter->name,$op, $values, $filter->type, FALSE));
+    if ($this->isAggregationEnabled()){
+      $aggregationFlow = $this->getAggregationDataFlowForField($filter);
+      $tableAlias = $aggregationFlow->getName();
+      if ($aggregationFlow instanceof SqlTableDataFlow) {
+        $tableAlias = $aggregationFlow->getTableAlias();
+      } elseif ($aggregationFlow instanceof CombinedSqlDataFlow) {
+        $tableAlias = $aggregationFlow->getPrimaryTableAlias();
+      }
+      $aggregationFlow ->addWhereClause(new SimpleWhereClause($tableAlias, $filter->name,$op, $values, $filter->type, FALSE));
     }
   }
 
@@ -419,11 +426,11 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
     }
 
     if ($this->isAggregationEnabled()) {
-      if ($join instanceof SimpleJoin && $join->getLeftTable() == $this->getEntityTableAlias()) {
+      if ($join instanceof SimpleJoin && $join->getLeftTable() == $this->getSourceName()) {
         $join->setLeftTable($this->aggregationDateFlow->getPrimaryTableAlias());
         $join->setLeftPrefix($this->aggregationDateFlow->getPrimaryTableAlias());
       }
-      elseif ($join instanceof SimpleJoin && $join->getRightTable() == $this->getEntityTableAlias()) {
+      elseif ($join instanceof SimpleJoin && $join->getRightTable() == $this->getSourceName()) {
         $join->setRightTable($this->aggregationDateFlow->getPrimaryTableAlias());
         $join->setRightPrefix($this->aggregationDateFlow->getPrimaryTableAlias());
       }
@@ -498,11 +505,29 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
    *
    * @return bool
    */
-  protected function isAggregationEnabled() {
+  public function isAggregationEnabled() {
     if (!empty($this->configuration['aggregate_function'])) {
       return TRUE;
     }
     return false;
+  }
+
+  /**
+   * Returns the aggregation data flow for a specific field.
+   * This could be used to set additional filters on both flows.
+   * So that aggregation even works when user enters certain filter criteria.
+   *
+   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $field
+   *
+   * @return \Civi\DataProcessor\DataFlow\CombinedDataFlow\SubqueryDataFlow|null
+   * @throws \Exception
+   */
+  public function getAggregationDataFlowForField(FieldSpecification $field) {
+    if ($this->isAggregationEnabled()) {
+      $this->ensureEntity();
+      return $this->aggregationDateFlow;
+    }
+    return null;
   }
 
   /**

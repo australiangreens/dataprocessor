@@ -6,10 +6,13 @@
 
 namespace Civi\DataProcessor\FilterHandler;
 
+use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
 use Civi\DataProcessor\DataFlow\InMemoryDataFlow;
 use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\Exception\DataSourceNotFoundException;
 use Civi\DataProcessor\Exception\FieldNotFoundException;
+use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
 abstract class AbstractFieldFilterHandler extends AbstractFilterHandler {
@@ -110,12 +113,23 @@ abstract class AbstractFieldFilterHandler extends AbstractFilterHandler {
       if (!is_array($value)) {
         $value = explode(",", $value);
       }
-      $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $value, $this->inputFieldSpecification->type);
+      $tableAlias = $this->getTableAlias($dataFlow);
+      $this->whereClause = new SqlDataFlow\SimpleWhereClause($tableAlias, $this->inputFieldSpecification->getName(), $filter['op'], $value, $this->inputFieldSpecification->type);
       $dataFlow->addWhereClause($this->whereClause);
     } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow) {
       $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->getName(), $filter['op'], $filter['value']);
       $dataFlow->addFilter($this->filterClass);
     }
+  }
+
+  protected function getTableAlias(SqlDataFlow $dataFlow) {
+    $tableAlias = $dataFlow->getName();
+    if ($dataFlow instanceof SqlTableDataFlow) {
+      $tableAlias = $dataFlow->getTableAlias();
+    } elseif ($dataFlow instanceof CombinedSqlDataFlow) {
+      $tableAlias = $dataFlow->getPrimaryTableAlias();
+    }
+    return $tableAlias;
   }
 
 }
