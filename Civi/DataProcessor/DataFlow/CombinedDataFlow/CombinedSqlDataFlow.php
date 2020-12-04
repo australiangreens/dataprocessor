@@ -155,7 +155,7 @@ class CombinedSqlDataFlow extends SqlDataFlow implements MultipleSourceDataFlows
       $fields[] = $outputHandler->getAggregateFieldSpec()->getSqlGroupByStatement($this->getName());
     }
     foreach($this->sourceDataFlowDescriptions as $sourceDataFlowDescription) {
-      if (!$sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow && !$sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
         $fields = array_merge($fields, $sourceDataFlowDescription->getDataFlow()
           ->getFieldsForGroupByStatement());
       }
@@ -216,11 +216,8 @@ class CombinedSqlDataFlow extends SqlDataFlow implements MultipleSourceDataFlows
       $clauses[] = $clause;
     }
     foreach($this->sourceDataFlowDescriptions as $sourceDataFlowDescription) {
-      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlTableDataFlow) {
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow && !$sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
         foreach($sourceDataFlowDescription->getDataFlow()->getWhereClauses() as $clause) {
-          if ($clause instanceof SqlDataFlow\WhereClauseInterface) {
-
-          }
           $clauses[] = $clause;
         }
       }
@@ -254,7 +251,7 @@ class CombinedSqlDataFlow extends SqlDataFlow implements MultipleSourceDataFlows
       }
     }
     foreach($this->sourceDataFlowDescriptions as $sourceDataFlowDescription) {
-      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow) {
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow && !$sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
         $sourceDataFlowDescription->getDataFlow()->removeWhereClause($clause);
       }
     }
