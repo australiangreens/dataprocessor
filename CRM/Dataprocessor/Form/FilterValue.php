@@ -57,7 +57,11 @@ class CRM_Dataprocessor_Form_FilterValue extends CRM_Core_Form {
     $this->filter = civicrm_api3('DataProcessorFilter', 'getsingle', array('id' => $this->id));
     $this->filterTypeClass = $factory->getFilterByName($this->filter['type']);
     $this->filterTypeClass->setDataProcessor($this->dataProcessorClass);
-    $this->filterTypeClass->initialize($this->filter);
+    try {
+      $this->filterTypeClass->initialize($this->filter);
+    } catch (\Civi\DataProcessor\Exception\FilterRequiredException $ex) {
+      // Do nothing.
+    }
 
     $title = E::ts('Data Processor Default Filter Value');
     CRM_Utils_System::setTitle($title);

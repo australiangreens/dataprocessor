@@ -7,6 +7,7 @@
 namespace Civi\DataProcessor\FilterHandler;
 
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
+use Civi\DataProcessor\Exception\FilterRequiredException;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
 
 use CRM_Dataprocessor_ExtensionUtil as E;
@@ -371,7 +372,7 @@ abstract class AbstractFilterHandler {
       }
     }
     if ($this->isRequired() && !$isFilterSet) {
-      throw new \Exception('Field ' . $filterSpec->title . ' is required');
+      throw new FilterRequiredException('Field ' . $filterSpec->title . ' is required');
     }
   }
 

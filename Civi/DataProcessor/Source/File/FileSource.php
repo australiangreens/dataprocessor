@@ -122,11 +122,11 @@ class FileSource extends AbstractCivicrmEntitySource {
     $entityDataFlowDataDescription = new DataFlowDescription($this->entityFileDataFlow, $join);
 
     // Create the subquery data flow
-    $entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->getTable(), $this->getSourceName());
-    $entityDataFlow->addSourceDataFlow($fileDataDescription);
-    $entityDataFlow->addSourceDataFlow($entityDataFlowDataDescription);
+    $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->getTable(), $this->getSourceName());
+    $this->entityDataFlow->addSourceDataFlow($fileDataDescription);
+    $this->entityDataFlow->addSourceDataFlow($entityDataFlowDataDescription);
 
-    return $entityDataFlow;
+    return $this->entityDataFlow;
   }
 
   /**

@@ -7,6 +7,7 @@
 * Contact Search Output is now also able to create smart groups and send bulk mails (with a hidden smarty group). See #32.
 * Fixed issue with Field Filter on relationship type and also made relationship type a non required filter on the data source.
 * Improved performance by caching the API entities and actions configured by a data processor output. (Previously during an api call all actions and entities where retrieved from the database)
+* Fixed issue when a filter is required and no default value is set and you want to set the default value.
 
 # Version 1.21
 
