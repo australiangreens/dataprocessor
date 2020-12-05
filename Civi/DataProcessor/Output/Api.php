@@ -8,10 +8,12 @@ namespace Civi\DataProcessor\Output;
 
 use Civi\API\Event\ResolveEvent;
 use Civi\API\Events;
+use Civi\DataProcessor\ConfigContainer;
 use Civi\DataProcessor\FieldOutputHandler\arrayFieldOutput;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
 
 use \CRM_Dataprocessor_ExtensionUtil as E;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class Api extends AbstractApi implements OutputInterface {
 
@@ -166,26 +168,42 @@ class Api extends AbstractApi implements OutputInterface {
     // Do nothing
   }
 
+  public static function buildConfigContainer(ContainerBuilder $containerBuilder) {
+    // Load the entities.
+    $dao = \CRM_Core_DAO::executeQuery("
+      SELECT DISTINCT o.api_entity, api_action, api_count_action
+      FROM civicrm_data_processor_output o
+      INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
+      WHERE p.is_active = 1
+    ");
+    $entities = array();
+    $actions = array();
+
+    while($dao->fetch()) {
+      if ($dao->api_entity ) {
+        if (in_array($dao->api_entity, $entities)) {
+          $entities[] = $dao->api_entity;
+        }
+        if (!isset($actions[$dao->api_entity])) {
+          $actions[$dao->api_entity][] = 'getfields';
+          $actions[$dao->api_entity][] = 'getoptions';
+        }
+        $actions[$dao->api_entity][] = $dao->api_action;
+        $actions[$dao->api_entity][] = $dao->api_count_action;
+      }
+    }
+    $containerBuilder->setParameter('entity_names', $entities);
+    $containerBuilder->setParameter('action_names', $actions);
+  }
+
   /**
    * @param int $version
    *   API version.
    * @return array<string>
    */
   public function getEntityNames($version=null) {
-    $dao = \CRM_Core_DAO::executeQuery("
-      SELECT DISTINCT o.api_entity
-      FROM civicrm_data_processor_output o
-      INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
-      WHERE p.is_active = 1
-    ");
-    $entities = array();
-
-    while($dao->fetch()) {
-      if ($dao->api_entity) {
-        $entities[] = $dao->api_entity;
-      }
-    }
-    return $entities;
+    $config = ConfigContainer::getInstance();
+    return $config->getParameter('entity_names');
   }
 
   /**
@@ -196,19 +214,9 @@ class Api extends AbstractApi implements OutputInterface {
    * @return array<string>
    */
   public function getActionNames($version, $entity) {
-    $actions = parent::getActionNames($version, $entity);
-    $dao = \CRM_Core_DAO::executeQuery("
-      SELECT api_action, api_count_action
-      FROM civicrm_data_processor_output o
-      INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
-      WHERE p.is_active = 1 AND LOWER(o.api_entity) = LOWER(%1)",
-      array(1=>array($entity, 'String'))
-    );
-    while($dao->fetch()) {
-      $actions[] = $dao->api_action;
-      $actions[] = $dao->api_count_action;
-    }
-    return $actions;
+    $config = ConfigContainer::getInstance();
+    $actions = $config->getParameter('action_names');
+    return $actions[$entity];
   }
 
   /**
