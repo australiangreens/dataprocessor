@@ -4,7 +4,7 @@
  * @license AGPL-3.0
  */
 
-namespace Civi\DataProcessor;
+namespace Civi\DataProcessor\Config;
 
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
