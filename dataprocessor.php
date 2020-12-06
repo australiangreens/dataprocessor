@@ -115,7 +115,7 @@ function dataprocessor_civicrm_alterMenu(&$items) {
  * @param $params
  */
 function dataprocessor_civicrm_pre($op, $objectName, $objectId, &$params) {
-  \Civi\DataProcessor\Output\UIOutputHelper::preHook($op, $objectName, $objectId, $params);
+
 }
 
 /**
@@ -318,5 +318,6 @@ function dataprocessor_civicrm_navigationMenu(&$menu) {
     'operator' => 'OR',
     'separator' => 0,
   ));
+  \Civi\DataProcessor\Output\UIOutputHelper::navigationMenuHook($menu);
   _dataprocessor_civix_navigationMenu($menu);
 }

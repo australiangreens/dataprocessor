@@ -27,7 +27,7 @@ class CRM_DataprocessorSearch_MembershipSearch implements UIFormOutputInterface 
    * @param array $filter
    */
   public function buildConfigurationForm(\CRM_Core_Form $form, $output=array()) {
-
+    \Civi\DataProcessor\Output\UIOutputHelper::fixBackwardsCompatibility($output);
     $navigation = CRM_Dataprocessor_Utils_Navigation::singleton();
     $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $output['data_processor_id']));
     $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
@@ -62,10 +62,6 @@ class CRM_DataprocessorSearch_MembershipSearch implements UIFormOutputInterface 
 
     // navigation field
     $navigationOptions = $navigation->getNavigationOptions();
-    if (isset($output['configuration']['navigation_id'])) {
-      $navigationPath = $navigation->getNavigationPathById($output['configuration']['navigation_id']);
-      unset($navigationOptions[$navigationPath]);
-    }
     $form->add('select', 'navigation_parent_path', ts('Parent Menu'), array('' => ts('- select -')) + $navigationOptions, true);
 
     $defaults = array();
@@ -82,8 +78,8 @@ class CRM_DataprocessorSearch_MembershipSearch implements UIFormOutputInterface 
         } else {
           $defaults['no_result_text'] = E::ts('No results');
         }
-        if (isset($output['configuration']['navigation_id'])) {
-          $defaults['navigation_parent_path'] = $navigation->getNavigationParentPathById($output['configuration']['navigation_id']);
+        if (isset($output['configuration']['navigation_parent_path'])) {
+          $defaults['navigation_parent_path'] = $output['configuration']['navigation_parent_path'];
         }
         if (isset($output['configuration']['hide_id_field'])) {
           $defaults['hide_id_field'] = $output['configuration']['hide_id_field'];

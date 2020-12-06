@@ -248,6 +248,7 @@ class CRM_Dataprocessor_Utils_Importer {
     $return = array();
     $importedIds = array();
     $extensions = self::getExtensionFileListWithDataProcessors($extension);
+    \Civi\DataProcessor\Output\UIOutputHelper::disableRebuildingOfMenuAndNavigation();
     foreach($extensions as $ext_file) {
       $data = json_decode($ext_file['data'], true);
       $return[$ext_file['file']] = self::import($data, $ext_file['file']);
@@ -282,6 +283,7 @@ class CRM_Dataprocessor_Utils_Importer {
         $return['deleted data processors'][] = 'Error: '. $dao->id.": ".$dao->name;
       }
     }
+    \Civi\DataProcessor\Output\UIOutputHelper::rebuildMenuAndNavigation();
     return $return;
   }
 
