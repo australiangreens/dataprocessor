@@ -14,8 +14,8 @@
     <url desc="Documentation">https://lab.civicrm.org/extensions/dataprocessor/blob/master/README.md</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2020-12-05</releaseDate>
-  <version>1.23-dev</version>
+  <releaseDate>2020-12-06</releaseDate>
+  <version>1.22.1</version>
   <develStage>stable</develStage>
   <compatibility>
     <ver>4.7</ver>

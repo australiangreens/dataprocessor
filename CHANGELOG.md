@@ -1,4 +1,6 @@
-# Version 1.23 (not yet released)
+# Version 1.22.1
+
+* Fixed regression bug with API output.
 
 # Version 1.22
 

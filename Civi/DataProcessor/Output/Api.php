@@ -181,7 +181,7 @@ class Api extends AbstractApi implements OutputInterface {
 
     while($dao->fetch()) {
       if ($dao->api_entity ) {
-        if (in_array($dao->api_entity, $entities)) {
+        if (!in_array($dao->api_entity, $entities)) {
           $entities[] = $dao->api_entity;
         }
         if (!isset($actions[$dao->api_entity])) {
