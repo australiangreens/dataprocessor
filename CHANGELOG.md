@@ -1,5 +1,7 @@
 # Version 1.23 (not yet released)
 
+* Refactor of config classes.
+
 # Version 1.22.1
 
 * Fixed regression bug with API output.

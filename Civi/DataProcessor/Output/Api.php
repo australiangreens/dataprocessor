@@ -6,14 +6,11 @@
 
 namespace Civi\DataProcessor\Output;
 
-use Civi\API\Event\ResolveEvent;
-use Civi\API\Events;
-use Civi\DataProcessor\ConfigContainer;
-use Civi\DataProcessor\FieldOutputHandler\arrayFieldOutput;
+use Civi\DataProcessor\Config\ConfigContainer;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 use \CRM_Dataprocessor_ExtensionUtil as E;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class Api extends AbstractApi implements OutputInterface {
 

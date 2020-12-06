@@ -130,6 +130,7 @@ function dataprocessor_civicrm_pre($op, $objectName, $objectId, &$params) {
  */
 function dataprocessor_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   \Civi\DataProcessor\Output\UIOutputHelper::postHook($op, $objectName, $objectId, $objectRef);
+  \Civi\DataProcessor\Config\ConfigContainer::postHook($op, $objectName, $objectId, $objectRef);
 }
 
 function dataprocessor_civicrm_dataprocessor_export(&$dataProcessor) {
