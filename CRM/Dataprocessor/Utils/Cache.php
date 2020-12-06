@@ -33,7 +33,7 @@ class CRM_Dataprocessor_Utils_Cache {
   public static function clearAllDataProcessorCaches() {
       $cache = CRM_Dataprocessor_Utils_Cache::singleton();
       $cache->cache->clear();
-      Civi\DataProcessor\ConfigContainer::clearCache();
+      Civi\DataProcessor\Config\ConfigContainer::clearCache();
       Civi\DataProcessor\Output\Api::clearCache();
   }
 
