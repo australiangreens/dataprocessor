@@ -14,6 +14,7 @@ use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
+use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 use Civi\DataProcessor\DataSpecification\Utils as DataSpecificationUtils;
 
@@ -114,7 +115,7 @@ class CaseSource extends AbstractCivicrmEntitySource {
     $caseContactDataDescription = new DataFlowDescription($this->caseContactDataFlow, $join);
 
     // Create the subquery data flow
-    $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->getTable(), $this->getSourceName());
+    $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->caseDataFlow->getTable(), $this->caseDataFlow->getTableAlias());
     $this->entityDataFlow->addSourceDataFlow($caseDataDescription);
     $this->entityDataFlow->addSourceDataFlow($caseContactDataDescription);
 
@@ -146,6 +147,7 @@ class CaseSource extends AbstractCivicrmEntitySource {
     $this->additionalDataFlowDescriptions[] = $additionalDataFlowDescription;
     return $additionalDataFlowDescription->getDataFlow();
   }
+
 
   /**
    * Adds an inidvidual filter to the data source

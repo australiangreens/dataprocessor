@@ -49,12 +49,13 @@ class PermissionToViewContactFilter extends AbstractFieldFilterHandler {
     if ($where) {
       $contactFilters[] = new SqlDataFlow\PureSqlStatementClause($where);
       if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+        $tableAlias = $this->getTableAlias($dataFlow);
         $this->whereClause = new SqlDataFlow\InTableWhereClause(
           'id',
           'civicrm_contact',
           $contactTableAlias,
           $contactFilters,
-          $dataFlow->getName(),
+          $tableAlias,
           $this->inputFieldSpecification->getName(),
           'IN'
         );

@@ -56,12 +56,13 @@ class ContactHasMembershipFilter extends AbstractFieldFilterHandler {
     );
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'contact_id',
         'civicrm_membership',
         $membershipTableAlias,
         $embershipFilters,
-        $dataFlow->getName(),
+        $tableAlias,
         $this->inputFieldSpecification->getName(),
         $filter['op']
       );

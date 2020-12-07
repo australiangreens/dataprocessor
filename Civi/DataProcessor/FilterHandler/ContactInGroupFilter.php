@@ -77,12 +77,13 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
     );
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'contact_id',
         'civicrm_group_contact',
         $groupTableAlias,
         $groupFilters,
-        $dataFlow->getName(),
+        $tableAlias,
         $this->inputFieldSpecification->getName(),
         $filter['op']
       );
@@ -96,12 +97,13 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
     );
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'contact_id',
         'civicrm_group_contact_cache',
         $groupTableAlias,
         $groupFilters,
-        $dataFlow->getName(),
+        $tableAlias,
         $this->inputFieldSpecification->getName(),
         $filter['op']
       );

@@ -42,11 +42,6 @@ class SimpleSqlFilter extends AbstractFieldFilterHandler {
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
       $tableAlias = $this->getTableAlias($dataFlow);
       $fieldName = $this->inputFieldSpecification->getName();
-      // special handling for activity contact fields added to filter
-      if (stripos($fieldName, 'activity_contact_') === 0) {
-        $tableAlias = '_activity_contact';
-        $fieldName = substr($fieldName, 17);
-      }
       if ($this->isMultiValueField()) {
         $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($tableAlias, $fieldName, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       } else {

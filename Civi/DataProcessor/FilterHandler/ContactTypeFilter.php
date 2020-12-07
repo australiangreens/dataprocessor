@@ -54,12 +54,13 @@ class ContactTypeFilter extends AbstractFieldFilterHandler {
     if (count($contactTypeClauses)) {
       $contactTypeClause = new SqlDataFlow\OrClause($contactTypeClauses);
       if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+        $tableAlias = $this->getTableAlias($dataFlow);
         $this->whereClause = new SqlDataFlow\InTableWhereClause(
           'id',
           'civicrm_contact',
           $contactTableAlias,
           array($contactTypeClause),
-          $dataFlow->getName(),
+          $tableAlias,
           $this->inputFieldSpecification->getName(),
           $filter['op']
         );

@@ -160,11 +160,13 @@ class ChecksumFilter extends AbstractFieldFilterHandler {
     if ($dataFlow && $hashDataFlow && $dataFlow instanceof SqlDataFlow && $hashDataFlow instanceof SqlDataFlow) {
       list($cs, $ts, $lf) = explode('_', $filter['value'], 3);
       $now = time();
+      $tableAlias = $this->getTableAlias($dataFlow);
+      $hashTableAlias = $this->getTableAlias($hashTableAlias);
       $this->whereClause = new SqlDataFlow\PureSqlStatementClause(
         "MD5(CONCAT(
-          `{$hashDataFlow->getName()}`.`{$this->hashInputFieldSpecification->getName()}`,
+          `{$hashTableAlias}`.`{$this->hashInputFieldSpecification->getName()}`,
           '_',
-          `{$dataFlow->getName()}`.`{$this->inputFieldSpecification->getName()}`,
+          `{$tableAlias}`.`{$this->inputFieldSpecification->getName()}`,
           '_{$ts}_{$lf}'
           )) = '{$cs}' AND ({$ts} + ({$lf} * 60 * 60)) >= {$now}
           "

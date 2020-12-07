@@ -46,12 +46,13 @@ class WorldRegionFilter extends AbstractFieldFilterHandler {
       new SqlDataFlow\SimpleWhereClause($countryTableAlias, 'region_id', 'IN', $region_ids),
     );
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'id',
         'civicrm_country',
         $countryTableAlias,
         $countryFilters,
-        $dataFlow->getName(),
+        $tableAlias,
         $this->inputFieldSpecification->getName(),
         $filter['op']
       );

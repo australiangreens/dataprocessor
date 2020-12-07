@@ -83,12 +83,13 @@ class CaseRoleFilter extends AbstractFieldFilterHandler {
     }
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'case_id',
         'civicrm_relationship',
         $relationshipTableAlias,
         $relationshipFilters,
-        $dataFlow->getName(),
+        $tableAlias,
         $this->inputFieldSpecification->getName(),
         $inOperator
       );

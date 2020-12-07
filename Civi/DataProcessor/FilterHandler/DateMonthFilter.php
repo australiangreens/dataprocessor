@@ -53,11 +53,12 @@ class DateMonthFilter extends AbstractFieldFilterHandler {
     $this->resetFilter();
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $value = $filter['value'];
       if (!is_array($value)) {
         $value = explode(",", $value);
       }
-      $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->getName(), $filter['op'], $value, 'Int', FALSE, 'MONTH(%s)');
+      $this->whereClause = new SqlDataFlow\SimpleWhereClause($tableAlias, $this->inputFieldSpecification->getName(), $filter['op'], $value, 'Int', FALSE, 'MONTH(%s)');
       $dataFlow->addWhereClause($this->whereClause);
     } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow) {
       $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->getName(), $filter['op'], $filter['value'], function($value) {

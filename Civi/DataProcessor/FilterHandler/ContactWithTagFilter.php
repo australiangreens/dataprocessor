@@ -45,12 +45,13 @@ class ContactWithTagFilter extends AbstractFieldFilterHandler {
     );
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'entity_id',
         'civicrm_entity_tag',
         $tagTableAlias,
         $tagFilters,
-        $dataFlow->getName(),
+        $tableAlias,
         $this->inputFieldSpecification->getName(),
         $filter['op']
       );

@@ -1,4 +1,6 @@
-# Version 1.24 (not yet released)
+# Version 1.23.4
+
+* Fixed regression bug with case role filter (and other filters).
 
 # Version 1.23.3
 
