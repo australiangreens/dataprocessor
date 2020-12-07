@@ -10,7 +10,9 @@ use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
 use Civi\DataProcessor\DataFlow\CombinedDataFlow\SubqueryDataFlow;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\DataFlowDescription;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleJoin;
+use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
+use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\DataSpecification\Utils as DataSpecificationUtils;
@@ -56,7 +58,7 @@ class FileSource extends AbstractCivicrmEntitySource {
       $this->entityTables = array();
       $allTables = \CRM_Core_DAO_AllCoreTables::getCoreTables();
       foreach($allTables as $entity_table => $daoClass) {
-        if (method_exists($daoClass,'getEntityTitle')) {
+        if (is_callable([$daoClass,'getEntityTitle'])) {
           $this->entityTables[$entity_table] = call_user_func([$daoClass,'getEntityTitle']);
         } else {
           $this->entityTables[$entity_table] = \CRM_Core_DAO_AllCoreTables::getBriefName($daoClass);
@@ -128,6 +130,44 @@ class FileSource extends AbstractCivicrmEntitySource {
 
     return $this->entityDataFlow;
   }
+
+  /**
+   * Adds an inidvidual filter to the data source
+   *
+   * @param $filter_field_alias
+   * @param $op
+   * @param $values
+   *
+   * @throws \Exception
+   */
+  protected function addFilter($filter_field_alias, $op, $values) {
+    $spec = null;
+    if ($this->getAvailableFields()->doesAliasExists($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByAlias($filter_field_alias);
+    } elseif ($this->getAvailableFields()->doesFieldExist($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByName($filter_field_alias);
+    }
+
+    if ($spec) {
+      if ($spec instanceof CustomFieldSpecification) {
+        $customGroupDataFlow = $this->ensureCustomGroup($spec->customGroupTableName, $spec->customGroupName);
+        $customGroupTableAlias = $customGroupDataFlow->getTableAlias();
+        $customGroupDataFlow->addWhereClause(
+          new SimpleWhereClause($customGroupTableAlias, $spec->customFieldColumnName, $op, $values, $spec->type, TRUE)
+        );
+      } else {
+        $this->ensureEntity();
+        if (stripos($spec->name, 'entity_file_') === 0) {
+          $name = str_replace('entity_file_', '', $spec->name);
+          $this->entityFileDataFlow->addWhereClause(new SimpleWhereClause($this->entityFileDataFlow->getTableAlias(), $name, $op, $values, $spec->type, FALSE));
+        } else {
+          $this->fileDataFlow->addWhereClause(new SimpleWhereClause($this->fileDataFlow->getTableAlias(), $spec->name, $op, $values, $spec->type, TRUE));
+        }
+        $this->addFilterToAggregationDataFlow($spec, $op, $values);
+      }
+    }
+  }
+
 
   /**
    * Ensure that the entity table is added the to the data flow.

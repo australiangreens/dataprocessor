@@ -1,3 +1,7 @@
+# Version 1.23.3
+
+* Fixed issue with data sources for file, contributions and cases.
+
 # Version 1.23.2
 
 * Made smart group implementation compatible with civicrm version 5.14.1
