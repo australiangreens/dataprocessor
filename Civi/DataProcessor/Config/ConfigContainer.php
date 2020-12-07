@@ -26,10 +26,13 @@ class ConfigContainer {
    */
   public static function getInstance() {
     static $isRunning = false;
+    if ($isRunning) {
+      // The function getInstance is already running
+      // and somewhere in the code a config class is needed
+      // so we return an empty Config class.
+      return new Config();
+    }
     if (!self::$configContainer) {
-      if ($isRunning) {
-        return new DummyConfig();
-      }
       $isRunning = true;
       $file = self::getCacheFile();
       if (!file_exists($file)) {
@@ -68,7 +71,7 @@ class ConfigContainer {
     // So we cater for multisite installations and installations with one code base
     // and multiple databases.
     $envId = \CRM_Core_Config_Runtime::getId();
-    return \Civi::paths()->getPath(CIVICRM_TEMPLATE_COMPILEDIR."/CachedDataProcessorConfig.{$envId}.php");
+    return CIVICRM_TEMPLATE_COMPILEDIR."/CachedDataProcessorConfig.{$envId}.php";
   }
 
   /**
