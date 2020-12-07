@@ -8,20 +8,8 @@ namespace Civi\DataProcessor\Config;
 
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class Config extends Container {
-
-  /**
-   * Config constructor.
-   *
-   * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface|null $parameterBag
-   */
-  /*public function __construct(ParameterBagInterface $parameterBag = NULL) {
-    parent::__construct($parameterBag);
-    $this->setParameter('entity_names', []);
-    $this->setParameter('action_names', []);
-  }*/
 
   /**
    * Returns with custom fields of a certain group.
