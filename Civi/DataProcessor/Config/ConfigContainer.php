@@ -68,7 +68,7 @@ class ConfigContainer {
     // So we cater for multisite installations and installations with one code base
     // and multiple databases.
     $envId = \CRM_Core_Config_Runtime::getId();
-    return \Civi::paths()->getPath("[civicrm.compile]/CachedDataProcessorConfig.{$envId}.php");
+    return \Civi::paths()->getPath(CIVICRM_TEMPLATE_COMPILEDIR."/CachedDataProcessorConfig.{$envId}.php");
   }
 
   /**
