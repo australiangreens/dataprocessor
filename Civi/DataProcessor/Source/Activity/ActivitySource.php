@@ -276,6 +276,48 @@ class ActivitySource extends AbstractCivicrmEntitySource {
   }
 
   /**
+   * Adds an inidvidual filter to the data source
+   *
+   * @param $filter_field_alias
+   * @param $op
+   * @param $values
+   *
+   * @throws \Exception
+   */
+  protected function addFilter($filter_field_alias, $op, $values) {
+    $spec = null;
+    if ($this->getAvailableFields()->doesAliasExists($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByAlias($filter_field_alias);
+    } elseif ($this->getAvailableFields()->doesFieldExist($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByName($filter_field_alias);
+    }
+
+    if ($spec) {
+      if ($spec instanceof CustomFieldSpecification) {
+        $customGroupDataFlow = $this->ensureCustomGroup($spec->customGroupTableName, $spec->customGroupName);
+        $customGroupTableAlias = $customGroupDataFlow->getTableAlias();
+        $customGroupDataFlow->addWhereClause(
+          new SimpleWhereClause($customGroupTableAlias, $spec->customFieldColumnName, $op, $values, $spec->type, TRUE)
+        );
+      } else {
+        $this->ensureEntity();
+
+        if (stripos($spec->name, 'activity_contact_') === 0) {
+          $name = str_replace('activity_contact_', '', $spec->name);
+          $this->activityContactDataFlow->addWhereClause(new SimpleWhereClause($this->activityContactDataFlow->getTableAlias(), $name, $op, $values, $spec->type, FALSE));
+        } elseif (stripos($spec->name, 'activity_case_') === 0) {
+          $name = str_replace('activity_case_', '', $spec->name);
+          $this->activityCaseDataFlow->addWhereClause(new SimpleWhereClause($this->activityCaseDataFlow->getTableAlias(), $name, $op, $values, $spec->type, FALSE));
+        } else {
+          $this->activityDataFlow->addWhereClause(new SimpleWhereClause($this->activityDataFlow->getTableAlias(), $spec->name, $op, $values, $spec->type, FALSE));
+        }
+        $this->addFilterToAggregationDataFlow($spec, $op, $values);
+      }
+    }
+  }
+
+
+  /**
    * Load the fields from this entity.
    *
    * @param DataSpecification $dataSpecification
