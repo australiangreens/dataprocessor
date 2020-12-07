@@ -1,4 +1,4 @@
-# Version 1.23 (not yet released)
+# Version 1.23
 
 * Refactor of how the navigation menu is build/stored. It now makes use of hook_civicrm_navigationMenu instead of storing the items in the database directly.
 * Refactor of config classes.
