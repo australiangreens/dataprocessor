@@ -28,7 +28,7 @@ class ConfigContainer {
     static $isRunning = false;
     if (!self::$configContainer) {
       if ($isRunning) {
-        return new DummyConfig();
+        return Config::getDummyConfig();
       }
       $isRunning = true;
       $file = self::getCacheFile();
@@ -95,7 +95,6 @@ class ConfigContainer {
     $containerBuilder = new ContainerBuilder();
 
     Config::buildConfigContainer($containerBuilder);
-    Api::buildConfigContainer($containerBuilder);
 
     // Dipsatch an symfony event so that extensions could listen to this event
     // and hook int the building of the config container.

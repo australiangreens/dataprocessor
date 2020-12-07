@@ -6,8 +6,10 @@
 
 namespace Civi\DataProcessor\Config;
 
+use Civi\DataProcessor\Output\Api;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 
 class Config extends Container {
 
@@ -41,7 +43,14 @@ class Config extends Container {
     return $customGroups;
   }
 
+  /**
+   * Build the config container
+   * @param \Symfony\Component\DependencyInjection\ContainerBuilder $containerBuilder
+   * @throws \CiviCRM_API3_Exception
+   */
   public static function buildConfigContainer(ContainerBuilder $containerBuilder) {
+    Api::buildConfigContainer($containerBuilder);
+
     $customGroupPerExtends = array();
     $customGroups = array();
     $customFields = array();
@@ -61,7 +70,16 @@ class Config extends Container {
     $containerBuilder->setParameter('custom_groups_per_extends', $customGroupPerExtends);
     $containerBuilder->setParameter('custom_fields_per_group', $customFieldsPerGroup);
     $containerBuilder->setParameter('custom_fields', $customFields);
+  }
 
+  /**
+   * @return \Civi\DataProcessor\Config\Config
+   */
+  public static function getDummyConfig() {
+    return new Config(new ParameterBag([
+      'entity_names' => [],
+      'action_names' => [],
+    ]));
   }
 
 }

@@ -165,6 +165,11 @@ class Api extends AbstractApi implements OutputInterface {
     // Do nothing
   }
 
+  /**
+   * Build the container.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerBuilder $containerBuilder
+   */
   public static function buildConfigContainer(ContainerBuilder $containerBuilder) {
     // Load the entities.
     $dao = \CRM_Core_DAO::executeQuery("
@@ -191,6 +196,21 @@ class Api extends AbstractApi implements OutputInterface {
     }
     $containerBuilder->setParameter('entity_names', $entities);
     $containerBuilder->setParameter('action_names', $actions);
+  }
+
+  /**
+   * Clears the cached configuration file ony when custom field or custom group has been saved.
+   *
+   * @param $op
+   * @param $objectName
+   * @param $objectId
+   * @param $objectRef
+   */
+  public static function postHook($op, $objectName, $id, &$objectRef) {
+    $clearCacheObjects = ['DataProcessorOutput'];
+    if (in_array($objectName, $clearCacheObjects)) {
+      ConfigContainer::clearCache();
+    }
   }
 
   /**
