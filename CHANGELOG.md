@@ -1,3 +1,5 @@
+#Version 1.24 (not yet released)
+
 # Version 1.23.3
 
 * Fixed issue with data sources for file, contributions and cases.
