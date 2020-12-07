@@ -210,11 +210,15 @@ class CombinedSqlDataFlow extends SqlDataFlow implements MultipleSourceDataFlows
     return $this->name;
   }
 
-  public function getWhereClauses() {
-    $clauses = array();
-    foreach($this->whereClauses as $clause) {
-      $clauses[] = $clause;
-    }
+  /**
+   * Return all the where clauses
+   *
+   * @param bool $includeJoinClause
+   * @param bool $includeNonJoinClause
+   * @return array
+   */
+  public function getWhereClauses($includeJoinClause=TRUE, $includeNonJoinClause=TRUE) {
+    $clauses = parent::getWhereClauses($includeJoinClause, $includeNonJoinClause);
     foreach($this->sourceDataFlowDescriptions as $sourceDataFlowDescription) {
       if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow && !$sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
         foreach($sourceDataFlowDescription->getDataFlow()->getWhereClauses() as $clause) {

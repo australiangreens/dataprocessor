@@ -306,7 +306,7 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
         );
       } else {
         $this->ensureEntity();
-        $this->entityDataFlow->addWhereClause(new SimpleWhereClause($this->getSourceName(), $spec->name,$op, $values, $spec->type, TRUE));
+        $this->entityDataFlow->addWhereClause(new SimpleWhereClause($this->entityDataFlow->getTableAlias(), $spec->name,$op, $values, $spec->type, TRUE));
         $this->addFilterToAggregationDataFlow($spec, $op, $values);
       }
     }

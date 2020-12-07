@@ -240,10 +240,8 @@ abstract class SqlDataFlow extends AbstractDataFlow {
    */
   public function getWhereStatement() {
     $clauses = array("1");
-    foreach($this->getWhereClauses() as $clause) {
-      if (!$clause->isJoinClause()) {
+    foreach($this->getWhereClauses(FALSE, TRUE) as $clause) {
         $clauses[] = $clause->getWhereClause();
-      }
     }
     return "WHERE ". implode(" AND ", $clauses);
   }
@@ -280,9 +278,20 @@ abstract class SqlDataFlow extends AbstractDataFlow {
   /**
    * Return all the where clauses
    *
+   * @param bool $includeJoinClause
+   * @param bool $includeNonJoinClause
    * @return array
    */
-  public function getWhereClauses() {
+  public function getWhereClauses($includeJoinClause=TRUE, $includeNonJoinClause=TRUE) {
+    $clauses = [];
+    foreach($this->whereClauses as $clause) {
+      if ($clause->isJoinClause() && $includeJoinClause) {
+        $clauses[] = $clause;
+      }
+      if (!$clause->isJoinClause() && $includeNonJoinClause) {
+        $clauses[] = $clause;
+      }
+    }
     return $this->whereClauses;
   }
 

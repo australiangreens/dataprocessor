@@ -2,6 +2,7 @@
 
 * Refactor of how the navigation menu is build/stored. It now makes use of hook_civicrm_navigationMenu instead of storing the items in the database directly.
 * Refactor of config classes.
+* Fixed regression bug in getting where statements and join statements.
 
 # Version 1.22.1
 
