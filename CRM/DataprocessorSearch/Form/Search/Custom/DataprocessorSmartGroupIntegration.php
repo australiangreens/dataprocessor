@@ -42,9 +42,9 @@ class CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegrat
   /**
    * This is an symfony event for preUpdate which is run when just before saved search
    * is saved.
-   * @param \Civi\Core\DAO\Event\PreUpdate $event
+   * @param \Civi\Core\DAO\Event\PostUpdate $event
    */
-  public function alterSavedSearch(\Civi\Core\DAO\Event\PreUpdate $event) {
+  public function alterSavedSearch(\Civi\Core\DAO\Event\PostUpdate $event) {
     // Check whether we are saving saved search.
     // And check whether a data processor search has been run.
     if ($event->object instanceof \CRM_Contact_DAO_SavedSearch && self::$dataProcessorName) {
@@ -56,6 +56,11 @@ class CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegrat
       $event->object->search_custom_id = $custom_search_id;
       self::$formValues['customSearchID'] = $custom_search_id; // Store also the custom search id in the formValues.
       $event->object->form_values = serialize(self::$formValues);
+      \CRM_Core_DAO::executeQuery("UPDATE `{$event->object->tableName()}` SET `form_values` = %1, `search_custom_id` = %2 WHERE `id` = %3", [
+        1 => [$event->object->form_values, 'String'],
+        2 => [$event->object->search_custom_id, 'Integer'],
+        3 => [$event->object->id, 'Integer']
+      ]);
     }
   }
 
@@ -150,7 +155,7 @@ class CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegrat
 
     $this->runDataProcessorAndStoreInTempTable($tempTableName);
 
-    return "SELECT `id` FROM `{$tempTableName}` `contact_a`";
+    return "SELECT `id` AS `contact_id` FROM `{$tempTableName}` `contact_a`";
   }
 
   protected function runDataProcessorAndStoreInTempTable($table_name) {

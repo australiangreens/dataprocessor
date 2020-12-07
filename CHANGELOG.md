@@ -1,3 +1,7 @@
+# Version 1.23.2
+
+* Made smart group implementation compatible with civicrm version 5.14.1
+
 # Version 1.23.1
 
 * Fixed issue with config.
