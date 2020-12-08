@@ -106,6 +106,9 @@ abstract class AbstractApi implements API_ProviderInterface, EventSubscriberInte
     if (isset($apiRequest['params'])) {
       $params = $apiRequest['params'];
     }
+    if (!in_array($apiRequest['entity'], $entities)) {
+      return;
+    }
     foreach($entities as $entity) {
       $actions = $this->getActionNames(3, $entity);
       $actions = array_map('strtolower', $actions);

@@ -220,7 +220,8 @@ class Api extends AbstractApi implements OutputInterface {
    */
   public function getEntityNames($version=null) {
     $config = ConfigContainer::getInstance();
-    return $config->getParameter('entity_names');
+    $return = $config->getParameter('entity_names');
+    return $return;
   }
 
   /**
@@ -233,7 +234,10 @@ class Api extends AbstractApi implements OutputInterface {
   public function getActionNames($version, $entity) {
     $config = ConfigContainer::getInstance();
     $actions = $config->getParameter('action_names');
-    return $actions[$entity];
+    if (isset($actions[$entity])) {
+      return $actions[$entity];
+    }
+    return array();
   }
 
   /**
