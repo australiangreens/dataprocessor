@@ -102,7 +102,7 @@ class ContributionSource extends AbstractCivicrmEntitySource {
     $contributionSoftDataDescription = new DataFlowDescription($this->contributionSoftDataFlow, $join);
 
     // Create the subquery data flow
-    $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->getTable(), $this->getSourceName());
+    $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->contributionDataFlow->getTable(), $this->contributionDataFlow->getTableAlias());
     $this->entityDataFlow->addSourceDataFlow($contributionDataDescription);
     $this->entityDataFlow->addSourceDataFlow($contributionSoftDataDescription);
 
