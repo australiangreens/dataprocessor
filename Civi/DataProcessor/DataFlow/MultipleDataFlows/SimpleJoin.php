@@ -305,7 +305,7 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
           $this->leftFieldSpec = $this->left_source->getAvailableFields()->getFieldSpecificationByName($this->left_field);
         }
         if ($this->leftFieldSpec) {
-          $leftTable = $this->left_source->ensureField($this->leftFieldSpec);
+          $leftTable = $this->left_source->ensureFieldForJoin($this->leftFieldSpec);
           if ($leftTable && $leftTable instanceof SqlTableDataFlow) {
             $this->left_table = $leftTable->getTableAlias();
           }
@@ -322,7 +322,7 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
           $this->rightFieldSpec = $this->right_source->getAvailableFields()->getFieldSpecificationByName($this->right_field);
         }
         if ($this->rightFieldSpec) {
-          $rightTable = $this->right_source->ensureField($this->rightFieldSpec);
+          $rightTable = $this->right_source->ensureFieldForJoin($this->rightFieldSpec);
           if ($rightTable && $rightTable instanceof SqlTableDataFlow) {
             $this->right_table = $rightTable->getTableAlias();
           }

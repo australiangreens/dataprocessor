@@ -186,6 +186,31 @@ class CaseSource extends AbstractCivicrmEntitySource {
     }
   }
 
+  public function ensureField(FieldSpecification $field) {
+    if (stripos($field->name, 'case_contact_') === 0) {
+      $this->ensureEntity();
+      $field->name = str_replace('case_contact_', '', $field->name);
+      return $this->caseContactDataFlow;
+    }
+
+    return parent::ensureField($field);
+  }
+
+  /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field) {
+    if (stripos($field->name, 'case_contact_') === 0) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    }
+    return parent::ensureFieldForJoin($field);
+  }
+
   /**
    * Load the fields from this entity.
    *

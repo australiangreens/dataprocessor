@@ -15,6 +15,7 @@ use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
+use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 use Civi\DataProcessor\DataSpecification\Utils as DataSpecificationUtils;
 
@@ -169,6 +170,31 @@ class ContributionSource extends AbstractCivicrmEntitySource {
         $this->addFilterToAggregationDataFlow($spec, $op, $values);
       }
     }
+  }
+
+  public function ensureField(FieldSpecification $field) {
+    if (stripos($field->name, 'contribution_soft_') === 0) {
+      $this->ensureEntity();
+      $field->name = str_replace('contribution_soft_', '', $field->name);
+      return $this->contributionSoftDataFlow;
+    }
+
+    return parent::ensureField($field);
+  }
+
+  /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field) {
+    if (stripos($field->name, 'contribution_soft_') === 0) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    }
+    return parent::ensureFieldForJoin($field);
   }
 
   /**

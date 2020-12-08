@@ -195,6 +195,31 @@ class FileSource extends AbstractCivicrmEntitySource {
     return $additionalDataFlowDescription->getDataFlow();
   }
 
+  public function ensureField(FieldSpecification $field) {
+    if (stripos($field->name, 'entity_file_') === 0) {
+      $this->ensureEntity();
+      $field->name = str_replace('entity_file_', '', $field->name);
+      return $this->entityFileDataFlow;
+    }
+
+    return parent::ensureField($field);
+  }
+
+  /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field) {
+    if (stripos($field->name, 'entity_file_') === 0) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    }
+    return parent::ensureFieldForJoin($field);
+  }
+
   /**
    * Load the fields from this entity.
    *

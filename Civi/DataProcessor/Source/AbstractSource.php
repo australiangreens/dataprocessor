@@ -146,6 +146,17 @@ abstract class AbstractSource implements SourceInterface {
   }
 
   /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field) {
+    return $this->ensureField($field);
+  }
+
+  /**
    * Ensures a field is in the data source
    *
    * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $fieldSpecification
