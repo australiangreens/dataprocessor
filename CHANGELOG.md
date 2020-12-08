@@ -1,6 +1,7 @@
 # Version 1.23.5
 
 * Fixed regression bug with filter on certain fields which are secondary to the data source. Such as the activity record type id.
+* Fixed regression bug #66: Dataprocessor breaks API3 explorer actions list
 
 # Version 1.23.4
 
