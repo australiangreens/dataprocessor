@@ -66,7 +66,6 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
     if (!$this->dataProcessorId) {
       $debug = CRM_Utils_Request::retrieve('debug', 'Boolean');
       $doNotUseCache = $debug ? true : false;
-      $doNotUseCache = true;
 
       $dataProcessorName = $this->getDataProcessorName();
       $sql = "
