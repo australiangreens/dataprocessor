@@ -198,7 +198,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $this->defaults = [];
     // we allow the controller to set force/reset externally, useful when we are being
     // driven by the wizard framework
-    $this->_debug = CRM_Utils_Request::retrieveValue('debug', 'Boolean');
+    $this->_debug = $this->isDebug();
     $this->_reset = CRM_Utils_Request::retrieveValue('reset', 'Boolean');
     $this->_force = CRM_Utils_Request::retrieveValue('force', 'Boolean');
     $this->_context = CRM_Utils_Request::retrieveValue('context', 'String', 'search');

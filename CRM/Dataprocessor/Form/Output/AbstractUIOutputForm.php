@@ -56,6 +56,20 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
     $this->assign('has_exposed_filters', $this->hasExposedFilters());
   }
 
+  public function buildQuickForm() {
+    parent::buildQuickForm();
+    $this->add('hidden', 'debug');
+    $this->setDefaults(['debug' => $this->isDebug()]);
+  }
+
+  protected function isDebug() {
+    $debug = CRM_Utils_Request::retrieve('debug', 'Boolean');
+    if (!$debug) {
+      $debug = isset($this->_formValues['debug']) ? $this->_formValues['debug'] : false;
+    }
+    return $debug ? true : false;
+  }
+
   /**
    * Retrieve the data processor and the output configuration
    *
@@ -64,8 +78,7 @@ abstract class CRM_Dataprocessor_Form_Output_AbstractUIOutputForm extends CRM_Co
   protected function loadDataProcessor() {
     $factory = dataprocessor_get_factory();
     if (!$this->dataProcessorId) {
-      $debug = CRM_Utils_Request::retrieve('debug', 'Boolean');
-      $doNotUseCache = $debug ? true : false;
+      $doNotUseCache = $this->isDebug();
 
       $dataProcessorName = $this->getDataProcessorName();
       $sql = "
