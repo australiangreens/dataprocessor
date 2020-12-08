@@ -1,3 +1,8 @@
+# Version 1.23.6
+
+* Fixed regression issue with file data source and with contribution source.
+* Fixed #64 aggregation on a custom field of a contribution data source works.
+
 # Version 1.23.5
 
 * Fixed regression bug with filter on certain fields which are secondary to the data source. Such as the activity record type id.
