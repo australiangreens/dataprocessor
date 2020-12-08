@@ -56,7 +56,7 @@ class Utils {
       if ($customGroup['is_active']) {
         $customFields = ConfigContainer::getInstance()->getCustomFieldsOfCustomGroup($customGroup['id']);
         foreach ($customFields as $field) {
-          if ($field['is_active'] && (!$onlySearchAbleFields || (isset($field['is_searchable']) && $field['is_searchable']))) {
+          if (!empty($field['is_active']) && (!$onlySearchAbleFields || (isset($field['is_searchable']) && $field['is_searchable']))) {
             $alias = $aliasPrefix . $customGroup['name'] . '_' . $field['name'];
             $customFieldSpec = new CustomFieldSpecification(
               $customGroup['name'], $customGroup['table_name'], $customGroup['title'],
