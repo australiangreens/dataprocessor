@@ -1,3 +1,5 @@
+# Version 1.24 (not yet released)
+
 # Version 1.23.6
 
 * Fixed regression issue with file data source and with contribution source.
