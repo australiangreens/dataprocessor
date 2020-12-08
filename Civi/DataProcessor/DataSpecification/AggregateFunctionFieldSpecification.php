@@ -98,7 +98,7 @@ class AggregateFunctionFieldSpecification extends FieldSpecification implements 
    * @return \Civi\DataProcessor\DataSpecification\AggregateFunctionFieldSpecification
    */
   public static function convertFromFieldSpecification(FieldSpecification $fieldSpecification, $function) {
-    $return = new AggregateFunctionFieldSpecification($fieldSpecification->name, $fieldSpecification->type, $fieldSpecification->title, $fieldSpecification->options, $fieldSpecification->alias);
+    $return = new AggregateFunctionFieldSpecification($fieldSpecification->getName(), $fieldSpecification->type, $fieldSpecification->title, $fieldSpecification->options, $fieldSpecification->alias);
     $return->setAggregateFunction($function);
     return $return;
   }
