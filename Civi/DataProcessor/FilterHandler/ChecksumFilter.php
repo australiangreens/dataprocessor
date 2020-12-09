@@ -161,7 +161,7 @@ class ChecksumFilter extends AbstractFieldFilterHandler {
       list($cs, $ts, $lf) = explode('_', $filter['value'], 3);
       $now = time();
       $tableAlias = $this->getTableAlias($dataFlow);
-      $hashTableAlias = $this->getTableAlias($hashTableAlias);
+      $hashTableAlias = $this->getTableAlias($hashDataFlow);
       $this->whereClause = new SqlDataFlow\PureSqlStatementClause(
         "MD5(CONCAT(
           `{$hashTableAlias}`.`{$this->hashInputFieldSpecification->getName()}`,

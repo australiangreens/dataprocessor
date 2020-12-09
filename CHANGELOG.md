@@ -1,5 +1,6 @@
-# Version 1.24 (not yet released)
+# Version 1.23.8
 
+* Fixed regression bug in Checksum filter. 
 
 # Version 1.23.7
 
