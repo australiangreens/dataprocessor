@@ -58,7 +58,7 @@ class ActivitySource extends AbstractCivicrmEntitySource {
     parent::__construct();
 
     // Create the activity data flow and data flow description
-    $this->activityDataFlow = new SqlTableDataFlow($this->getTable(), $this->getSourceName().'_activity', $this->getSourceTitle());
+    $this->activityDataFlow = new SqlTableDataFlow($this->getTable(), $this->getSourceName().'_activity');
     DataSpecificationUtils::addDAOFieldsToDataSpecification('CRM_Activity_DAO_Activity', $this->activityDataFlow->getDataSpecification());
 
     // Create the activity contact data flow and data flow description
@@ -301,7 +301,6 @@ class ActivitySource extends AbstractCivicrmEntitySource {
         );
       } else {
         $this->ensureEntity();
-
         if (stripos($spec->name, 'activity_contact_') === 0) {
           $name = str_replace('activity_contact_', '', $spec->name);
           $this->activityContactDataFlow->addWhereClause(new SimpleWhereClause($this->activityContactDataFlow->getTableAlias(), $name, $op, $values, $spec->type, FALSE));
@@ -316,6 +315,7 @@ class ActivitySource extends AbstractCivicrmEntitySource {
     }
   }
 
+
   public function ensureField(FieldSpecification $field) {
     if (stripos($field->name, 'activity_contact_') === 0) {
       $this->ensureEntity();
@@ -324,6 +324,12 @@ class ActivitySource extends AbstractCivicrmEntitySource {
     } elseif (stripos($field->name, 'activity_case_') === 0) {
       $this->ensureEntity();
       $field->name = str_replace('activity_case_', '', $field->name);
+      return $this->activityCaseDataFlow;
+    }
+    if ($this->activityContactDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      return $this->activityContactDataFlow;
+    }
+    if ($this->activityCaseDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
       return $this->activityCaseDataFlow;
     }
 

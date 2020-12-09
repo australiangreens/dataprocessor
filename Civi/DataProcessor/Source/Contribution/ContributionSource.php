@@ -178,6 +178,9 @@ class ContributionSource extends AbstractCivicrmEntitySource {
       $field->name = str_replace('contribution_soft_', '', $field->name);
       return $this->contributionSoftDataFlow;
     }
+    if ($this->contributionSoftDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      return $this->contributionSoftDataFlow;
+    }
 
     return parent::ensureField($field);
   }

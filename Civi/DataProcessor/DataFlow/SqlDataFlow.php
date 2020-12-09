@@ -12,6 +12,7 @@ use Civi\DataProcessor\DataFlow\Utils\Aggregator;
 use \Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\FieldExistsException;
 use Civi\DataProcessor\FieldOutputHandler\OutputHandlerAggregate;
+use CRM_Dataprocessor_ExtensionUtil as E;
 
 abstract class SqlDataFlow extends AbstractDataFlow {
 
@@ -125,10 +126,12 @@ abstract class SqlDataFlow extends AbstractDataFlow {
       $sql = "{$selectAndFrom} {$where} {$groupBy} {$orderBy}";
       $countSql = "SELECT COUNT(*) AS count FROM ({$sql}) `{$countName}`";
       $this->sqlCountStatements[] = $countSql;
-      $countDao = \CRM_Core_DAO::executeQuery($countSql);
+      $countDao = \CRM_Core_DAO::executeQuery($countSql, [], true, NULL, false, true, true);
       $this->count = 0;
-      while ($countDao->fetch()) {
-        $this->count = $this->count + $countDao->count;
+      if (!is_a($countDao, 'DB_Error') && $countDao) {
+        while ($countDao->fetch()) {
+          $this->count = $this->count + $countDao->count;
+        }
       }
 
       // Build Limit and Offset.
@@ -145,13 +148,16 @@ abstract class SqlDataFlow extends AbstractDataFlow {
       }
       $sql .= " {$limitStatement}";
       $this->sqlStatements[] = $sql;
-      $this->dao = \CRM_Core_DAO::executeQuery($sql);
+      $this->dao = \CRM_Core_DAO::executeQuery($sql, [], true, NULL, false, true, true);
+      if (is_a($this->dao, 'DB_Error') || !$this->dao) {
+        throw new \Exception('Error in dataflow');
+      }
     } catch (\Exception $e) {
       throw new \Exception(
         "Error in DataFlow query.
         \r\nData flow: {$this->getName()}
+        \r\nQuery: {$sql}
         \r\nCount query: {$countSql}
-        \r\nQuery: $sql
         \r\nMessage: {$e->getMessage()}", 0, $e);
 
 

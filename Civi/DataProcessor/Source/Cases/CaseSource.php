@@ -192,6 +192,9 @@ class CaseSource extends AbstractCivicrmEntitySource {
       $field->name = str_replace('case_contact_', '', $field->name);
       return $this->caseContactDataFlow;
     }
+    if ($this->caseContactDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      return $this->caseContactDataFlow;
+    }
 
     return parent::ensureField($field);
   }

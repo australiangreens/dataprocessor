@@ -201,6 +201,9 @@ class FileSource extends AbstractCivicrmEntitySource {
       $field->name = str_replace('entity_file_', '', $field->name);
       return $this->entityFileDataFlow;
     }
+    if ($this->entityFileDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      return $this->entityFileDataFlow;
+    }
 
     return parent::ensureField($field);
   }
