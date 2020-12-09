@@ -1,3 +1,6 @@
+# Version 1.24 (not yet released)
+
+
 # Version 1.23.7
 
 * Fixed another regression bug with filter on certain fields which are secondary to the data source. Such as the activity record type id.
