@@ -1,3 +1,5 @@
+# Version 1.25 (not yet released)
+
 # Version 1.24
 
 * Fixed issue with sorting the data processor and case insenstivity.
