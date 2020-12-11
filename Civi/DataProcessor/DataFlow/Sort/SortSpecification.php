@@ -116,7 +116,7 @@ class SortSpecification {
    */
   public function compare($row_a, $row_b) {
     $comparer = $this->getComparer();
-    $compareValue = $comparer->sort($row_a[$this->fieldName], $row_b[$this->fieldName]);
+    $compareValue = $comparer->sort($row_a[$this->fieldName]->rawValue, $row_b[$this->fieldName]->rawValue);
     if ($this->direction == self::DESC) {
       if ($compareValue < 0) {
         $compareValue = 1;

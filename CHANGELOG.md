@@ -1,8 +1,10 @@
-# Version 1.24 (not yet released)
+# Version 1.24
+
+* Fixed issue with sorting the data processor and case insenstivity.
 
 # Version 1.23.8
 
-* Fixed regression bug in Checksum filter. 
+* Fixed regression bug in Checksum filter.
 
 # Version 1.23.7
 
