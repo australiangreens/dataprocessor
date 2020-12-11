@@ -155,20 +155,15 @@ abstract class AbstractProcessorType {
    */
   public function getDataFlow() {
     if (!$this->dataflow) {
-      if (count($this->dataSources) === 1) {
-        $dataflow = $this->dataSources[0]['datasource']->getDataFlow();
+      if ($this->allSqlDataFlows) {
+        $dataflow = new CombinedSqlDataFlow();
       }
       else {
-        if ($this->allSqlDataFlows) {
-          $dataflow = new CombinedSqlDataFlow();
-        }
-        else {
-          $dataflow = new CombinedDataFlow();
-        }
-        foreach ($this->dataSources as $datasource) {
-          $dataFlowDescription = new DataFlowDescription($datasource['datasource']->getDataFlow(), $datasource['combine_specification']);
-          $dataflow->addSourceDataFlow($dataFlowDescription);
-        }
+        $dataflow = new CombinedDataFlow();
+      }
+      foreach ($this->dataSources as $datasource) {
+        $dataFlowDescription = new DataFlowDescription($datasource['datasource']->getDataFlow(), $datasource['combine_specification']);
+        $dataflow->addSourceDataFlow($dataFlowDescription);
       }
 
       if ($this->storage) {

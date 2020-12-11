@@ -1,4 +1,6 @@
-# Version 1.25 (not yet released)
+# Version 1.24.1
+
+* Fixed regression bug when only one activity data source is present.
 
 # Version 1.24
 
