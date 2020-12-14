@@ -1,5 +1,7 @@
 # Version 1.25 (not yet released)
 
+* Fix for #68: contact search actions did not work after upgrading to 5.32.2
+
 # Version 1.24.1
 
 * Fixed regression bug when only one activity data source is present.

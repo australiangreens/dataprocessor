@@ -42,6 +42,7 @@ class CRM_Contact_Controller_DataProcessorContactSearch extends CRM_Core_Control
 
     // create and instantiate the pages
     $this->addPages($this->_stateMachine, $action);
+    $this->set('entity', 'Contact');
 
     // add all the actions
     $this->addActions();
