@@ -66,6 +66,11 @@ class Config extends Container {
       $customFieldsPerGroup[$customField['custom_group_id']][] = $customField;
     }
 
+    $customGroups = $containerBuilder->getParameterBag()->escapeValue($customGroups);
+    $customGroupPerExtends = $containerBuilder->getParameterBag()->escapeValue($customGroupPerExtends);
+    $customFieldsPerGroup = $containerBuilder->getParameterBag()->escapeValue($customFieldsPerGroup);
+    $customFields = $containerBuilder->getParameterBag()->escapeValue($customFields);
+
     $containerBuilder->setParameter('custom_groups', $customGroups);
     $containerBuilder->setParameter('custom_groups_per_extends', $customGroupPerExtends);
     $containerBuilder->setParameter('custom_fields_per_group', $customFieldsPerGroup);
