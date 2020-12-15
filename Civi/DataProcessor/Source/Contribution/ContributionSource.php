@@ -196,6 +196,12 @@ class ContributionSource extends AbstractCivicrmEntitySource {
     if (stripos($field->name, 'contribution_soft_') === 0) {
       $this->ensureEntity();
       return $this->entityDataFlow;
+    } elseif ($this->contributionDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    } elseif ($this->contributionSoftDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
     }
     return parent::ensureFieldForJoin($field);
   }
