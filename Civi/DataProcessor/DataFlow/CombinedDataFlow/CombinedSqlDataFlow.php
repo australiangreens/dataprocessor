@@ -155,9 +155,8 @@ class CombinedSqlDataFlow extends SqlDataFlow implements MultipleSourceDataFlows
       $fields[] = $outputHandler->getAggregateFieldSpec()->getSqlGroupByStatement($this->getName());
     }
     foreach($this->sourceDataFlowDescriptions as $sourceDataFlowDescription) {
-      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow && !$sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
-        $fields = array_merge($fields, $sourceDataFlowDescription->getDataFlow()
-          ->getFieldsForGroupByStatement());
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow) {
+        $fields = array_merge($fields, $sourceDataFlowDescription->getDataFlow()->getFieldsForGroupByStatement());
       }
     }
     return $fields;

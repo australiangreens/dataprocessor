@@ -7,6 +7,7 @@
 namespace Civi\DataProcessor\DataFlow\CombinedDataFlow;
 
 use Civi\DataProcessor\DataFlow\EndOfFlowException;
+use Civi\DataProcessor\DataFlow\SqlDataFlow;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\SqlFieldSpecification;
@@ -40,8 +41,12 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
    */
   public function getTableStatement() {
     $fields = array();
+    $groupByFields = array();
     foreach($this->sourceDataFlowDescriptions as $sourceDataFlowDescription) {
       $fields = array_merge($fields, $sourceDataFlowDescription->getDataFlow()->getFieldsForSelectStatement());
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow) {
+        $groupByFields = array_merge($groupByFields, $sourceDataFlowDescription->getDataFlow()->getFieldsForGroupByStatement());
+      }
     }
 
     $fromStatements = array();
@@ -71,7 +76,10 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
     $from = implode(" ", $fromStatements);
     $select = implode(", ", $fields);
     $where = $this->getWhereStatement();
-    $groupBy = $this->getGroupByStatement();
+    $groupBy = "";
+    if (count($groupByFields)) {
+      $groupBy = "GROUP BY ".implode(", ", $groupByFields);
+    }
     return "(SELECT {$select} {$from} {$where} {$groupBy}) `{$alias}`";
   }
 
@@ -89,6 +97,19 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
       } else {
         $fields[] = "`{$this->name}`.`{$field->name}` AS `{$field->alias}`";
       }
+    }
+    return $fields;
+  }
+
+  /**
+   * Returns an array with the fields for in the group by statement in the sql query.
+   *
+   * @return string[]
+   */
+  public function getFieldsForGroupByStatement() {
+    $fields = array();
+    foreach($this->aggregateOutputHandlers as $outputHandler) {
+      $fields[] = $outputHandler->getAggregateFieldSpec()->getSqlGroupByStatement($this->getName());
     }
     return $fields;
   }

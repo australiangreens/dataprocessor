@@ -4,6 +4,7 @@
 * Fix for #67: error when a custom field or custom groups contains an @ or % sign in the help texts.
 * Fixed issue with join on contribution data source.
 * Added better error handling.
+* Fixed issue with aggregation fields and a subquery data flow.
 
 # Version 1.24.1
 
