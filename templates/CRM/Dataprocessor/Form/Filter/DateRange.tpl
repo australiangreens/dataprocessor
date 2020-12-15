@@ -22,6 +22,7 @@
     <script type="text/javascript">
       cj("#{/literal}{$relativeName}{literal}").change(function() {
         var n = cj(this).parent().parent();
+        console.log(cj(this).val());
         if (cj(this).val() == "0") {
           cj(".crm-absolute-date-range", n).show();
         } else {

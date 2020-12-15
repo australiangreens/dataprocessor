@@ -402,9 +402,13 @@ abstract class AbstractFilterHandler {
     }
     if (isset($submittedValues[$alias.'_from'])) {
       $return['from'] = $submittedValues[$alias . '_from'];
+    } elseif (isset($submittedValues[$alias.'_low'])) {
+      $return['from'] = $submittedValues[$alias . '_low'];
     }
     if (isset($submittedValues[$alias.'_to'])) {
       $return['to'] = $submittedValues[$alias . '_to'];
+    } elseif (isset($submittedValues[$alias.'_high'])) {
+      $return['to'] = $submittedValues[$alias . '_high'];
     }
     if (isset($submittedValues[$alias.'_from_time'])) {
       $return['from_time'] = $submittedValues[$alias.'_from_time'];
@@ -482,7 +486,7 @@ abstract class AbstractFilterHandler {
         case \CRM_Utils_Type::T_DATE:
         case \CRM_Utils_Type::T_TIMESTAMP:
           $additionalOptions['null'] = E::ts('Not set');
-          $form->addDatePickerRange($alias, $title, FALSE, FALSE, E::ts('From'), E::ts('To'), $additionalOptions, '_from', '_to');
+          \CRM_Dataprocessor_Utils_Form::addDatePickerRange($form, $alias, $title, FALSE, FALSE, E::ts('From'), E::ts('To'), $additionalOptions, '_high', '_low');
           if (isset($defaultFilterValue['op'])) {
             $defaults[$alias . '_op'] = $defaultFilterValue['op'];
           }

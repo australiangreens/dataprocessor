@@ -21,8 +21,8 @@
     {if !($filter.operatorType & 4) && !$filter.no_display && $form.$fieldOp.html}
         var val = document.getElementById("{$fieldOp}").value;
     {/if}
-    showHideMaxMinVal("{$filter.alias}", val );
-    initializeOperator("{$filter.alias}");
+    showHideMaxMinVal("filter-{$filter.alias}", val );
+    initializeOperator("filter-{$filter.alias}");
     {literal}
 
     function showHideMaxMinVal( field, val ) {
@@ -57,7 +57,7 @@
     CRM.$(function($) {
       cj("#{/literal}{$fieldOp}{literal}").change(function() {
         var val = $(this).val();
-        showHideMaxMinVal("{/literal}{$filter.alias}{literal}", val );
+        showHideMaxMinVal("filter-{/literal}{$filter.alias}{literal}", val );
       });
     });
     {/literal}

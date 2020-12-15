@@ -14,7 +14,7 @@
     </td>
     <td>
       {if $filter.type == 'Date' || $filter.type == 'Timestamp'}
-          {include file="CRM/Dataprocessor/Form/Filter/DateRange.tpl" fieldName=$filter.alias from='_from' to='_to'}
+          {include file="CRM/Dataprocessor/Form/Filter/DateRange.tpl" fieldName=$filter.alias from='_low' to='_high'}
       {else}
           <span id="{$filterVal}_cell">{$form.$filterVal.label}&nbsp;{$form.$filterVal.html}</span>
           <span id="{$filterMin}_max_cell">{$form.$filterMin.label}&nbsp;{$form.$filterMin.html}&nbsp;&nbsp;{$form.$filterMax.label}&nbsp;{$form.$filterMax.html}</span>

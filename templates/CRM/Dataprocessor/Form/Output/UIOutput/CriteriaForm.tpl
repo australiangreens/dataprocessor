@@ -41,13 +41,13 @@
       {if !($field.operatorType & 4) && !$field.no_display && $form.$fieldOp.html}
               {literal}var val = document.getElementById("{/literal}{$fieldOp}{literal}").value;{/literal}
       {/if}
-      {literal}showHideMaxMinVal( "{/literal}{$filterName}{literal}", val );{/literal}
-      {literal}initializeOperator( "{/literal}{$filterName}{literal}");{/literal}
+      {literal}showHideMaxMinVal( "filter-{/literal}{$filterName}{literal}", val );{/literal}
+      {literal}initializeOperator( "filter-{/literal}{$filterName}{literal}");{/literal}
       {literal}
         CRM.$(function($) {
           cj("#{/literal}{$fieldOp}{literal}").change(function() {
             var val = $(this).val();
-            showHideMaxMinVal("{/literal}{$filter.alias}{literal}", val );
+            showHideMaxMinVal("filter-{/literal}{$filter.alias}{literal}", val );
           });
         });
       {/literal}

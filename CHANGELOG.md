@@ -6,6 +6,7 @@
 * Added better error handling.
 * Fixed issue with aggregation fields and a subquery data flow.
 * Fixed issue with backwards compatibility and field drop down.
+* Fixed issue with date filter and civicrm version before 5.25
 
 # Version 1.24.1
 
