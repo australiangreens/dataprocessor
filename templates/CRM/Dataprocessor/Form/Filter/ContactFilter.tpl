@@ -8,8 +8,8 @@
     <td class="label">{$filter.title}</td>
     <td>
       {if $form.$fieldOp.html}
-        <span class="filter-processor-element {$filter.alias}">{$form.$fieldOp.html}</span>
-        <span class="filter-processor-show-close {$filter.alias}">&nbsp;</span>
+        <span class="filter-processor-element filter-{$filter.alias}">{$form.$fieldOp.html}</span>
+        <span class="filter-processor-show-close filter-{$filter.alias}">&nbsp;</span>
       {/if}
     </td>
     <td>
