@@ -147,10 +147,10 @@ class ManageCaseLinkFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['contact_id_field']) && isset($configuration['contact_id_datasource'])) {
-        $defaults['contact_id_field'] = $configuration['contact_id_datasource'] . '::' . $configuration['contact_id_field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['contact_id_datasource'], $configuration['contact_id_field']);
       }
       if (isset($configuration['case_id_field']) && isset($configuration['case_id_datasource'])) {
-        $defaults['case_id_field'] = $configuration['case_id_datasource'] . '::' . $configuration['case_id_field'];
+        $defaults['case_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['case_id_datasource'], $configuration['case_id_field']);
       }
       if (isset($configuration['link_title'])) {
         $defaults['link_title'] = $configuration['link_title'];

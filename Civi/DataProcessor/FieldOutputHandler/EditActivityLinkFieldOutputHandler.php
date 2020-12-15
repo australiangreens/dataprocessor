@@ -128,10 +128,10 @@ class EditActivityLinkFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['activity_id_field']) && isset($configuration['activity_id_datasource'])) {
-        $defaults['activity_id_field'] = $configuration['activity_id_datasource'] . '::' . $configuration['activity_id_field'];
+        $defaults['activity_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['activity_id_datasource'], $configuration['activity_id_field']);
       }
       if (isset($configuration['contact_id_field']) && isset($configuration['contact_id_datasource'])) {
-        $defaults['contact_id_field'] = $configuration['contact_id_datasource'] . '::' . $configuration['contact_id_field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['contact_id_datasource'], $configuration['contact_id_field']);
       }
       $form->setDefaults($defaults);
     }

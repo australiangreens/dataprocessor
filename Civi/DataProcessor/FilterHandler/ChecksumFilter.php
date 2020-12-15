@@ -111,10 +111,10 @@ class ChecksumFilter extends AbstractFieldFilterHandler {
       $configuration = $filter['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['hash_field']) && isset($configuration['hash_datasource'])) {
-        $defaults['hash_field'] = $configuration['hash_datasource'] . '::' . $configuration['hash_field'];
+        $defaults['hash_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['hash_datasource'], $configuration['hash_field']);
       }
       $form->setDefaults($defaults);
     }

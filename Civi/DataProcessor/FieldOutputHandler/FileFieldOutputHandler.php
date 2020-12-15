@@ -141,7 +141,7 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
         $defaults['return_url'] = $configuration['return_url'];
       }
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       $form->setDefaults($defaults);
     }

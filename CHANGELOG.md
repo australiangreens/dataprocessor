@@ -5,6 +5,7 @@
 * Fixed issue with join on contribution data source.
 * Added better error handling.
 * Fixed issue with aggregation fields and a subquery data flow.
+* Fixed issue with backwards compatibility and field drop down.
 
 # Version 1.24.1
 

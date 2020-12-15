@@ -130,7 +130,7 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['link_field']) && isset($configuration['link_field_datasource'])) {
-        $defaults['link_field'] = $configuration['link_field_datasource'] . '::' . $configuration['link_field'];
+        $defaults['link_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['link_field_datasource'], $configuration['link_field']);
       }
       if (isset($configuration['link_template'])) {
         $defaults['link_template'] = $configuration['link_template'] ;

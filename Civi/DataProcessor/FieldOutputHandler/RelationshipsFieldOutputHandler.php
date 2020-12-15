@@ -255,7 +255,7 @@ class RelationshipsFieldOutputHandler extends AbstractFieldOutputHandler {
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['contact_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['relationship_types'])) {
         $defaults['relationship_type_checkboxes'] = array();

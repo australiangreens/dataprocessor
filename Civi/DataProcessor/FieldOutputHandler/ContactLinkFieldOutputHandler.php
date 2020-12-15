@@ -138,10 +138,10 @@ class ContactLinkFieldOutputHandler extends AbstractFieldOutputHandler implement
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['contact_id_field']) && isset($configuration['contact_id_datasource'])) {
-        $defaults['contact_id_field'] = $configuration['contact_id_datasource'] . '::' . $configuration['contact_id_field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['contact_id_datasource'], $configuration['contact_id_field']);
       }
       if (isset($configuration['contact_name_field']) && isset($configuration['contact_name_datasource'])) {
-        $defaults['contact_name_field'] = $configuration['contact_name_datasource'] . '::' . $configuration['contact_name_field'];
+        $defaults['contact_name_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['contact_name_datasource'], $configuration['contact_name_field']);
       }
       $form->setDefaults($defaults);
     }

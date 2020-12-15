@@ -273,9 +273,9 @@ abstract class AbstractSource implements SourceInterface {
     $defaults = array();
     if (isset($source['configuration']['filter'])) {
       foreach($source['configuration']['filter'] as $alias => $filter) {
-        $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByName($alias);
+        $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByAlias($alias);
         if (!$fieldSpec) {
-          $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByAlias($alias);
+          $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByName($alias);
         }
         $defaults[$fieldSpec->name.'_op'] = $filter['op'];
         $defaults[$fieldSpec->name.'_value'] = $filter['value'];

@@ -169,7 +169,7 @@ class CaseRolesFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['case_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['case_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['relationship_types'])) {
         $defaults['relationship_types'] = $configuration['relationship_types'];

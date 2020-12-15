@@ -83,7 +83,7 @@ class DateFilter extends AbstractFieldFilterHandler {
     if (isset($filter['configuration'])) {
       $configuration = $filter['configuration'];
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['datasource'], $configuration['field']);
         $form->setDefaults($defaults);
       }
     }

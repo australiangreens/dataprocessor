@@ -157,13 +157,13 @@ class IsActiveFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['is_active_field']) && isset($configuration['is_active_datasource'])) {
-        $defaults['is_active_field'] = $configuration['is_active_datasource'] . '::' . $configuration['is_active_field'];
+        $defaults['is_active_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['is_active_datasource'], $configuration['is_active_field']);
       }
       if (isset($configuration['start_date_field']) && isset($configuration['start_date_datasource'])) {
-        $defaults['start_date_field'] = $configuration['start_date_datasource'] . '::' . $configuration['start_date_field'];
+        $defaults['start_date_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['start_date_datasource'], $configuration['start_date_field']);
       }
       if (isset($configuration['end_date_field']) && isset($configuration['end_date_datasource'])) {
-        $defaults['end_date_field'] = $configuration['end_date_datasource'] . '::' . $configuration['end_date_field'];
+        $defaults['end_date_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['end_date_datasource'], $configuration['end_date_field']);
       }
       $form->setDefaults($defaults);
     }

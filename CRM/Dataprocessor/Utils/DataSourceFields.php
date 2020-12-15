@@ -9,6 +9,34 @@ use Civi\DataProcessor\Source\SourceInterface;
 class CRM_Dataprocessor_Utils_DataSourceFields {
 
   /**
+   * Get the value for the selected field.
+   *
+   * @param $dataProcessorId
+   * @param $dataSourceName
+   * @param $fieldName
+   *
+   * @return string|null
+   * @throws \CiviCRM_API3_Exception
+   */
+  public static function getSelectedFieldValue($dataProcessorId, $dataSourceName, $fieldName) {
+    $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $dataProcessorId));
+    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
+    $dataSource = $dataProcessorClass->getDataSourceByName($dataSourceName);
+    if ($dataSource) {
+      $inputFieldSpec = $dataSource->getAvailableFields()
+        ->getFieldSpecificationByAlias($fieldName);
+      if (!$inputFieldSpec) {
+        $inputFieldSpec = $dataSource->getAvailableFields()
+          ->getFieldSpecificationByName($fieldName);
+      }
+      if ($inputFieldSpec) {
+        return $dataSourceName.'::'.$inputFieldSpec->alias;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Returns an array with the name of the field as the key and the label of the field as the value.
    *
    * @oaram int $dataProcessorId

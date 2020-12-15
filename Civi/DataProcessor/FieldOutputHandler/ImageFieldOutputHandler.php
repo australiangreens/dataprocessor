@@ -132,7 +132,7 @@ class ImageFieldOutputHandler extends AbstractFieldOutputHandler
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['image_field']) && isset($configuration['datasource'])) {
-        $defaults['image_field'] = $configuration['datasource'] . '::' . $configuration['image_field'];
+        $defaults['image_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['image_field']);
       }
       if (isset($configuration['image_text'])) {
         $defaults['image_text'] = $configuration['image_text'];
