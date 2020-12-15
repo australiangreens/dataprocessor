@@ -214,6 +214,7 @@ abstract class AbstractSource implements SourceInterface {
       if (in_array($alias, $requiredFilters)) {
         $isRequired = true;
       }
+
       switch ($fieldSpec->type) {
         case 'Boolean':
           if ($isRequired) {
@@ -272,8 +273,12 @@ abstract class AbstractSource implements SourceInterface {
     $defaults = array();
     if (isset($source['configuration']['filter'])) {
       foreach($source['configuration']['filter'] as $alias => $filter) {
-        $defaults[$alias.'_op'] = $filter['op'];
-        $defaults[$alias.'_value'] = $filter['value'];
+        $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByName($alias);
+        if (!$fieldSpec) {
+          $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByAlias($alias);
+        }
+        $defaults[$fieldSpec->name.'_op'] = $filter['op'];
+        $defaults[$fieldSpec->name.'_value'] = $filter['value'];
       }
     }
     $form->setDefaults($defaults);
