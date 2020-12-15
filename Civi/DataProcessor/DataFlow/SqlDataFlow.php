@@ -11,6 +11,7 @@ use Civi\DataProcessor\DataFlow\SqlDataFlow\WhereClauseInterface;
 use Civi\DataProcessor\DataFlow\Utils\Aggregator;
 use \Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\FieldExistsException;
+use Civi\DataProcessor\Exception\DataFlowException;
 use Civi\DataProcessor\FieldOutputHandler\OutputHandlerAggregate;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
@@ -150,15 +151,14 @@ abstract class SqlDataFlow extends AbstractDataFlow {
       $this->sqlStatements[] = $sql;
       $this->dao = \CRM_Core_DAO::executeQuery($sql, [], true, NULL, false, true, true);
       if (is_a($this->dao, 'DB_Error') || !$this->dao) {
-        throw new \Exception('Error in dataflow');
+        throw new DataFlowException('Error in dataflow: '.$sql);
       }
     } catch (\Exception $e) {
-      throw new \Exception(
+      throw new DataFlowException(
         "Error in DataFlow query.
         \r\nData flow: {$this->getName()}
         \r\nQuery: {$sql}
-        \r\nCount query: {$countSql}
-        \r\nMessage: {$e->getMessage()}", 0, $e);
+        \r\nCount query: {$countSql}");
 
 
     }

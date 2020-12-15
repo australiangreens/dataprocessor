@@ -117,6 +117,8 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
       }
     } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
       // Do nothing
+    } catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      // Do nothing
     }
     $this->controller->set('entityIds', $this->entityIDs);
   }

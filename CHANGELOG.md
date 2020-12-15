@@ -2,6 +2,8 @@
 
 * Fix for #68: contact search actions did not work after upgrading to 5.32.2
 * Fix for #67: error when a custom field or custom groups contains an @ or % sign in the help texts.
+* Fixed issue with join on contribution data source.
+* Added better error handling.
 
 # Version 1.24.1
 

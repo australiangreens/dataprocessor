@@ -311,16 +311,16 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
 
     $this->alterDataProcessor($this->dataProcessorClass);
 
-    $pagerParams = $this->getPagerParams();
-    $pagerParams['total'] = $this->dataProcessorClass->getDataFlow()->recordCount();
-    $pagerParams['pageID'] = $pageId;
-    $this->pager = new CRM_Utils_Pager($pagerParams);
-    $this->assign('pager', $this->pager);
-    $this->controller->set('rowCount', $this->dataProcessorClass->getDataFlow()->recordCount());
-    $showLink = false;
-
-    $i=0;
     try {
+      $pagerParams = $this->getPagerParams();
+      $pagerParams['total'] = $this->dataProcessorClass->getDataFlow()->recordCount();
+      $pagerParams['pageID'] = $pageId;
+      $this->pager = new CRM_Utils_Pager($pagerParams);
+      $this->assign('pager', $this->pager);
+      $this->controller->set('rowCount', $this->dataProcessorClass->getDataFlow()->recordCount());
+      $showLink = false;
+
+      $i=0;
       while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
         $i ++;
         $row = array();
@@ -367,6 +367,8 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
       }
     } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
       // Do nothing
+    } catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      \CRM_Core_Session::setStatus(E::ts('Error in data processor'), E::ts('Error'), 'error');
     }
 
     $this->alterRows($rows, $ids);
@@ -376,6 +378,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $this->assign('no_result_text', $this->getNoResultText());
     $this->assign('showLink', $showLink);
     $this->assign('debug_info', $this->dataProcessorClass->getDataFlow()->getDebugInformation());
+
     if ($this->usePrevNextCache()) {
       $cacheKey = "civicrm search {$this->controller->_key}";
       CRM_DataprocessorSearch_Utils_PrevNextCache::fillWithArray($cacheKey, $prevnextData);

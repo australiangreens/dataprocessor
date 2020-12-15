@@ -62,6 +62,7 @@ abstract class AbstractDataFlow {
    * Initialize the data flow
    *
    * @return void
+   * @throws \Civi\DataProcessor\Exception\DataFlowException
    */
   abstract public function initialize();
 
@@ -89,7 +90,8 @@ abstract class AbstractDataFlow {
    * @param string $fieldNameprefix
    *   The prefix before the name of the field within the record.
    * @return array
-   * @throws EndOfFlowException
+   * @throws \Civi\DataProcessor\Exception\EndOfFlowException
+   * @throws \Civi\DataProcessor\Exception\DataFlowException
    */
   abstract public function retrieveNextRecord($fieldNameprefix='');
 
@@ -111,6 +113,7 @@ abstract class AbstractDataFlow {
    *   The prefix before the name of the field within the record.
    * @return array
    * @throws \Civi\DataProcessor\DataFlow\EndOfFlowException
+   * @throws \Civi\DataProcessor\Exception\DataFlowException
    */
   public function nextRecord($fieldNamePrefix = '') {
     $allRecords = $this->allRecords($fieldNamePrefix);

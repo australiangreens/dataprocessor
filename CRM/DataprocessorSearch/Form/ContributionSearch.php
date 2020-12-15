@@ -127,6 +127,8 @@ class CRM_DataprocessorSearch_Form_ContributionSearch extends CRM_DataprocessorS
       }
     } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
       // Do nothing
+    } catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      // Do nothing
     }
     $this->_queryParams[0] = array(
       'contribution_id',
