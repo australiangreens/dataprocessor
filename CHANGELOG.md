@@ -7,6 +7,7 @@
 * Fixed issue with aggregation fields and a subquery data flow.
 * Fixed issue with backwards compatibility and field drop down.
 * Fixed issue with date filter and civicrm version before 5.25
+* Join when aggregation is enabled on a data source should be of type LEFT and not INNER.
 
 # Version 1.24.1
 

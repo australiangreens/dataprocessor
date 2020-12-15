@@ -222,7 +222,7 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
       $groupByFields[] = $field;
     }
 
-    $join = new SimpleNonRequiredJoin($entityTableAlias, $this->getAggregateField(), $this->aggregationDateFlow->getPrimaryTableAlias(), $this->getAggregateField(), 'INNER');
+    $join = new SimpleNonRequiredJoin($entityTableAlias, $this->getAggregateField(), $this->aggregationDateFlow->getPrimaryTableAlias(), $this->getAggregateField(), 'LEFT');
     foreach($groupByFields as $groupByField) {
       $join->addFilterClause(new PureSqlStatementClause("`{$entityTableAlias}`.`{$groupByField->alias}` = `{$this->aggregationDateFlow->getPrimaryTableAlias()}`.`{$groupByField->alias}`", TRUE));
     }
