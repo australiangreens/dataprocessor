@@ -1,3 +1,5 @@
+# Version 1.26 (not yet released)
+
 # Version 1.25
 
 * Fix for #68: contact search actions did not work after upgrading to 5.32.2
