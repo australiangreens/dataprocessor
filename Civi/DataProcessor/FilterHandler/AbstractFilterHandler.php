@@ -6,6 +6,9 @@
 
 namespace Civi\DataProcessor\FilterHandler;
 
+use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Exception\FilterRequiredException;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
@@ -230,7 +233,7 @@ abstract class AbstractFilterHandler {
         $op = \CRM_Utils_Array::value("op", $submittedValues);
 
         if ($relative != 'null') {
-          list($from, $to) = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
+          [$from, $to] = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
         }
         if (!$from && !$to) {
           $errors[$filterName . '_relative'] = E::ts('Field %1 is required', [1 => $filterSpec->title]);
@@ -666,7 +669,7 @@ abstract class AbstractFilterHandler {
       $this->setFilter($filterParams);
       return TRUE;
     } else {
-      list($from, $to) = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
+      [$from, $to] = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
     }
     if ($from && $to) {
       $from = ($type == "Date") ? substr($from, 0, 8) : $from;
@@ -692,6 +695,22 @@ abstract class AbstractFilterHandler {
       return TRUE;
     }
     return FALSE;
+  }
+
+  /**
+   * Returns the table alias of a sql data flow.
+   *
+   * @param \Civi\DataProcessor\DataFlow\SqlDataFlow $dataFlow
+   * @return string|null
+   */
+  protected function getTableAlias(SqlDataFlow $dataFlow) {
+    $tableAlias = $dataFlow->getName();
+    if ($dataFlow instanceof SqlTableDataFlow) {
+      $tableAlias = $dataFlow->getTableAlias();
+    } elseif ($dataFlow instanceof CombinedSqlDataFlow) {
+      $tableAlias = $dataFlow->getPrimaryTableAlias();
+    }
+    return $tableAlias;
   }
 
 }

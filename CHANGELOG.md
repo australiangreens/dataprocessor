@@ -8,6 +8,7 @@
 * Fixed issue with backwards compatibility and field drop down.
 * Fixed issue with date filter and civicrm version before 5.25
 * Join when aggregation is enabled on a data source should be of type LEFT and not INNER.
+* Fix for regression bug #69: Multiple Field Filter
 
 # Version 1.24.1
 
