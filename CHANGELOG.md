@@ -1,4 +1,4 @@
-# Version 1.25 (not yet released)
+# Version 1.25
 
 * Fix for #68: contact search actions did not work after upgrading to 5.32.2
 * Fix for #67: error when a custom field or custom groups contains an @ or % sign in the help texts.
