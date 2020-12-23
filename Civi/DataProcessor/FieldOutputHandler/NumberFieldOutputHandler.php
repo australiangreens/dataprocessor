@@ -19,6 +19,16 @@ class NumberFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler 
    */
   protected $isAggregateField = false;
 
+  protected $number_of_decimals;
+
+  protected $decimal_sep;
+
+  protected $thousand_sep;
+
+  protected $prefix = '';
+
+  protected $suffix = '';
+
   /**
    * Returns the formatted value
    *
@@ -31,10 +41,8 @@ class NumberFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler 
     $value = (float) $rawRecord[$this->inputFieldSpec->alias];
 
     $formattedValue = $value;
-    if (is_numeric($this->number_of_decimals) && $value != null) {
+    if (is_numeric($this->number_of_decimals) && $value !== null) {
       $formattedValue = number_format((float) $value, $this->number_of_decimals, $this->decimal_sep, $this->thousand_sep);
-    } elseif ($this->inputFieldSpec->type == 'Money') {
-      $formattedValue = \CRM_Utils_Money::format((float) $value);
     }
     if ($formattedValue != null) {
       $formattedValue = $this->prefix . $formattedValue . $this->suffix;

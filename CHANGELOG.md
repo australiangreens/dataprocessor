@@ -1,4 +1,6 @@
-# Version 1.26 (not yet released)
+# Version 1.26 
+
+* Fixed issue with formatting of money fields and 0 value in the formatted number field output handler.
 
 # Version 1.25
 
