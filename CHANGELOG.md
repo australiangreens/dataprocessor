@@ -1,6 +1,9 @@
 # Version 1.27 (not yet released)
 
-# Version 1.26 
+* Added Contribution Count Field Output Handler.
+* Fixed issue with importing/exporting of data processor.
+
+# Version 1.26
 
 * Fixed issue with formatting of money fields and 0 value in the formatted number field output handler.
 

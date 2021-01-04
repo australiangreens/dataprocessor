@@ -52,7 +52,7 @@ class CRM_Dataprocessor_Utils_Importer {
       unset($field['data_processor_id']);
       $fieldClass = $factory->getOutputHandlerByName($field['type']);
       if ($fieldClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
-        $field = $filterClass->alterExportData($field);
+        $field = $fieldClass->alterExportData($field);
       }
       $dataProcessor['fields'][] = $field;
     }
@@ -217,7 +217,7 @@ class CRM_Dataprocessor_Utils_Importer {
       civicrm_api3('DataProcessorFilter', 'create', $params);
     }
     foreach($data['fields'] as $field) {
-      $fieldClass = $factory->getFilterByName($field['type']);
+      $fieldClass = $factory->getOutputHandlerByName($field['type']);
       if ($fieldClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
         $field = $fieldClass->alterImportData($field);
       }
@@ -226,7 +226,7 @@ class CRM_Dataprocessor_Utils_Importer {
       civicrm_api3('DataProcessorField', 'create', $params);
     }
     foreach($data['outputs'] as $output) {
-      $outputClass = $factory->getFilterByName($output['type']);
+      $outputClass = $factory->getOutputByName($output['type']);
       if ($outputClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
         $output = $outputClass->alterImportData($output);
       }
