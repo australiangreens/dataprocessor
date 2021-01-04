@@ -62,7 +62,7 @@ class UIOutputHelper {
       SELECT DISTINCT o.id as output_id, o.type, p.id as dataprocessor_id
       FROM civicrm_data_processor_output o
       INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
-      WHERE p.is_active = 1 and p.id = 9
+      WHERE p.is_active = 1
     ");
     while ($dao->fetch()) {
       $outputClass = $factory->getOutputByName($dao->type);

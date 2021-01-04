@@ -3,6 +3,7 @@
 * Added Contribution Count Field Output Handler.
 * Fixed issue with importing/exporting of data processor.
 * Fixed issue with participant data source.
+* Fixed issue with loading menu items.
 
 # Version 1.26
 
