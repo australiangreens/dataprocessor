@@ -1,4 +1,4 @@
-# Version 1.27 (not yet released)
+# Version 1.27
 
 * Added Contribution Count Field Output Handler.
 * Fixed issue with importing/exporting of data processor.
