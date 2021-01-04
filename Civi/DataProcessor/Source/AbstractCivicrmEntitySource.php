@@ -9,6 +9,7 @@ namespace Civi\DataProcessor\Source;
 use Civi\DataProcessor\DataFlow\CombinedDataFlow\SubqueryDataFlow;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\JoinInterface;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleNonRequiredJoin;
+use Civi\DataProcessor\DataFlow\MultipleDataFlows\SqlJoinInterface;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\PureSqlStatementClause;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
@@ -40,6 +41,11 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
    * @var SqlTableDataFlow
    */
   protected $entityDataFlow;
+
+  /**
+   * @var SqlJoinInterface
+   */
+  protected $entityJoin;
 
   /**
    * @var SubqueryDataFlow
@@ -372,11 +378,13 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
     }
     $customGroupTableAlias = $this->getSourceName().'_'.$customGroupName;
     $this->ensureEntity(); // Ensure the entity as we need it before joining.
-    $join = new SimpleJoin($this->getSourceName(), 'id', $customGroupTableAlias, 'entity_id', 'LEFT');
-    $join->setDataProcessor($this->dataProcessor);
+    if (!$this->entityJoin) {
+      $this->entityJoin = new SimpleJoin($this->getSourceName(), 'id', $customGroupTableAlias, 'entity_id', 'LEFT');
+      $this->entityJoin->setDataProcessor($this->dataProcessor);
+    }
     $this->customGroupDataFlowDescriptions[$customGroupName] = new DataFlowDescription(
       new SqlTableDataFlow($customGroupTableName, $customGroupTableAlias, new DataSpecification()),
-      $join
+      $this->entityJoin
     );
     $this->dataProcessor->resetDataFlow();
     return $this->customGroupDataFlowDescriptions[$customGroupName]->getDataFlow();
@@ -403,9 +411,11 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
       }
     }
     $entityDataFlow = $this->getEntityDataFlow();
-    $join = new SimpleJoin($this->getSourceName(), 'id', $this->primaryDataFlow->getTableAlias(), 'entity_id', 'LEFT');
-    $join->setDataProcessor($this->dataProcessor);
-    $additionalDataFlowDescription = new DataFlowDescription($entityDataFlow,$join);
+    if (!$this->entityJoin) {
+      $this->entityJoin = new SimpleJoin($this->getSourceName(), 'id', $this->primaryDataFlow->getTableAlias(), 'entity_id', 'LEFT');
+      $this->entityJoin->setDataProcessor($this->dataProcessor);
+    }
+    $additionalDataFlowDescription = new DataFlowDescription($entityDataFlow, $this->entityJoin);
     $this->additionalDataFlowDescriptions[] = $additionalDataFlowDescription;
     return $this->entityDataFlow;
   }
@@ -421,7 +431,16 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
     foreach($this->customGroupDataFlowDescriptions as $idx => $customGroupDataFlowDescription) {
       if ($join->worksWithDataFlow($customGroupDataFlowDescription->getDataFlow())) {
         $this->primaryDataFlow = $customGroupDataFlowDescription->getDataFlow();
+        $this->entityJoin = $customGroupDataFlowDescription->getJoinSpecification();
         unset($this->customGroupDataFlowDescriptions[$idx]);
+        unset($this->dataFlow);
+      }
+    }
+    foreach($this->additionalDataFlowDescriptions as $idx => $additionalDataFlowDescription) {
+      if ($join->worksWithDataFlow($additionalDataFlowDescription->getDataFlow())) {
+        $this->primaryDataFlow = $additionalDataFlowDescription->getDataFlow();
+        $this->entityJoin = $additionalDataFlowDescription->getJoinSpecification();
+        unset($this->additionalDataFlowDescriptions[$idx]);
         unset($this->dataFlow);
       }
     }

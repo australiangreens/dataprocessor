@@ -12,7 +12,6 @@ use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\DataSpecification\Utils as DataSpecificationUtils;
-use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
 use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 
 use Civi\DataProcessor\Utils\AlterExportInterface;
@@ -44,7 +43,7 @@ class ParticipantSource extends AbstractCivicrmEntitySource implements AlterExpo
       $this->participantPaymentDataFlow = new SqlTableDataFlow('civicrm_participant_payment', $this->getSourceName().'_participant_payment');
       DataSpecificationUtils::addDAOFieldsToDataSpecification('CRM_Event_DAO_ParticipantPayment', $this->participantPaymentDataFlow->getDataSpecification(), array('id'), '', 'participant_payment_', E::ts('Participant Payment :: '));
     }
-    if (!isset($this->additionalDataFlowDescriptions['civicrm_participant_payment'])) {
+    if (!isset($this->additionalDataFlowDescriptions['civicrm_participant_payment']) && $this->primaryDataFlow != $this->participantPaymentDataFlow) {
       $this->participantPaymentJoin = new SimpleJoin($this->getSourceName(), 'id', $this->participantPaymentDataFlow->getName(), 'participant_id', 'LEFT');
       $this->participantPaymentJoin->setDataProcessor($this->dataProcessor);
       $this->additionalDataFlowDescriptions['civicrm_participant_payment'] = new DataFlowDescription($this->participantPaymentDataFlow, $this->participantPaymentJoin);

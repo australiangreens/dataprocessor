@@ -289,6 +289,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $rows = [];
     $ids = array();
     $prevnextData = array();
+    $showLink = false;
 
     $id_field = $this->getIdFieldName();
     $this->assign('id_field', $id_field);
@@ -318,7 +319,6 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
       $this->pager = new CRM_Utils_Pager($pagerParams);
       $this->assign('pager', $this->pager);
       $this->controller->set('rowCount', $this->dataProcessorClass->getDataFlow()->recordCount());
-      $showLink = false;
 
       $i=0;
       while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
