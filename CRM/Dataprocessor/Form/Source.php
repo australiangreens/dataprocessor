@@ -1,6 +1,5 @@
 <?php
 
-use Civi\DataProcessor\Source\SQLTable;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
 /**
