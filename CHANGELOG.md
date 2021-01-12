@@ -1,7 +1,8 @@
-# Version 1.28 (not yet released)
+# Version 1.28
 
 * Fixed #73: Aggregation on SQL Source does not always work
 * Fixed #40: SQL Table data source error and #45: Allow MySQL Views as Sources. See !71
+* Fixed regression bug with custom fields on activity data sources.
 
 # Version 1.27
 

@@ -378,13 +378,14 @@ abstract class AbstractCivicrmEntitySource extends AbstractSource {
     }
     $customGroupTableAlias = $this->getSourceName().'_'.$customGroupName;
     $this->ensureEntity(); // Ensure the entity as we need it before joining.
+    $join = new SimpleJoin($this->getSourceName(), 'id', $customGroupTableAlias, 'entity_id', 'LEFT');
+    $join->setDataProcessor($this->dataProcessor);
     if (!$this->entityJoin) {
-      $this->entityJoin = new SimpleJoin($this->getSourceName(), 'id', $customGroupTableAlias, 'entity_id', 'LEFT');
-      $this->entityJoin->setDataProcessor($this->dataProcessor);
+      $this->entityJoin = $join;
     }
     $this->customGroupDataFlowDescriptions[$customGroupName] = new DataFlowDescription(
       new SqlTableDataFlow($customGroupTableName, $customGroupTableAlias, new DataSpecification()),
-      $this->entityJoin
+      $join
     );
     $this->dataProcessor->resetDataFlow();
     return $this->customGroupDataFlowDescriptions[$customGroupName]->getDataFlow();
