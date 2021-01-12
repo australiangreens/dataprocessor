@@ -165,8 +165,18 @@ abstract class AbstractSource implements SourceInterface {
    * @throws \Exception
    */
   public function ensureFieldInSource(FieldSpecification $fieldSpecification) {
-    if (!$this->dataFlow->getDataSpecification()->doesFieldExist($fieldSpecification->name)) {
-      $this->dataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification->name, $fieldSpecification);
+    try {
+      $originalFieldSpecification = null;
+      if ($this->getAvailableFields()->doesAliasExists($fieldSpecification->alias)) {
+        $originalFieldSpecification = $this->getAvailableFields()->getFieldSpecificationByAlias($fieldSpecification->alias);
+      } elseif ($this->getAvailableFields()->doesFieldExist($fieldSpecification->name)) {
+        $originalFieldSpecification = $this->getAvailableFields()->getFieldSpecificationByName($fieldSpecification->name);
+      }
+      if ($originalFieldSpecification) {
+        $this->dataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification->alias, $fieldSpecification);
+      }
+    } catch (FieldExistsException $e) {
+      // Do nothing.
     }
     return $this;
   }
