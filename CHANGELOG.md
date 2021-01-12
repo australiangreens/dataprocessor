@@ -1,5 +1,7 @@
 # Version 1.28 (not yet released)
 
+* Fixed #73: Aggregation on SQL Source does not always work
+
 # Version 1.27
 
 * Added Contribution Count Field Output Handler.
