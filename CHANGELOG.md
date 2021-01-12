@@ -1,3 +1,5 @@
+# Version 1.29 (not yet released)
+
 # Version 1.28
 
 * Fixed #73: Aggregation on SQL Source does not always work
