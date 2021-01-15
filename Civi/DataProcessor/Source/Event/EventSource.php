@@ -176,8 +176,9 @@ class EventSource extends AbstractCivicrmEntitySource implements AlterExportInte
     if (stripos($fieldSpecification->alias, $this->getSourceName().'_locblock_') === 0) {
       $this->ensureEntity();
       $this->locBlockDataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification);
+      return $this;
     } else {
-      parent::ensureFieldInSource($fieldSpecification);
+      return parent::ensureFieldInSource($fieldSpecification);
     }
   }
 

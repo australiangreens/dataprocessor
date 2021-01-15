@@ -1,4 +1,6 @@
-# Version 1.29 (not yet released)
+# Version 1.29
+
+* Fixed issue when same field existed twice but with different names.
 
 # Version 1.28
 
