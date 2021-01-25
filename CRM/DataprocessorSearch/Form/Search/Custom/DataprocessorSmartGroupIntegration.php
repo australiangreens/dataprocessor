@@ -44,7 +44,7 @@ class CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegrat
    * is saved.
    * @param \Civi\Core\DAO\Event\PostUpdate $event
    */
-  public function alterSavedSearch(\Civi\Core\DAO\Event\PostUpdate $event) {
+  public static function alterSavedSearch(\Civi\Core\DAO\Event\PostUpdate $event) {
     // Check whether we are saving saved search.
     // And check whether a data processor search has been run.
     if ($event->object instanceof \CRM_Contact_DAO_SavedSearch && self::$dataProcessorName) {
