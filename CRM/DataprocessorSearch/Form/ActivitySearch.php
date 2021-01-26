@@ -25,6 +25,9 @@ class CRM_DataprocessorSearch_Form_ActivitySearch extends CRM_DataprocessorSearc
    * @return false|string
    */
   protected function link($row) {
+    if (empty($row['id'])) {
+      return '';
+    }
     $activity = civicrm_api3('Activity', 'getsingle', ['id' => $row['id'], "return" => ["target_contact_id", "source_record_id", "activity_type_id"]]);
     $activity['cid'] = reset($activity['target_contact_id']);
     unset($activity['target_contact_id']);
