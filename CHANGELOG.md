@@ -1,5 +1,9 @@
 # Version 1.30 (not yet released)
 
+* Fixed issue with relative date and required filters.
+* Compatibility with php 7.0
+* Activity search with empty id.
+
 # Version 1.29
 
 * Fixed issue when same field existed twice but with different names.
