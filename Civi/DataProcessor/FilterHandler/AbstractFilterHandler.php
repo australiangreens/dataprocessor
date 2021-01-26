@@ -233,7 +233,7 @@ abstract class AbstractFilterHandler {
         $op = \CRM_Utils_Array::value("op", $submittedValues);
 
         if ($relative != 'null') {
-          [$from, $to] = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
+          list($from, $to) = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
         }
         if (!$from && !$to) {
           $errors[$filterName . '_relative'] = E::ts('Field %1 is required', [1 => $filterSpec->title]);
@@ -669,7 +669,7 @@ abstract class AbstractFilterHandler {
       $this->setFilter($filterParams);
       return TRUE;
     } else {
-      [$from, $to] = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
+      list($from, $to) = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
     }
     if ($from && $to) {
       $from = ($type == "Date") ? substr($from, 0, 8) : $from;
