@@ -224,13 +224,14 @@ abstract class AbstractFilterHandler {
     if ($this->isRequired()) {
       $filterSpec = $this->getFieldSpecification();
       $filterName = $filterSpec->alias;
+      $processedSubmittedValues = $this->processSubmittedValues($submittedValues);
       if ($filterSpec->type == 'Date' || $filterSpec->type == 'Timestamp') {
-        $relative = \CRM_Utils_Array::value("{$filterName}_relative", $submittedValues);
-        $from = \CRM_Utils_Array::value("{$filterName}_from", $submittedValues);
-        $to = \CRM_Utils_Array::value("{$filterName}_to", $submittedValues);
-        $fromTime = \CRM_Utils_Array::value("{$filterName}_from_time", $submittedValues);
-        $toTime = \CRM_Utils_Array::value("{$filterName}_to_time", $submittedValues);
-        $op = \CRM_Utils_Array::value("op", $submittedValues);
+        $relative = \CRM_Utils_Array::value("relative", $processedSubmittedValues);
+        $from = \CRM_Utils_Array::value("from", $processedSubmittedValues);
+        $to = \CRM_Utils_Array::value("to", $processedSubmittedValues);
+        $fromTime = \CRM_Utils_Array::value("from_time", $processedSubmittedValues);
+        $toTime = \CRM_Utils_Array::value("to_time", $processedSubmittedValues);
+        $op = \CRM_Utils_Array::value("op", $processedSubmittedValues);
 
         if ($relative != 'null') {
           list($from, $to) = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
@@ -239,7 +240,7 @@ abstract class AbstractFilterHandler {
           $errors[$filterName . '_relative'] = E::ts('Field %1 is required', [1 => $filterSpec->title]);
         }
       }
-      elseif (!isset($submittedValues[$filterName . '_op']) || !(isset($submittedValues[$filterName . '_value']) && $submittedValues[$filterName . '_value'])) {
+      elseif (!isset($processedSubmittedValues['op']) || !(isset($processedSubmittedValues['value']) && $processedSubmittedValues['value'])) {
         $errors[$filterName . '_value'] = E::ts('Field %1 is required', [1 => $filterSpec->title]);
       }
     }
