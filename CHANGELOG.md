@@ -3,6 +3,7 @@
 * Fixed issue with relative date and required filters.
 * Compatibility with php 7.0
 * Activity search with empty id.
+* Fixed issue with aggregation on date fields #78
 
 # Version 1.29
 
