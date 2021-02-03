@@ -1,3 +1,5 @@
+# Version 1.31 (not yet released)
+
 # Version 1.30
 
 * Fixed issue with relative date and required filters.
