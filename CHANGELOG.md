@@ -1,9 +1,10 @@
-# Version 1.30 (not yet released)
+# Version 1.30
 
 * Fixed issue with relative date and required filters.
 * Compatibility with php 7.0
 * Activity search with empty id.
 * Fixed issue with aggregation on date fields #78
+* Fixed issue with CSV and PDF Download output.
 
 # Version 1.29
 

@@ -258,7 +258,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     }
   }
 
-  public function doDirectDownload(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $sortFieldName = null, $sortDirection = 'ASC', $idField, $selectedIds=array()) {
+  public function doDirectDownload(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
     $filename = date('Ymdhis').'_'.$dataProcessor['id'].'_'.$outputBAO['id'].'_'.CRM_Core_Session::getLoggedInContactID().'_'.$dataProcessor['name'].'.html';
     $download_name = date('Ymdhis').'_'.$dataProcessor['name'].'.pdf';
 
@@ -286,6 +286,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
       \CRM_Core_Error::statusBounce('The file is either empty or you do not have permission to retrieve the file');
     }
 
+    CRM_Utils_System::setHttpHeader('Access-Control-Allow-Origin', '*');
     \CRM_Utils_System::download(
       $download_name,
       $mimeType,

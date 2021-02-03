@@ -52,6 +52,7 @@ class CRM_DataprocessorOutputExport_Page_Download extends CRM_Core_Page {
       CRM_Core_Error::statusBounce('The file is either empty or you do not have permission to retrieve the file');
     }
 
+    CRM_Utils_System::setHttpHeader('Access-Control-Allow-Origin', '*');
     CRM_Utils_System::download(
       $download_name,
       $mimeType,
