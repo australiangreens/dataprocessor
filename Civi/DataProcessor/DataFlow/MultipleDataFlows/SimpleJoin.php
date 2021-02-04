@@ -150,13 +150,17 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
       'placeholder' => E::ts('- select -'),
     ));
 
-    // Backwords compatability
+    // Backwards compatibility
     if (isset($joinConfiguration['right_prefix']) && $joinConfiguration['right_prefix'] == $joinFromSource->getSourceName()) {
       $joinConfigurationBackwardsCompatibility = $joinConfiguration;
       $joinConfiguration['left_prefix'] = '';
       $joinConfiguration['left_field'] = $joinConfigurationBackwardsCompatibility['right_field'];
+      $joinConfiguration['left_field'] = $this->correctFieldName($joinConfiguration['left_field'], $joinFromSource);
       $joinConfiguration['right_prefix'] = $joinConfigurationBackwardsCompatibility['left_prefix'];
       $joinConfiguration['right_field'] = $joinConfigurationBackwardsCompatibility['left_field'];
+      if (!isset($rightFields[$joinConfiguration['right_prefix']."::".$joinConfiguration['right_field']])) {
+        $joinConfiguration['right_field'] = $this->correctFieldName($joinConfiguration['right_field'], $joinToSource);
+      }
     }
 
     $defaults = array();
