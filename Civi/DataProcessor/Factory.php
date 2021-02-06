@@ -169,6 +169,7 @@ class Factory {
     $this->addOutputHandler('contact_has_relationship', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactHasRelationshipFieldOutputHandler'), E::ts('Contact has relationship'));
     $this->addOutputHandler('contact_link', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactLinkFieldOutputHandler'), E::ts('Link to view contact'));
     $this->addOutputHandler('custom_link', new Definition('Civi\DataProcessor\FieldOutputHandler\CustomLinkFieldOutputHandler'), E::ts('Custom Link'));
+    $this->addOutputHandler('custom_link_2', new Definition('Civi\DataProcessor\FieldOutputHandler\CustomLinkTwoFieldOutputHandler'), E::ts('Custom Link (using two fields)'));
     $this->addOutputHandler('contact_checksum', new Definition('Civi\DataProcessor\FieldOutputHandler\ContactChecksumFieldOutputHandler'), E::ts('Contact Checksum'));
     $this->addOutputHandler('edit_activity_link', new Definition('Civi\DataProcessor\FieldOutputHandler\EditActivityLinkFieldOutputHandler'), E::ts('Link to edit an activity'));
     $this->addOutputHandler('is_active', new Definition('Civi\DataProcessor\FieldOutputHandler\IsActiveFieldOutputHandler'), E::ts('Is Active (based on dates)'));

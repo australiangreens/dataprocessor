@@ -10,7 +10,7 @@ use CRM_Dataprocessor_ExtensionUtil as E;
 use Civi\DataProcessor\Source\SourceInterface;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 
-class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
+class CustomLinkTwoFieldOutputHandler extends AbstractFieldOutputHandler {
 
   /**
    * @var \Civi\DataProcessor\Source\SourceInterface
@@ -25,12 +25,14 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
   /**
    * @var FieldSpecification
    */
-  protected $linkField;
+  protected $linkFieldOne;
+  protected $linkFieldTwo;
 
   /**
    * @var SourceInterface
    */
-  protected $linkFieldSource;
+  protected $linkFieldOneSource;
+  protected $linkFieldTwoSource;
 
   protected $linkTemplate;
 
@@ -66,7 +68,8 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    list($this->linkFieldSource, $this->linkField) = $this->initializeField($configuration['link_field'], $configuration['link_field_datasource'], $alias.'_link_field');
+    list($this->linkFieldOneSource, $this->linkFieldOne) = $this->initializeField($configuration['link_field_1'], $configuration['link_field_datasource_1'], $alias.'_link_field_1');
+    list($this->linkFieldTwoSource, $this->linkFieldTwo) = $this->initializeField($configuration['link_field_2'], $configuration['link_field_datasource_2'], $alias.'_link_field_2');
     if (isset($configuration['link_template'])) {
       $this->linkTemplate = $configuration['link_template'];
     }
@@ -85,11 +88,18 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
    * @return \Civi\DataProcessor\FieldOutputHandler\FieldOutput
    */
   public function formatField($rawRecord, $formattedRecord) {
+    $linkFieldOne = $rawRecord[$this->linkFieldOne->alias];
+    $linkFieldTwo = $rawRecord[$this->linkFieldTwo->alias];
 
-    $linkField = $rawRecord[$this->linkField->alias];
-    $url = str_replace('%1',$linkField,$this->linkTemplate);
-    $label = str_replace('%1', $linkField, $this->linkText);
+    $url = $this->linkTemplate;
+    $url = str_replace('%1',$linkFieldOne,$url);
+    $url = str_replace('%2',$linkFieldTwo,$url);
+
+    $label = $this->linkText;
+    $label = str_replace('%1',$linkFieldOne,$label);
+    $label = str_replace('%2',$linkFieldTwo,$label);
     $link = '<a href="'.$url.'">'.$label.'</a>';
+
     $formattedValue = new HTMLFieldOutput($link);
     $formattedValue->setHtmlOutput($link);
     return $formattedValue;
@@ -114,7 +124,12 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
   public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
     $fieldSelect = \CRM_Dataprocessor_Utils_DataSourceFields::getAvailableFieldsInDataSources($field['data_processor_id']);
 
-    $form->add('select', 'link_field', E::ts('Field to link to'), $fieldSelect, true, array(
+    $form->add('select', 'link_field_1', E::ts('Field 1 to link to'), $fieldSelect, true, array(
+      'style' => 'min-width:250px',
+      'class' => 'crm-select2 huge data-processor-field-for-name',
+      'placeholder' => E::ts('- select -'),
+    ));
+    $form->add('select', 'link_field_2', E::ts('Field 2 to link to'), $fieldSelect, true, array(
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge data-processor-field-for-name',
       'placeholder' => E::ts('- select -'),
@@ -130,8 +145,11 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
       $defaults = array();
-      if (isset($configuration['link_field']) && isset($configuration['link_field_datasource'])) {
-        $defaults['link_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['link_field_datasource'], $configuration['link_field']);
+      if (isset($configuration['link_field_1']) && isset($configuration['link_field_datasource_1'])) {
+        $defaults['link_field_1'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['link_field_datasource_1'], $configuration['link_field_1']);
+      }
+      if (isset($configuration['link_field_2']) && isset($configuration['link_field_datasource_2'])) {
+        $defaults['link_field_2'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['link_field_datasource_2'], $configuration['link_field_2']);
       }
       if (isset($configuration['link_template'])) {
         $defaults['link_template'] = $configuration['link_template'] ;
@@ -150,7 +168,7 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
    * @return false|string
    */
   public function getConfigurationTemplateFileName() {
-    return "CRM/Dataprocessor/Form/Field/Configuration/CustomLinkFieldOutputHandler.tpl";
+    return "CRM/Dataprocessor/Form/Field/Configuration/CustomLinkTwoFieldOutputHandler.tpl";
   }
 
 
@@ -161,12 +179,14 @@ class CustomLinkFieldOutputHandler extends AbstractFieldOutputHandler {
    * @return array
    */
   public function processConfiguration($submittedValues) {
-    list($contact_id_datasource, $contact_id_field) = explode('::', $submittedValues['link_field'], 2);
-    $configuration['link_field'] = $contact_id_field;
-    $configuration['link_field_datasource'] = $contact_id_datasource;
+    list($ds1, $lf1) = explode('::', $submittedValues['link_field_1'], 2);
+    list($ds2, $lf2) = explode('::', $submittedValues['link_field_2'], 2);
+    $configuration['link_field_1'] = $lf1;
+    $configuration['link_field_2'] = $lf2;
+    $configuration['link_field_datasource_1'] = $ds1;
+    $configuration['link_field_datasource_2'] = $ds2;
     $configuration['link_template'] =$submittedValues['link_template'];
     $configuration['link_text'] =$submittedValues['link_text'];
     return $configuration;
   }
-
 }
