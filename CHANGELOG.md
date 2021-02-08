@@ -1,4 +1,4 @@
-# Version 1.31 (not yet released)
+# Version 1.31
 
 * Fixed backwards compatibility with joins on the edit screen.
 * Add custom link handler referencing two fields. (!73 & #79)
