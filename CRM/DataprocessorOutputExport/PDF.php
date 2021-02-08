@@ -4,24 +4,26 @@
  * @license AGPL-3.0
  */
 
-use Civi\DataProcessor\Output\ExportOutputInterface;
-use Civi\DataProcessor\Output\DirectDownloadExportOutputInterface;
-
 use CRM_Dataprocessor_ExtensionUtil as E;
 
-class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, DirectDownloadExportOutputInterface {
-
-  const MAX_DIRECT_SIZE = 500;
-
-  const RECORDS_PER_JOB = 250;
+class CRM_DataprocessorOutputExport_PDF extends CRM_DataprocessorOutputExport_AbstractOutputExport {
 
   /**
-   * Returns true when this filter has additional configuration
+   * Returns the directory name for storing temporary files.
    *
-   * @return bool
+   * @return String
    */
-  public function hasConfiguration() {
-    return true;
+  public function getDirectory() {
+    return 'dataprocessor_export_pdf';
+  }
+
+  /**
+   * Returns the file extension.
+   *
+   * @return String
+   */
+  public function getExtension() {
+    return 'pdf';
   }
 
   /**
@@ -32,6 +34,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
    * @param array $filter
    */
   public function buildConfigurationForm(\CRM_Core_Form $form, $output=array()) {
+    parent::buildConfigurationForm($form, $output);
     $defaults = [];
     $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $output['data_processor_id']));
     $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
@@ -104,9 +107,6 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     ));
     $form->assign('ManagePdfFormatUrl', CRM_Utils_System::url('civicrm/admin/pdfFormats', ['reset'=>1]));
 
-
-    $form->add('checkbox', 'anonymous', E::ts('Available for anonymous users'), array(), false);
-
     $form->add('wysiwyg', 'header', E::ts('Header'), array('rows' => 6, 'cols' => 80));
 
     $form->add('checkbox', 'additional_column', E::ts('Add an additional column'), array(), false);
@@ -135,9 +135,6 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     }
     if ($configuration && isset($configuration['header'])) {
       $defaults['header'] = $configuration['header'];
-    }
-    if ($configuration && isset($configuration['anonymous'])) {
-      $defaults['anonymous'] = $configuration['anonymous'];
     }
     if ($configuration && isset($configuration['additional_column'])) {
       $defaults['additional_column'] = $configuration['additional_column'];
@@ -176,14 +173,13 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
    * @return array
    */
   public function processConfiguration($submittedValues, &$output) {
-    $configuration = array();
+    $configuration = parent::processConfiguration($submittedValues, $output);
     $configuration['header_fields'] = $submittedValues['header_fields'];
     $configuration['header_after_section'] = isset($submittedValues['header_after_section']) ? $submittedValues['header_after_section'] : false;
     $configuration['hidden_fields'] = $submittedValues['hidden_fields'];
     $configuration['section_titles'] = $submittedValues['section_titles'];
     $configuration['pdf_format'] = $submittedValues['pdf_format'];
     $configuration['header'] = $submittedValues['header'];
-    $configuration['anonymous'] = isset($submittedValues['anonymous']) ? $submittedValues['anonymous'] : false;
     $configuration['additional_column'] = isset($submittedValues['additional_column']) ? $submittedValues['additional_column'] : false;
     $configuration['additional_column_title'] = $submittedValues['additional_column_title'];
     $configuration['additional_column_width'] = $submittedValues['additional_column_width'];
@@ -234,132 +230,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     return '<i class="fa fa-file-pdf-o">&nbsp;</i>';
   }
 
-  /**
-   * Download export
-   *
-   * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass
-   * @param array $dataProcessor
-   * @param array $outputBAO
-   * @param array $formValues
-   * @param string $sortFieldName
-   * @param string $sortDirection
-   * @param string $idField
-   *  Set $idField to the name of the field containing the ID of the array $selectedIds
-   * @param array $selectedIds
-   *   Array with the selectedIds.
-   * @return string
-   * @throws \Exception
-   */
-  public function downloadExport(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $formValues, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
-    if ($dataProcessorClass->getDataFlow()->recordCount() > self::MAX_DIRECT_SIZE) {
-      $this->startBatchJob($dataProcessorClass, $dataProcessor, $outputBAO, $formValues, $sortFieldName, $sortDirection, $idField, $selectedIds);
-    } else {
-      $this->doDirectDownload($dataProcessorClass, $dataProcessor, $outputBAO, $sortFieldName, $sortDirection, $idField, $selectedIds);
-    }
-  }
-
-  public function doDirectDownload(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
-    $filename = date('Ymdhis').'_'.$dataProcessor['id'].'_'.$outputBAO['id'].'_'.CRM_Core_Session::getLoggedInContactID().'_'.$dataProcessor['name'].'.html';
-    $download_name = date('Ymdhis').'_'.$dataProcessor['name'].'.pdf';
-
-    $basePath = CRM_Core_Config::singleton()->templateCompileDir . 'dataprocessor_export_pdf';
-    CRM_Utils_File::createDir($basePath);
-    CRM_Utils_File::restrictAccess($basePath.'/');
-
-    $path = CRM_Core_Config::singleton()->templateCompileDir . 'dataprocessor_export_pdf/'. $filename;
-    if ($sortFieldName) {
-      $dataProcessorClass->getDataFlow()->resetSort();
-      $dataProcessorClass->getDataFlow()->addSort($sortFieldName, $sortDirection);
-    }
-
-    self::exportDataProcessor($path, $dataProcessorClass, $outputBAO['configuration'], $idField, $selectedIds);
-    $path = self::createFooter($path, $dataProcessorClass, $outputBAO['configuration'], $dataProcessor);
-
-    $mimeType = $this->mimeType();
-
-    if (!$path) {
-      \CRM_Core_Error::statusBounce('Could not retrieve the file');
-    }
-
-    $buffer = file_get_contents($path);
-    if (!$buffer) {
-      \CRM_Core_Error::statusBounce('The file is either empty or you do not have permission to retrieve the file');
-    }
-
-    CRM_Utils_System::setHttpHeader('Access-Control-Allow-Origin', '*');
-    \CRM_Utils_System::download(
-      $download_name,
-      $mimeType,
-      $buffer,
-      NULL,
-      TRUE,
-      'download'
-    );
-  }
-
-
-  protected function startBatchJob(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $formValues, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
-    $session = \CRM_Core_Session::singleton();
-
-    $name = date('Ymdhis').'_'.$dataProcessor['id'].'_'.$outputBAO['id'].'_'.CRM_Core_Session::getLoggedInContactID().'_'.md5($dataProcessor['name']);
-
-    $queue = \CRM_Queue_Service::singleton()->create(array(
-      'type' => 'Sql',
-      'name' => $name,
-      'reset' => TRUE, //do flush queue upon creation
-    ));
-
-    $basePath = \CRM_Core_Config::singleton()->templateCompileDir . 'dataprocessor_export_pdf';
-    \CRM_Utils_File::createDir($basePath);
-    \CRM_Utils_File::restrictAccess($basePath.'/');
-    $filename = $basePath.'/'. $name.'.html';
-
-    $count = $dataProcessorClass->getDataFlow()->recordCount();
-    $recordsPerJob = self::RECORDS_PER_JOB;
-    for($i=0; $i < $count; $i = $i + $recordsPerJob) {
-      $title = E::ts('Exporting records %1/%2', array(
-        1 => ($i+$recordsPerJob) <= $count ? $i+$recordsPerJob : $count,
-        2 => $count,
-      ));
-
-      //create a task without parameters
-      $task = new \CRM_Queue_Task(
-        array(
-          'CRM_DataprocessorOutputExport_PDF',
-          'exportBatch'
-        ), //call back method
-        array($filename,$formValues, $dataProcessor['id'], $outputBAO['id'], $i, $recordsPerJob, $sortFieldName, $sortDirection, $idField, $selectedIds), //parameters,
-        $title
-      );
-      //now add this task to the queue
-      $queue->createItem($task);
-    }
-
-    $task = new \CRM_Queue_Task(
-      array(
-        'CRM_DataprocessorOutputExport_PDF',
-        'exportBatchFooter'
-      ), //call back method
-      array($filename,$formValues, $dataProcessor['id'], $outputBAO['id'], $i, $recordsPerJob, $sortFieldName, $sortDirection, $idField, $selectedIds), //parameters,
-      $title
-    );
-    //now add this task to the queue
-    $queue->createItem($task);
-
-    $url = str_replace("&amp;", "&", $session->readUserContext());
-
-    $runner = new \CRM_Queue_Runner(array(
-      'title' => E::ts('Exporting data'), //title fo the queue
-      'queue' => $queue, //the queue object
-      'errorMode'=> \CRM_Queue_Runner::ERROR_CONTINUE, //abort upon error and keep task in queue
-      'onEnd' => array('CRM_DataprocessorOutputExport_PDF', 'onEnd'), //method which is called as soon as the queue is finished
-      'onEndUrl' => $url,
-    ));
-
-    $runner->runAllViaWeb(); // does not return
-  }
-
-  protected static function createFooter($filename, \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $configuration, $dataProcessor) {
+  protected function createFooter($filename, \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $configuration, $dataProcessor, $idField=null, $selectedIds=array()) {
     $content = "";
     $headerContent = "";
     $showHeaderAfterEachSection = false;
@@ -389,7 +260,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     $smarty->assign('dataProcessor', $dataProcessor);
 
     $parts = [];
-    foreach (glob($filename.".part.*") as $partFilename) {
+    foreach (glob($filename.".html.part.*") as $partFilename) {
       $headerPartFileName = str_replace(".part.", ".header_part.", $partFilename);
       $basePartFileName = basename($partFilename);
       $partName = substr($basePartFileName, stripos($basePartFileName, ".part.")+6);
@@ -437,7 +308,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     $content = $smarty->fetch(self::getTemplateFolder($configuration)."html.tpl");
     $smarty->popScope();
 
-    $pdfFilename = str_replace(".html", ".pdf", $filename);
+    $pdfFilename = $filename.'.'.$this->getExtension();
     $pdfFormat = isset($configuration['pdf_format']) ? $configuration['pdf_format'] : null;
     $pdfContents = \CRM_Utils_PDF_Utils::html2pdf($content, basename($pdfFilename), TRUE, $pdfFormat);
     $file = fopen($pdfFilename, 'a');
@@ -447,7 +318,7 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
     return $pdfFilename;
   }
 
-  protected static function exportDataProcessor($filename, \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessor, $configuration, $idField, $selectedIds=array()) {
+  protected function exportDataProcessor($filename, \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessor, $configuration, $idField=null, $selectedIds=array()) {
     $hiddenFields = array();
     if (isset($configuration['hidden_fields']) && is_array($configuration['hidden_fields'])) {
       $hiddenFields = $configuration['hidden_fields'];
@@ -513,12 +384,12 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
       // Do nothing
     }
     foreach($contents as $sectionHeader => $content) {
-      $file = fopen($filename.".part.".$sectionHeader, 'a');
+      $file = fopen($filename.".html.part.".$sectionHeader, 'a');
       fwrite($file, $content['content'] . "\r\n");
       fclose($file);
 
       if (isset($content['header'])) {
-        $file = fopen($filename.".header_part.".$sectionHeader, 'a');
+        $file = fopen($filename.".html.header_part.".$sectionHeader, 'a');
         fwrite($file, $content['header'] . "\r\n");
         fclose($file);
       }
@@ -533,89 +404,6 @@ class CRM_DataprocessorOutputExport_PDF implements ExportOutputInterface, Direct
       $template = $configuration['template'];
     }
     return "CRM/DataprocessorOutputExport/PDF/{$template}/";
-  }
-
-  public static function exportBatch(CRM_Queue_TaskContext $ctx, $filename, $params, $dataProcessorId, $outputId, $offset, $limit, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
-    $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $dataProcessorId));
-    $output = civicrm_api3('DataProcessorOutput', 'getsingle', array('id' => $outputId));
-    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
-    CRM_Dataprocessor_Form_Output_AbstractUIOutputForm::applyFilters($dataProcessorClass, $params);
-    if ($sortFieldName) {
-      $dataProcessorClass->getDataFlow()->resetSort();
-      $dataProcessorClass->getDataFlow()->addSort($sortFieldName, $sortDirection);
-    }
-    $dataProcessorClass->getDataFlow()->setOffset($offset);
-    $dataProcessorClass->getDataFlow()->setLimit($limit);
-    self::exportDataProcessor($filename, $dataProcessorClass, $output['configuration'], $idField, $selectedIds);
-    return TRUE;
-  }
-
-  public static function exportBatchFooter(CRM_Queue_TaskContext $ctx, $filename, $params, $dataProcessorId, $outputId, $offset, $limit, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
-    $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $dataProcessorId));
-    $output = civicrm_api3('DataProcessorOutput', 'getsingle', array('id' => $outputId));
-    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
-    CRM_Dataprocessor_Form_Output_AbstractUIOutputForm::applyFilters($dataProcessorClass, $params);
-    if ($sortFieldName) {
-      $dataProcessorClass->getDataFlow()->addSort($sortFieldName, $sortDirection);
-    }
-    $dataProcessorClass->getDataFlow()->setOffset($offset);
-    $dataProcessorClass->getDataFlow()->setLimit($limit);
-    self::createFooter($filename, $dataProcessorClass, $output['configuration'], $dataProcessor);
-    return TRUE;
-  }
-
-  public static function onEnd(CRM_Queue_TaskContext $ctx) {
-    $queue_name = $ctx->queue->getName();
-    $pdf_filename = $queue_name.'.pdf';
-    $downloadLink = CRM_Utils_System::url('civicrm/dataprocessor/form/output/download', 'filename='.$pdf_filename.'&directory=dataprocessor_export_pdf');
-    //set a status message for the user
-    CRM_Core_Session::setStatus(E::ts('<a href="%1">Download PDF file</a>', array(1=>$downloadLink)), E::ts('Exported data'), 'success');
-  }
-
-  /**
-   * Returns the url for the page/form this output will show to the user
-   *
-   * @param array $output
-   * @param array $dataProcessor
-   * @return string
-   */
-  public function getUrl($output, $dataProcessor) {
-    return CRM_Utils_System::url('civicrm/dataprocessor/output/export', array(
-      'name' => $dataProcessor['name'],
-      'type' => $output['type']
-    ));
-  }
-
-  /**
-   * Returns the url for the page/form this output will show to the user
-   *
-   * @param array $output
-   * @param array $dataProcessor
-   * @return string
-   */
-  public function getTitleForLink($output, $dataProcessor) {
-    return $dataProcessor['title'];
-  }
-
-  /**
-   * Checks whether the current user has access to this output
-   *
-   * @param array $output
-   * @param array $dataProcessor
-   * @return bool
-   */
-  public function checkPermission($output, $dataProcessor) {
-    $anonymous = false;
-    if (isset($output['configuration']) && isset($output['configuration']['anonymous'])) {
-      $anonymous = $output['configuration']['anonymous'] ? true : false;
-    }
-    $userId = \CRM_Core_Session::getLoggedInContactID();
-    if ($userId) {
-      return true;
-    } elseif ($anonymous) {
-      return true;
-    }
-    return false;
   }
 
 

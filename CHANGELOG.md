@@ -2,6 +2,7 @@
 
 * Fixed backwards compatibility with joins on the edit screen.
 * Add custom link handler referencing two fields. (!73 & #79)
+* Fixed issue with CSV and PDF Download output on wordpress.
 
 # Version 1.30
 
