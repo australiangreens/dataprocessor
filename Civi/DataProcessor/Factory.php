@@ -160,6 +160,7 @@ class Factory {
     $this->addjoinType('simple_join', new Definition('Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleJoin'), E::ts('Select fields to join on'));
     $this->addjoinType('simple_non_required_join', new Definition('Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleNonRequiredJoin'), E::ts('Select fields to join on (not required)'));
     $this->addOutputHandler('raw', new Definition('Civi\DataProcessor\FieldOutputHandler\RawFieldOutputHandler'), E::ts('Raw field value'));
+    $this->addOutputHandler('cleanfilename', new Definition('Civi\DataProcessor\FieldOutputHandler\CleanFileNameFieldOutputHandler'), E::ts('Clean File Name'));
     $this->addOutputHandler('markup', new Definition('Civi\DataProcessor\FieldOutputHandler\MarkupFieldOutputHandler'), E::ts('Markup/Html field value'));
     $this->addOutputHandler('formatted_address', new Definition('Civi\DataProcessor\FieldOutputHandler\FormattedAddressFieldOutputHandler'), E::ts('Formatted Address'));
     $this->addOutputHandler('worldregion', new Definition('Civi\DataProcessor\FieldOutputHandler\WorldRegionFieldOutputHandler'), E::ts('Worldregion'));
