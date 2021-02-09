@@ -1,3 +1,5 @@
+# Version 1.33 (not yet released)
+
 # Version 1.32
 
 * Added Field Output Handler for clean file names.  E.g. change `Expense/2/receipt_802fd5cd009e0a39cf2202f4bfb9c0b4.pdf`
