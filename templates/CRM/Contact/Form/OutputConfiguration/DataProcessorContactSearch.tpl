@@ -30,9 +30,19 @@
       <div class="clear"></div>
     </div>
     <div class="crm-section">
+      <div class="label">{$form.link_to_view_contact.label}</div>
+      <div class="content">{$form.link_to_view_contact.html}</div>
+      <div class="clear"></div>
+    </div>
+    <div class="crm-section">
         <div class="label">{$form.help_text.label}</div>
         <div class="content">{$form.help_text.html}</div>
         <div class="clear"></div>
+    </div>
+    <div class="crm-section">
+      <div class="label">{$form.no_result_text.label}</div>
+      <div class="content">{$form.no_result_text.html}</div>
+      <div class="clear"></div>
     </div>
 
 {/crmScope}

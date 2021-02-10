@@ -42,6 +42,7 @@ class CRM_Contact_Controller_DataProcessorContactSearch extends CRM_Core_Control
 
     // create and instantiate the pages
     $this->addPages($this->_stateMachine, $action);
+    $this->set('entity', 'Contact');
 
     // add all the actions
     $this->addActions();
@@ -67,9 +68,9 @@ class CRM_Contact_Controller_DataProcessorContactSearch extends CRM_Core_Control
     // Hack to replace to userContext for redirecting after a Task has been completed.
     // We want the redirect
     if (!$this->_pages[$pageName] instanceof CRM_DataprocessorSearch_Form_ContactSearch) {
-      $session = CRM_Core_Session::singleton();
+      CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegration::setDataProcessorAndFormValues('contact_search', $this->get('formValues'), CRM_Utils_System::currentPath());
       $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this);
-      $urlPath = CRM_Utils_System::getUrlPath();
+      $urlPath = CRM_Utils_System::currentPath();
       $urlParams = 'force=1';
       if ($qfKey) {
         $urlParams .= "&qfKey=$qfKey";

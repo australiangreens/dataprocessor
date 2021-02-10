@@ -9,4 +9,9 @@
     <div class="content">{$form.limit_groups.html}</div>
     <div class="clear"></div>
 </div>
+  <div class="crm-section">
+    <div class="label">{$form.limit_contact_types.label}</div>
+    <div class="content">{$form.limit_contact_types.html}</div>
+    <div class="clear"></div>
+  </div>
 {/crmScope}

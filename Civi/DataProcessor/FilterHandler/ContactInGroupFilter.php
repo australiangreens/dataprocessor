@@ -48,11 +48,21 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
    * @return mixed
    */
   public function setFilter($filter) {
+    switch ($filter['op']) {
+      case '=':
+        $filter['op'] = 'IN';
+        break;
+
+      case '!=':
+        $filter['op'] = 'NOT IN';
+        break;
+    }
     $this->resetFilter();
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     $group_ids = $filter['value'];
+
     if (!is_array($group_ids)) {
-      $group_ids = array($group_ids);
+      $group_ids = explode(",", $group_ids);
     }
 
     // If the groups are smartgroups (saved searches) they may be out of date.
@@ -67,13 +77,14 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
     );
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'contact_id',
         'civicrm_group_contact',
         $groupTableAlias,
         $groupFilters,
-        $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $tableAlias,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
       $whereClauses[] = $this->whereClause;
@@ -86,13 +97,14 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
     );
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'contact_id',
         'civicrm_group_contact_cache',
         $groupTableAlias,
         $groupFilters,
-        $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $tableAlias,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
 
@@ -151,7 +163,7 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
       $configuration = $filter['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['contact_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['parent_group'])) {
         $defaults['parent_group'] = $configuration['parent_group'];
@@ -174,7 +186,7 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
   /**
    * Process the submitted values and create a configuration array
    *
-   * @param $submittedValues
+   * @param array $submittedValues
    * @return array
    */
   public function processConfiguration($submittedValues) {
@@ -207,16 +219,18 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
 
     $sizeClass = 'huge';
     $minWidth = 'min-width: 250px;';
+
     if ($size =='compact') {
       $sizeClass = 'medium';
       $minWidth = '';
     }
 
     $api_params['is_active'] = 1;
+
     if ($this->parent_group_id) {
-      $childGroupIds = \CRM_Contact_BAO_GroupNesting::getDescendentGroupIds([$this->parent_group_id], FALSE);
-      $api_params['id']['IN'] = $childGroupIds;
-    }
+         $childGroupIds = \CRM_Contact_BAO_GroupNesting::getDescendentGroupIds([$this->parent_group_id], FALSE);
+         $api_params['parents']['IN'] = array_merge( [ $this->parent_group_id ] , $childGroupIds);
+         }
 
     $form->add('select', "{$fieldSpec->alias}_op", E::ts('Operator:'), $operations, true, [
       'style' => $minWidth,
@@ -224,6 +238,7 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
       'multiple' => FALSE,
       'placeholder' => E::ts('- select -'),
     ]);
+
     $form->addEntityRef( "{$fieldSpec->alias}_value", NULL, array(
       'placeholder' => E::ts('Select a group'),
       'entity' => 'Group',
@@ -238,6 +253,7 @@ class ContactInGroupFilter extends AbstractFieldFilterHandler {
     } else {
       $defaults[$alias . '_op'] = key($operations);
     }
+
     if (isset($defaultFilterValue['value'])) {
       $defaults[$alias.'_value'] = $defaultFilterValue['value'];
     }

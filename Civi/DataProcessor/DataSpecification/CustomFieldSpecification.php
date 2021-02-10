@@ -35,7 +35,7 @@ class CustomFieldSpecification extends FieldSpecification {
     $this->customFieldTitle = $field['label'];
 
     $options = \CRM_Core_PseudoConstant::get('CRM_Core_BAO_CustomField', 'custom_' . $this->customFieldId, array(), 'search');
-    parent::__construct($field['column_name'], $field['data_type'], $custom_group_title. ': '.$this->customFieldTitle, $options, $alias);
+    parent::__construct($alias, $field['data_type'], $custom_group_title. ': '.$this->customFieldTitle, $options, $alias);
 
   }
 
@@ -51,13 +51,23 @@ class CustomFieldSpecification extends FieldSpecification {
     if ($this->type == 'Boolean') {
       return false;
     }
-    if ($this->customField['html_type'] == 'Radio') {
+    if ($this->type == 'Country') {
       return false;
     }
-    if ($this->customField['html_type'] == 'Select') {
+    if ($this->customField['html_type'] == 'Radio' && empty($this->customField['serialize'])) {
+      return false;
+    }
+    if ($this->customField['html_type'] == 'Select' && empty($this->customField['serialize'])) {
       return false;
     }
     return true;
+  }
+
+  /**
+   * @return String
+   */
+  public function getName() {
+    return $this->customFieldColumnName;
   }
 
 }

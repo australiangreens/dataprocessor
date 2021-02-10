@@ -16,4 +16,12 @@ interface MultipleSourceDataFlows {
    */
   public function addSourceDataFlow(DataFlowDescription $dataFlowDescription);
 
+  /**
+   * Removes a source data flow
+   *
+   * @param \Civi\DataProcessor\DataFlow\MultipleDataFlows\DataFlowDescription $dataFlowDescription
+   * @return void
+   */
+  public function removeSourceDataFlow(DataFlowDescription $dataFlowDescription);
+
 }

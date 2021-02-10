@@ -9,6 +9,34 @@ use Civi\DataProcessor\Source\SourceInterface;
 class CRM_Dataprocessor_Utils_DataSourceFields {
 
   /**
+   * Get the value for the selected field.
+   *
+   * @param $dataProcessorId
+   * @param $dataSourceName
+   * @param $fieldName
+   *
+   * @return string|null
+   * @throws \CiviCRM_API3_Exception
+   */
+  public static function getSelectedFieldValue($dataProcessorId, $dataSourceName, $fieldName) {
+    $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $dataProcessorId));
+    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
+    $dataSource = $dataProcessorClass->getDataSourceByName($dataSourceName);
+    if ($dataSource) {
+      $inputFieldSpec = $dataSource->getAvailableFields()
+        ->getFieldSpecificationByAlias($fieldName);
+      if (!$inputFieldSpec) {
+        $inputFieldSpec = $dataSource->getAvailableFields()
+          ->getFieldSpecificationByName($fieldName);
+      }
+      if ($inputFieldSpec) {
+        return $dataSourceName.'::'.$inputFieldSpec->alias;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Returns an array with the name of the field as the key and the label of the field as the value.
    *
    * @oaram int $dataProcessorId
@@ -56,7 +84,7 @@ class CRM_Dataprocessor_Utils_DataSourceFields {
    * Returns an array with the name of the field as the key and the label of the field as the value.
    *
    * @oaram int $dataProcessorId
-   * @param callable $callback
+   * @param callable $filterFieldsCallback
    *   Function to filter certain fields.
    * @return array
    * @throws \Exception
@@ -66,7 +94,7 @@ class CRM_Dataprocessor_Utils_DataSourceFields {
     $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
     $fieldSelect = array();
     foreach($dataProcessorClass->getDataSources() as $dataSource) {
-      $fieldSelect = array_merge($fieldSelect, self::getAvailableFilterFieldsInDataSource($dataSource, $dataSource->getSourceTitle().' :: ', $dataSource->getSourceName().'::', $filterFieldsCallback));
+      $fieldSelect = array_merge($fieldSelect, self::getAvailableFilterFieldsInDataSource($dataSource, $dataSource->getSourceTitle() . ' :: ', $dataSource->getSourceName() . '::', $filterFieldsCallback));
     }
     return $fieldSelect;
   }
@@ -87,7 +115,7 @@ class CRM_Dataprocessor_Utils_DataSourceFields {
     foreach($dataSource->getAvailableFilterFields()->getFields() as $field) {
       $isFieldValid = true;
       if ($filterFieldsCallback) {
-        $isFieldValid = call_user_func($filterFieldsCallback, $field);
+        $isFieldValid = call_user_func($filterFieldsCallback, $field, $dataSource);
       }
       if ($isFieldValid) {
         $fieldSelect[$namePrefix . $field->alias] = $titlePrefix . $field->title;

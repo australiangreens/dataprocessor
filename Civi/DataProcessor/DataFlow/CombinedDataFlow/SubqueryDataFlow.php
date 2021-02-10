@@ -7,6 +7,8 @@
 namespace Civi\DataProcessor\DataFlow\CombinedDataFlow;
 
 use Civi\DataProcessor\DataFlow\EndOfFlowException;
+use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
 use Civi\DataProcessor\DataSpecification\SqlFieldSpecification;
 
@@ -39,8 +41,12 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
    */
   public function getTableStatement() {
     $fields = array();
+    $groupByFields = array();
     foreach($this->sourceDataFlowDescriptions as $sourceDataFlowDescription) {
       $fields = array_merge($fields, $sourceDataFlowDescription->getDataFlow()->getFieldsForSelectStatement());
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SqlDataFlow) {
+        $groupByFields = array_merge($groupByFields, $sourceDataFlowDescription->getDataFlow()->getFieldsForGroupByStatement());
+      }
     }
 
     $fromStatements = array();
@@ -58,15 +64,23 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
           $fromStatements[] = $joinStatement;
         }
       }
-      if ($sourceDataFlowDescription->getDataFlow() instanceof CombinedSqlDataFlow) {
+      if ($sourceDataFlowDescription->getDataFlow() instanceof SubqueryDataFlow) {
         $fromStatements = array_merge($fromStatements, $sourceDataFlowDescription->getDataFlow()->getJoinStatement(0));
       }
     }
 
+    $alias = $this->getName();
+    if (empty($alias)) {
+      $alias = $this->getPrimaryTableAlias();
+    }
     $from = implode(" ", $fromStatements);
-
     $select = implode(", ", $fields);
-    return "(SELECT {$select} {$from}) `{$this->getPrimaryTableAlias()}`";
+    $where = $this->getWhereStatement();
+    $groupBy = "";
+    if (count($groupByFields)) {
+      $groupBy = "GROUP BY ".implode(", ", $groupByFields);
+    }
+    return "(SELECT {$select} {$from} {$where} {$groupBy}) `{$alias}`";
   }
 
   /**
@@ -79,10 +93,23 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
     $fields = array();
     foreach($this->getDataSpecification()->getFields() as $field) {
       if ($field instanceof SqlFieldSpecification) {
-        $fields[] = $field->getSqlSelectStatement($this->primary_table_alias);
+        $fields[] = $field->getSqlSelectStatement($this->name);
       } else {
-        $fields[] = "`{$this->primary_table_alias}`.`{$field->name}` AS `{$field->alias}`";
+        $fields[] = "`{$this->name}`.`{$field->name}` AS `{$field->alias}`";
       }
+    }
+    return $fields;
+  }
+
+  /**
+   * Returns an array with the fields for in the group by statement in the sql query.
+   *
+   * @return string[]
+   */
+  public function getFieldsForGroupByStatement() {
+    $fields = array();
+    foreach($this->aggregateOutputHandlers as $outputHandler) {
+      $fields[] = $outputHandler->getAggregateFieldSpec()->getSqlGroupByStatement($this->getName());
     }
     return $fields;
   }
@@ -120,5 +147,6 @@ class SubqueryDataFlow extends CombinedSqlDataFlow {
     }
     return $record;
   }
+
 
 }

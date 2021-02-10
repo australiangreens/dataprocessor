@@ -54,15 +54,17 @@ class CRM_Dataprocessor_BAO_DataProcessor extends CRM_Dataprocessor_DAO_DataProc
    * Returns a configured data processor instance.
    *
    * @param array $dataProcessor
+   * @param bool $force
+   *   If set reload the data processor in the cache.
    * @return \Civi\DataProcessor\ProcessorType\AbstractProcessorType
    * @throws \Exception
    */
-  public static function dataProcessorToClass($dataProcessor) {
+  public static function dataProcessorToClass($dataProcessor, $force=false) {
     $cache_key = 'dataprocessor_'.$dataProcessor['id'];
     $cache = CRM_Dataprocessor_Utils_Cache::singleton();
-    if ($dataProcessorClass = $cache->get($cache_key)) {
+    if (!$force && $dataProcessorClass = $cache->get($cache_key)) {
       // Reset the default filter values as they might have been changed.
-      $dataProcessorClass->setDefaultFilterValues();
+      $dataProcessorClass->loadedFromCache();
       return $dataProcessorClass;
     }
     $factory = dataprocessor_get_factory();
@@ -103,6 +105,19 @@ class CRM_Dataprocessor_BAO_DataProcessor extends CRM_Dataprocessor_DAO_DataProc
         }
       }
     }
+
+    if (isset($dataProcessor['configuration']['default_sort'])) {
+      foreach($dataProcessor['configuration']['default_sort'] as $sort) {
+        if (stripos($sort, 'asc_by_') === 0) {
+          $field = substr($sort, 7);
+          $dataProcessorClass->getDataFlow()->addSort($field, 'ASC');
+        } elseif (stripos($sort, 'desc_by_') === 0) {
+          $field = substr($sort, 8);
+          $dataProcessorClass->getDataFlow()->addSort($field, 'DESC');
+        }
+      }
+    }
+
     $cache->set($cache_key, $dataProcessorClass);
     return $dataProcessorClass;
   }

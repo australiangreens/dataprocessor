@@ -128,6 +128,9 @@ abstract class AbstractProcessorType {
    * @return \Civi\DataProcessor\FilterHandler\AbstractFilterHandler[]
    */
   public function getFilterHandlers() {
+    if (!$this->filterHandlers || !is_array($this->filterHandlers)) {
+      $this->filterHandlers = array();
+    }
     return $this->filterHandlers;
   }
 
@@ -152,20 +155,15 @@ abstract class AbstractProcessorType {
    */
   public function getDataFlow() {
     if (!$this->dataflow) {
-      if (count($this->dataSources) === 1) {
-        $dataflow = $this->dataSources[0]['datasource']->getDataFlow();
+      if ($this->allSqlDataFlows) {
+        $dataflow = new CombinedSqlDataFlow();
       }
       else {
-        if ($this->allSqlDataFlows) {
-          $dataflow = new CombinedSqlDataFlow();
-        }
-        else {
-          $dataflow = new CombinedDataFlow();
-        }
-        foreach ($this->dataSources as $datasource) {
-          $dataFlowDescription = new DataFlowDescription($datasource['datasource']->getDataFlow(), $datasource['combine_specification']);
-          $dataflow->addSourceDataFlow($dataFlowDescription);
-        }
+        $dataflow = new CombinedDataFlow();
+      }
+      foreach ($this->dataSources as $datasource) {
+        $dataFlowDescription = new DataFlowDescription($datasource['datasource']->getDataFlow(), $datasource['combine_specification']);
+        $dataflow->addSourceDataFlow($dataFlowDescription);
       }
 
       if ($this->storage) {
@@ -181,16 +179,26 @@ abstract class AbstractProcessorType {
   }
 
   /**
-   * Sets the default filter values for all filters.
+   * Sets the default filter values for all filters and calls loadFromCache on a source.
    *
    * @throws \Exception
    */
-  public function setDefaultFilterValues() {
+  public function loadedFromCache() {
+    if ($this->dataSources && is_array($this->dataSources)) {
+      foreach ($this->dataSources as $dataSource) {
+        $dataSource['datasource']->sourceLoadedFromCache();
+      }
+    }
+
     if ($this->filterHandlers && is_array($this->filterHandlers)) {
       foreach ($this->filterHandlers as $filterHandler) {
         $filterHandler->setDefaultFilterValues();
       }
     }
+  }
+
+  public function resetDataFlow() {
+    $this->dataflow = null;
   }
 
 }

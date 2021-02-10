@@ -32,8 +32,10 @@ class Definition {
    */
   public function get() {
     $reflectionClass = new \ReflectionClass($this->class);
-    if ($reflectionClass->getConstructor()) {
-      return $reflectionClass->newInstance($this->arguments);
+    if ($this->arguments && $reflectionClass->getConstructor()) {
+      return $reflectionClass->newInstanceArgs($this->arguments);
+    } elseif ($reflectionClass->getConstructor()) {
+      return $reflectionClass->newInstance();
     } else {
       return $reflectionClass->newInstanceWithoutConstructor();
     }

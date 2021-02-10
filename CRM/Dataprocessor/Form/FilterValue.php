@@ -47,7 +47,7 @@ class CRM_Dataprocessor_Form_FilterValue extends CRM_Core_Form {
     $factory = dataprocessor_get_factory();
     $this->dataProcessorId = CRM_Utils_Request::retrieve('data_processor_id', 'Integer');
     $this->dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $this->dataProcessorId));
-    $this->dataProcessorClass = CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor);
+    $this->dataProcessorClass = CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor, true);
     $this->assign('data_processor_id', $this->dataProcessorId);
 
     $this->id = CRM_Utils_Request::retrieve('id', 'Integer');
@@ -57,7 +57,11 @@ class CRM_Dataprocessor_Form_FilterValue extends CRM_Core_Form {
     $this->filter = civicrm_api3('DataProcessorFilter', 'getsingle', array('id' => $this->id));
     $this->filterTypeClass = $factory->getFilterByName($this->filter['type']);
     $this->filterTypeClass->setDataProcessor($this->dataProcessorClass);
-    $this->filterTypeClass->initialize($this->filter);
+    try {
+      $this->filterTypeClass->initialize($this->filter);
+    } catch (\Civi\DataProcessor\Exception\FilterRequiredException $ex) {
+      // Do nothing.
+    }
 
     $title = E::ts('Data Processor Default Filter Value');
     CRM_Utils_System::setTitle($title);
@@ -95,7 +99,6 @@ class CRM_Dataprocessor_Form_FilterValue extends CRM_Core_Form {
   }
 
   public function postProcess() {
-    $session = CRM_Core_Session::singleton();
     $redirectUrl = CRM_Utils_System::url('civicrm/dataprocessor/form/edit', array('reset' => 1, 'action' => 'update', 'id' => $this->dataProcessorId));
     $values = $this->exportValues();
     $default_filter_value = $this->filterTypeClass->processSubmittedValues($values);

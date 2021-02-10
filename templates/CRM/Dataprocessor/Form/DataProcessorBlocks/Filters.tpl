@@ -22,6 +22,7 @@
                     </td>
                     <td style="width: 60px">{if ($filter.weight && !is_numeric($filter.weight))}{$filter.weight}{/if}</td>
                     <td class="right nowrap" style="width: 100px;">
+                        <div class="crm-configure-actions">
                         <span class="btn-slide crm-hover-button">{ts}Configure{/ts}
                         <ul class="panel">
                             <li><a class="action-item crm-hover-button" href="{crmURL p="civicrm/dataprocessor/form/filter" q="reset=1&action=update&data_processor_id=`$filter.data_processor_id`&id=`$filter.id`"}">{ts}Type &amp; configuration{/ts}</a></li>
@@ -29,6 +30,7 @@
                             <li><a class="action-item crm-hover-button" href="{crmURL p="civicrm/dataprocessor/form/filter" q="reset=1&action=delete&data_processor_id=`$filter.data_processor_id`&id=`$filter.id`"}">{ts}Remove{/ts}</a></li>
                         </ul>
                         </span>
+                        </div>
                     </td>
                 </tr>
             {/foreach}

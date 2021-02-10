@@ -14,7 +14,7 @@ use Civi\DataProcessor\FieldOutputHandler\FieldOutput;
 use Civi\DataProcessor\FieldOutputHandler\RawFieldOutputHandler;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
-class AggregateFunctionFieldOutputHandler extends AbstractSimpleFieldOutputHandler {
+class AggregateFunctionFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler {
 
   /**
    * @var \Civi\DataProcessor\DataSpecification\FieldSpecification
@@ -56,13 +56,13 @@ class AggregateFunctionFieldOutputHandler extends AbstractSimpleFieldOutputHandl
    * @return \Civi\DataProcessor\FieldOutputHandler\FieldOutput
    */
   public function formatField($rawRecord, $formattedRecord) {
-    $value = $rawRecord[$this->aggregateField->alias];
+    $value = (float) $rawRecord[$this->aggregateField->alias];
 
     $formattedValue = $value;
     if (is_numeric($this->number_of_decimals) && $value != null) {
-      $formattedValue = number_format($value, $this->number_of_decimals, $this->decimal_sep, $this->thousand_sep);
+      $formattedValue = number_format((float) $value, $this->number_of_decimals, $this->decimal_sep, $this->thousand_sep);
     } elseif ($this->inputFieldSpec->type == 'Money') {
-      $formattedValue = \CRM_Utils_Money::format($value);
+      $formattedValue = \CRM_Utils_Money::format((float) $value);
     }
     if ($formattedValue != null) {
       $formattedValue = $this->prefix . $formattedValue . $this->suffix;
@@ -84,19 +84,22 @@ class AggregateFunctionFieldOutputHandler extends AbstractSimpleFieldOutputHandl
   public function initialize($alias, $title, $configuration) {
     $this->dataSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
     if (!$this->dataSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
+      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$alias, 2=>$configuration['datasource'])));
     }
+
     $this->inputFieldSpec = $this->dataSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['field']);
     if (!$this->inputFieldSpec) {
       $this->inputFieldSpec = $this->dataSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
     }
     if (!$this->inputFieldSpec) {
       throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
+        1 => $alias,
         2 => $configuration['field'],
         3 => $configuration['datasource']
       )));
     }
+    $this->dataSource->ensureField($this->inputFieldSpec);
+
     $this->aggregateField = AggregateFunctionFieldSpecification::convertFromFieldSpecification($this->inputFieldSpec, $configuration['function']);
     $this->aggregateField->alias = $alias;
     $this->dataSource->ensureFieldInSource($this->aggregateField);
@@ -104,7 +107,7 @@ class AggregateFunctionFieldOutputHandler extends AbstractSimpleFieldOutputHandl
     $this->outputFieldSpec = clone $this->inputFieldSpec;
     $this->outputFieldSpec->alias = $alias;
     $this->outputFieldSpec->title = $title;
-    $this->outputFieldSpec->type = 'Float';
+    $this->outputFieldSpec->type = 'String';
 
     if (isset($configuration['number_of_decimals'])) {
       $this->number_of_decimals = $configuration['number_of_decimals'];
@@ -154,7 +157,7 @@ class AggregateFunctionFieldOutputHandler extends AbstractSimpleFieldOutputHandl
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['function'])) {
         $defaults['function'] = $configuration['function'];

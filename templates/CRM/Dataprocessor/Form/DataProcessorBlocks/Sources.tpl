@@ -14,12 +14,14 @@
                 </td>
                 <td style="width: 60px;">{if ($source.weight && !is_numeric($source.weight))}{$source.weight}{/if}</td>
                 <td class="right nowrap" style="width: 100px;">
+                  <div class="crm-configure-actions">
                         <span class="btn-slide crm-hover-button">{ts}Configure{/ts}
                         <ul class="panel">
                             <li><a class="action-item crm-hover-button" href="{crmURL p="civicrm/dataprocessor/form/source" q="reset=1&action=update&data_processor_id=`$source.data_processor_id`&id=`$source.id`"}">{ts}Edit{/ts}</a></li>
                             <li><a class="action-item crm-hover-button" href="{crmURL p="civicrm/dataprocessor/form/source" q="reset=1&action=delete&data_processor_id=`$source.data_processor_id`&id=`$source.id`"}">{ts}Remove{/ts}</a></li>
                         </ul>
                         </span>
+                  </div>
                 </td>
             </tr>
         {/foreach}

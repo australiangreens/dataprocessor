@@ -28,6 +28,8 @@ class CRM_DataprocessorDashlet_Page_Dashlet extends CRM_Core_Page {
    */
   private $dataProcessorClass;
 
+  protected $context;
+
   /**
    * Pre Process the results
    *
@@ -36,10 +38,12 @@ class CRM_DataprocessorDashlet_Page_Dashlet extends CRM_Core_Page {
 
   protected function preProcess() {
     $this->dataProcessorName = CRM_Utils_Request::retrieve('data_processor', 'String');
+    $this->context = CRM_Utils_Request::retrieve('context', 'String');
 
     $this->dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('name' => $this->dataProcessorName));
     $this->dataProcessorClass = CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor);
     $this->assign('dataProcessorName', $this->dataProcessorName);
+    $this->assign('context', $this->context);
   }
 
   /**

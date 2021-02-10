@@ -37,7 +37,7 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
    * @return String
    */
   protected function getDataProcessorName() {
-    $dataProcessorName = str_replace('civicrm/dataprocessor_search/', '', CRM_Utils_System::getUrlPath());
+    $dataProcessorName = str_replace('civicrm/dataprocessor_search/', '', CRM_Utils_System::currentPath());
     return $dataProcessorName;
   }
 
@@ -79,6 +79,51 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
   }
 
   /**
+   * Returns an array with hidden columns
+   *
+   * @return array
+   */
+  protected function getHiddenFields() {
+    $hiddenFields = array();
+    if (!$this->isIdFieldVisible()) {
+      $hiddenFields[] = $this->getIdFieldName();
+    }
+    if ($this->isSubmitted() && isset($this->dataProcessorOutput['configuration']['expose_hidden_fields']) && $this->dataProcessorOutput['configuration']['expose_hidden_fields']) {
+      $submittedHiddenFields = isset($this->_formValues['hidden_fields']) && is_array($this->_formValues['hidden_fields']) ? $this->_formValues['hidden_fields'] : array();
+      $hiddenFields = array_merge($hiddenFields, $submittedHiddenFields);
+    } elseif (isset($this->dataProcessorOutput['configuration']['hidden_fields']) && is_array($this->dataProcessorOutput['configuration']['hidden_fields'])) {
+      $hiddenFields = array_merge($hiddenFields, $this->dataProcessorOutput['configuration']['hidden_fields']);
+    }
+    return $hiddenFields;
+  }
+
+  /**
+   * Return altered rows
+   *
+   * Save the ids into the queryParams value. So that when an action is done on the selected record
+   * or on all records, the queryParams will hold all the case ids so that in the next step only the selected record, or the first
+   * all records are populated.
+   */
+  protected function retrieveEntityIds() {
+    $this->dataProcessorClass->getDataFlow()->setLimit(false);
+    $this->dataProcessorClass->getDataFlow()->setOffset(0);
+    $this->entityIDs = [];
+    $id_field = $this->getIdFieldName();
+    try {
+      while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
+        if ($id_field && isset($record[$id_field])) {
+          $this->entityIDs[] = $record[$id_field]->rawValue;
+        }
+      }
+    } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
+      // Do nothing
+    } catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      // Do nothing
+    }
+    $this->controller->set('entityIds', $this->entityIDs);
+  }
+
+  /**
    * Builds the list of tasks or actions that a searcher can perform on a result set.
    *
    * @return array
@@ -96,6 +141,7 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
   protected function buildCriteriaForm() {
     parent::buildCriteriaForm();
     $this->buildAggregateForm();
+    $this->buildHiddenFieldsForm();
   }
 
   /**
@@ -104,10 +150,49 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
    * @return false|String
    */
   protected function getAdditionalCriteriaTemplate() {
+    $return = [];
     if (isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
-      return "CRM/DataprocessorSearch/Form/Criteria/AggregateCriteria.tpl";
+      $return[] = "CRM/DataprocessorSearch/Form/Criteria/AggregateCriteria.tpl";
     }
-    return false;
+    if (isset($this->dataProcessorOutput['configuration']['expose_hidden_fields']) && $this->dataProcessorOutput['configuration']['expose_hidden_fields']) {
+      $return[] = "CRM/DataprocessorSearch/Form/Criteria/HiddenFieldsCriteria.tpl";
+    }
+    return $return;
+  }
+
+  /**
+   * Build the aggregate form
+   */
+  protected function buildHiddenFieldsForm() {
+    if (!isset($this->dataProcessorOutput['configuration']['expose_hidden_fields']) || !$this->dataProcessorOutput['configuration']['expose_hidden_fields']) {
+      return;
+    }
+    $size = $this->getCriteriaElementSize();
+
+    $sizeClass = 'huge';
+    $minWidth = 'min-width: 250px;';
+    if ($size =='compact') {
+      $sizeClass = 'medium';
+      $minWidth = '';
+    }
+
+    $fields = array();
+    $defaults = array();
+    foreach ($this->dataProcessorClass->getDataFlow()->getOutputFieldHandlers() as $outputFieldHandler) {
+      $fields[$outputFieldHandler->getOutputFieldSpecification()->alias] = $outputFieldHandler->getOutputFieldSpecification()->title;
+    }
+    if (isset($this->dataProcessorOutput['configuration']['hidden_fields']) && is_array($this->dataProcessorOutput['configuration']['hidden_fields'])) {
+      $defaults = $this->dataProcessorOutput['configuration']['hidden_fields'];
+    }
+
+    $this->add('select', "hidden_fields", '', $fields, false, [
+      'style' => $minWidth,
+      'class' => 'crm-select2 '.$sizeClass,
+      'multiple' => TRUE,
+      'placeholder' => E::ts('- Select -'),
+    ]);
+
+    $this->setDefaults(['hidden_fields' => $defaults]);
   }
 
 
@@ -149,6 +234,22 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
   }
 
   /**
+   * Returns whether the search has required filters.
+   *
+   * @return bool
+   */
+  protected function hasExposedFilters() {
+    $return = parent::hasExposedFilters();
+    if (!$return && isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
+      $return = true;
+    }
+    if (!$return && isset($this->dataProcessorOutput['configuration']['expose_hidden_fields']) && $this->dataProcessorOutput['configuration']['expose_hidden_fields']) {
+      $return = true;
+    }
+    return $return;
+  }
+
+  /**
    * Alter the data processor.
    *
    * Use this function in child classes to add for example additional filters.
@@ -159,7 +260,7 @@ class CRM_DataprocessorSearch_Form_Search extends CRM_DataprocessorSearch_Form_A
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass
    */
   protected function alterDataProcessor(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass) {
-    if (isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
+    if ($this->isSubmitted() && isset($this->dataProcessorOutput['configuration']['expose_aggregate']) && $this->dataProcessorOutput['configuration']['expose_aggregate']) {
       $aggregateFields = isset($this->_formValues['aggregateFields']) ? $this->_formValues['aggregateFields'] : array();
       foreach ($this->dataProcessorClass->getDataFlow()->getOutputFieldHandlers() as $outputFieldHandler) {
         if ($outputFieldHandler instanceof \Civi\DataProcessor\FieldOutputHandler\OutputHandlerAggregate) {

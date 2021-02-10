@@ -36,8 +36,14 @@ class CRM_Dataprocessor_Form_ManageDataProcessors extends CRM_Core_Form {
     foreach($dataProcessors as $idx => $dataProcessor) {
       $dataProcessors[$idx]['status_label'] = CRM_Dataprocessor_Status::statusToLabel($dataProcessor['status']);
       $outputs = civicrm_api3('DataProcessorOutput', 'get',['data_processor_id' => $dataProcessor['id'], 'options' => ['limit' => 0]]);
+      $outputTypeTitles = $factory->getOutputs();
       foreach(CRM_Utils_Array::value('values', $outputs) as $outputIndex => $output) {
         $outputClass = $factory->getOutputByName($output['type']);
+        $outputTypeTitle = "";
+        if (isset($outputTypeTitles[$output['type']])) {
+          $outputTypeTitle = $outputTypeTitles[$output['type']];
+        }
+        $dataProcessors[$idx]['navigation'][$outputIndex]['type'] = $outputTypeTitle;
         if ($outputClass instanceof \Civi\DataProcessor\Output\UIFormOutputInterface) {
           $dataProcessors[$idx]['navigation'][$outputIndex]['url'] = CRM_Utils_System::url($outputClass->getUrlToUi($output, $dataProcessor), array('reset' => '1'));
           $dataProcessors[$idx]['navigation'][$outputIndex]['title'] = $outputClass->getTitleForUiLink($output, $dataProcessor);
@@ -53,7 +59,7 @@ class CRM_Dataprocessor_Form_ManageDataProcessors extends CRM_Core_Form {
 
     $session = CRM_Core_Session::singleton();
     $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this);
-    $urlPath = CRM_Utils_System::getUrlPath();
+    $urlPath = CRM_Utils_System::currentPath();
     $urlParams = 'force=1';
     if ($qfKey) {
       $urlParams .= "&qfKey=$qfKey";

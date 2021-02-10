@@ -54,7 +54,7 @@ class SubtractFieldOutputHandler extends AbstractFieldOutputHandler {
    * @return String
    */
   protected function getType() {
-    return 'Float';
+    return 'String';
   }
 
   /**
@@ -66,8 +66,10 @@ class SubtractFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->inputFieldSpec1 = $this->initializeField($configuration['field1'], $title);
-    $this->inputFieldSpec2 = $this->initializeField($configuration['field2'], $title);
+    list($datasourceName1, $field1) = explode('::', $configuration['field1'], 2);
+    list($dataSource1, $this->inputFieldSpec1) = $this->initializeField($field1, $datasourceName1, $alias.'_1');
+    list($datasourceName2, $field2) = explode('::', $configuration['field2'], 2);
+    list($dataSource2, $this->inputFieldSpec2) = $this->initializeField($field2, $datasourceName2, $alias.'_2');
 
     $this->outputFieldSpec = new FieldSpecification($alias, 'Float', $title, null, $alias);
 
@@ -86,25 +88,6 @@ class SubtractFieldOutputHandler extends AbstractFieldOutputHandler {
     if (isset($configuration['suffix'])) {
       $this->suffix = $configuration['suffix'];
     }
-  }
-
-  protected function initializeField($field, $title) {
-    list($datasourceName, $field) = explode('::', $field, 2);
-    $dataSource = $this->dataProcessor->getDataSourceByName($datasourceName);
-    if (!$dataSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$datasourceName)));
-    }
-    $inputFieldSpec = $dataSource->getAvailableFields()
-      ->getFieldSpecificationByName($field);
-    if (!$inputFieldSpec) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", [
-        1 => $title,
-        2 => $field,
-        3 => $datasourceName
-      ]));
-    }
-    $dataSource->ensureFieldInSource($inputFieldSpec);
-    return $inputFieldSpec;
   }
 
   /**

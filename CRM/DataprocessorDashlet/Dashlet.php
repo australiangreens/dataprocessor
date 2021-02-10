@@ -41,6 +41,7 @@ class CRM_DataprocessorDashlet_Dashlet implements Civi\DataProcessor\Output\UIOu
     $form->add('text', 'default_limit', E::ts('Default Limit'));
     $form->add('wysiwyg', 'help_text', E::ts('Help text for this dashlet'), array('rows' => 6, 'cols' => 80));
     $form->add('checkbox', 'expanded_search', E::ts('Expand criteria form initially'));
+    $form->add('text', 'no_result_text', E::ts('No result text'), array('class' => 'huge'), false);
 
     $form->add('select', 'hidden_fields', E::ts('Hidden fields'), $fields, false, array(
       'style' => 'min-width:250px',
@@ -57,6 +58,11 @@ class CRM_DataprocessorDashlet_Dashlet implements Civi\DataProcessor\Output\UIOu
       if (isset($output['configuration']) && is_array($output['configuration'])) {
         if (isset($output['configuration']['default_limit'])) {
           $defaults['default_limit'] = $output['configuration']['default_limit'];
+        }
+        if (isset($output['configuration']['no_result_text'])) {
+          $defaults['no_result_text'] = $output['configuration']['no_result_text'];
+        } else {
+          $defaults['no_result_text'] = E::ts('No results');
         }
         if (isset($output['configuration']['help_text'])) {
           $defaults['help_text'] = $output['configuration']['help_text'];
@@ -100,8 +106,8 @@ class CRM_DataprocessorDashlet_Dashlet implements Civi\DataProcessor\Output\UIOu
   public function processConfiguration($submittedValues, &$output) {
     $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $output['data_processor_id']));
     $dashletName = 'dataprocessor_'.$dataProcessor['name'];
-    $dashletUrl = \CRM_Utils_System::url('civicrm/dataprocessor/page/dashlet', array('data_processor' => $dataProcessor['name']));
-    $fullScreenUrl = \CRM_Utils_System::url('civicrm/dataprocessor/page/dashlet', array('data_processor' => $dataProcessor['name'], 'context' => 'dashletFullscreen'));
+    $dashletUrl = "civicrm/dataprocessor/page/dashlet?data_processor={$dataProcessor['name']}";
+    $fullScreenUrl = "civicrm/dataprocessor/page/dashlet?data_processor={$dataProcessor['name']}&context=dashletFullscreen";
     $dashletParams['url'] = $dashletUrl;
     $dashletParams['fullscreen_url'] = $fullScreenUrl;
     $dashletParams['name'] = $dashletName;
@@ -123,6 +129,7 @@ class CRM_DataprocessorDashlet_Dashlet implements Civi\DataProcessor\Output\UIOu
 
     $output['permission'] = $submittedValues['permission'];
     $configuration['default_limit'] = $submittedValues['default_limit'];
+    $configuration['no_result_text'] = $submittedValues['no_result_text'];
     $configuration['help_text'] = $submittedValues['help_text'];
     $configuration['hidden_fields'] = $submittedValues['hidden_fields'];
     $configuration['expanded_search'] = isset($submittedValues['expanded_search']) ? $submittedValues['expanded_search'] : false;
@@ -139,16 +146,20 @@ class CRM_DataprocessorDashlet_Dashlet implements Civi\DataProcessor\Output\UIOu
   public function deleteOutput($output) {
     $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $output['data_processor_id']));
     $dashletName = 'dataprocessor_'.$dataProcessor['name'];
-    $dashlets = civicrm_api3('Dashboard', 'get', [
-      'name' => $dashletName,
-      'options' => ['limit' => 0]
-    ]);
-    foreach ($dashlets['values'] as $dashlet) {
-      try {
-        civicrm_api3('Dashlet', 'delete', ['id' => $dashlet['id']]);
-      } catch (\Exception $e) {
-        // Do nothing
+    try {
+      $dashlets = civicrm_api3('Dashboard', 'get', [
+        'name' => $dashletName,
+        'options' => ['limit' => 0]
+      ]);
+      foreach ($dashlets['values'] as $dashlet) {
+        try {
+          civicrm_api3('Dashlet', 'delete', ['id' => $dashlet['id']]);
+        } catch (\Exception $e) {
+          // Do nothing.
+        }
       }
+    } catch (\CiviCRM_API3_Exception $ex) {
+      // Do nothing.
     }
   }
 

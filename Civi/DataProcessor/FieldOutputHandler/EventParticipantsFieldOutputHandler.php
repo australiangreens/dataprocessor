@@ -12,22 +12,7 @@ use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Exception\DataSourceNotFoundException;
 use Civi\DataProcessor\Exception\FieldNotFoundException;
 
-class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler implements OutputHandlerSortable{
-
-  /**
-   * @var \Civi\DataProcessor\DataSpecification\FieldSpecification
-   */
-  protected $inputFieldSpec;
-
-  /**
-   * @var \Civi\DataProcessor\DataSpecification\FieldSpecification
-   */
-  protected $outputFieldSpec;
-
-  /**
-   * @var SourceInterface
-   */
-  protected $dataSource;
+class EventParticipantsFieldOutputHandler extends AbstractSimpleFieldOutputHandler {
 
   /**
    * @var array
@@ -38,20 +23,6 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
    * @var array
    */
   protected $role_ids = array();
-
-  /**
-   * @return \Civi\DataProcessor\DataSpecification\FieldSpecification
-   */
-  public function getOutputFieldSpecification() {
-    return $this->outputFieldSpec;
-  }
-
-  /**
-   * @return \Civi\DataProcessor\DataSpecification\FieldSpecification
-   */
-  public function getSortableInputFieldSpec() {
-    return $this->inputFieldSpec;
-  }
 
   /**
    * Returns the data type of this field
@@ -71,21 +42,7 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->dataSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->dataSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->inputFieldSpec = $this->dataSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    if (!$this->inputFieldSpec) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->dataSource->ensureFieldInSource($this->inputFieldSpec);
-
-    $this->outputFieldSpec = new FieldSpecification($alias, 'String', $title, $alias);
+    parent::initialize($alias, $title, $configuration);
     if (isset($configuration['role_ids'])) {
       $this->role_ids = $configuration['role_ids'];
     }
@@ -107,7 +64,7 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
     $output = new FieldOutput();
     if ($event_id) {
       $participantsSql = "
-        SELECT `c`.`display_name`, `c`.`id` as `contact_id`, `p`.`id` as `participant_id` 
+        SELECT `c`.`display_name`, `c`.`id` as `contact_id`, `p`.`id` as `participant_id`
         FROM `civicrm_contact` `c`
         INNER JOIN `civicrm_participant` `p` ON `p`.`contact_id` = `c`.`id`
         WHERE `p`.`event_id` = %1";
@@ -132,15 +89,6 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
   }
 
   /**
-   * Returns true when this handler has additional configuration.
-   *
-   * @return bool
-   */
-  public function hasConfiguration() {
-    return true;
-  }
-
-  /**
    * When this handler has additional configuration you can add
    * the fields on the form with this function.
    *
@@ -148,7 +96,7 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
    * @param array $field
    */
   public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
-    $fieldSelect = $this->getFieldOptions($field['data_processor_id']);
+    parent::buildConfigurationForm($form, $field);
     $roles = array();
     $roleApi = civicrm_api3('OptionValue', 'get', array(
       'option_group_id' => 'participant_role',
@@ -164,12 +112,6 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
     foreach($statusApi['values'] as $status) {
       $statuses[$status['id']] = $status['label'];
     }
-
-    $form->add('select', 'field', E::ts('Event ID Field'), $fieldSelect, true, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge data-processor-field-for-name',
-      'placeholder' => E::ts('- select -'),
-    ));
 
     $form->add('select', 'role_ids', E::ts('Roles'), $roles, false, array(
       'style' => 'min-width:250px',
@@ -187,9 +129,6 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
       $defaults = array();
-      if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
-      }
       if (isset($configuration['role_ids'])) {
         $defaults['role_ids'] = $configuration['role_ids'];
       }
@@ -218,35 +157,10 @@ class EventParticipantsFieldOutputHandler extends AbstractFieldOutputHandler imp
    * @return array
    */
   public function processConfiguration($submittedValues) {
-    list($datasource, $field) = explode('::', $submittedValues['field'], 2);
-    $configuration['field'] = $field;
-    $configuration['datasource'] = $datasource;
+    $configuration = parent::processConfiguration($submittedValues);
     $configuration['role_ids'] = $submittedValues['role_ids'];
     $configuration['status_ids'] = $submittedValues['status_ids'];
     return $configuration;
-  }
-
-  /**
-   * Returns all possible fields
-   *
-   * @param $data_processor_id
-   *
-   * @return array
-   * @throws \Exception
-   */
-  protected function getFieldOptions($data_processor_id) {
-    $fieldSelect = \CRM_Dataprocessor_Utils_DataSourceFields::getAvailableFieldsInDataSources($data_processor_id, array($this, 'isFieldValid'));
-    return $fieldSelect;
-  }
-
-  /**
-   * Callback function for determining whether this field could be handled by this output handler.
-   *
-   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $field
-   * @return bool
-   */
-  public function isFieldValid(FieldSpecification $field) {
-    return true;
   }
 
 

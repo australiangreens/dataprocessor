@@ -22,7 +22,7 @@ class CRM_DataprocessorOutputExport_Page_Export extends CRM_Core_Page {
   protected $dataProcessorId;
 
   /**
-   * @var \CRM_Dataprocessor_BAO_Output
+   * @var array
    */
   protected $dataProcessorOutput;
 
@@ -35,6 +35,67 @@ class CRM_DataprocessorOutputExport_Page_Export extends CRM_Core_Page {
     $this->sort = new CRM_Utils_Sort($sortFields);
 
     $this->runExport();
+  }
+
+  protected function startBatchJob(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $formValues, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array()) {
+    $session = \CRM_Core_Session::singleton();
+
+    $name = date('Ymdhis').'_'.$dataProcessor['id'].'_'.$outputBAO['id'].'_'.CRM_Core_Session::getLoggedInContactID().'_'.md5($dataProcessor['name']);
+
+    $queue = \CRM_Queue_Service::singleton()->create(array(
+      'type' => 'Sql',
+      'name' => $name,
+      'reset' => TRUE, //do flush queue upon creation
+    ));
+
+    $basePath = \CRM_Core_Config::singleton()->templateCompileDir . 'dataprocessor_export_pdf';
+    \CRM_Utils_File::createDir($basePath);
+    \CRM_Utils_File::restrictAccess($basePath.'/');
+    $filename = $basePath.'/'. $name.'.html';
+
+    $count = $dataProcessorClass->getDataFlow()->recordCount();
+    $recordsPerJob = self::RECORDS_PER_JOB;
+    for($i=0; $i < $count; $i = $i + $recordsPerJob) {
+      $title = E::ts('Exporting records %1/%2', array(
+        1 => ($i+$recordsPerJob) <= $count ? $i+$recordsPerJob : $count,
+        2 => $count,
+      ));
+
+      //create a task without parameters
+      $task = new \CRM_Queue_Task(
+        array(
+          'CRM_DataprocessorOutputExport_PDF',
+          'exportBatch'
+        ), //call back method
+        array($filename,$formValues, $dataProcessor['id'], $outputBAO['id'], $i, $recordsPerJob, $sortFieldName, $sortDirection, $idField, $selectedIds), //parameters,
+        $title
+      );
+      //now add this task to the queue
+      $queue->createItem($task);
+    }
+
+    $task = new \CRM_Queue_Task(
+      array(
+        'CRM_DataprocessorOutputExport_PDF',
+        'exportBatchFooter'
+      ), //call back method
+      array($filename,$formValues, $dataProcessor['id'], $outputBAO['id'], $i, $recordsPerJob, $sortFieldName, $sortDirection, $idField, $selectedIds), //parameters,
+      $title
+    );
+    //now add this task to the queue
+    $queue->createItem($task);
+
+    $url = str_replace("&amp;", "&", $session->readUserContext());
+
+    $runner = new \CRM_Queue_Runner(array(
+      'title' => E::ts('Exporting data'), //title fo the queue
+      'queue' => $queue, //the queue object
+      'errorMode'=> \CRM_Queue_Runner::ERROR_CONTINUE, //abort upon error and keep task in queue
+      'onEnd' => array('CRM_DataprocessorOutputExport_PDF', 'onEnd'), //method which is called as soon as the queue is finished
+      'onEndUrl' => $url,
+    ));
+
+    $runner->runAllViaWeb(); // does not return
   }
 
   protected function runExport() {
@@ -55,16 +116,21 @@ class CRM_DataprocessorOutputExport_Page_Export extends CRM_Core_Page {
     $outputClass = $factory->getOutputByName($this->dataProcessorOutput['type']);
     if ($outputClass instanceof \Civi\DataProcessor\Output\DirectDownloadExportOutputInterface) {
       $outputClass->doDirectDownload($this->dataProcessorClass, $this->dataProcessor, $this->dataProcessorOutput, array(), $sortFieldName, $sortDirection);
+      \CRM_Utils_System::civiExit();
     }
     throw new \Exception('Unable to export');
   }
 
   protected function getDataProcessorName() {
-    return CRM_Utils_Request::retrieve('name', 'String', CRM_Core_DAO::$_nullObject, TRUE);
+    $name = CRM_Utils_Request::retrieveValue('dataprocessor', 'String', NULL, FALSE);
+    if ($name) {
+      return $name;
+    }
+    return CRM_Utils_Request::retrieveValue('name', 'String', NULL, TRUE);
   }
 
   protected function getOutputName() {
-    return CRM_Utils_Request::retrieve('type', 'String', CRM_Core_DAO::$_nullObject, TRUE);
+    return CRM_Utils_Request::retrieveValue('type', 'String', NULL, TRUE);
   }
 
   /**
@@ -90,7 +156,7 @@ class CRM_DataprocessorOutputExport_Page_Export extends CRM_Core_Page {
       }
 
       $this->dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $dao->data_processor_id));
-      $this->dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor, true);
+      $this->dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor);
       $this->dataProcessorId = $dao->data_processor_id;
 
       $this->dataProcessorOutput = civicrm_api3('DataProcessorOutput', 'getsingle', array('id' => $dao->output_id));

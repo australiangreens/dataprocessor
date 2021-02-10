@@ -6,7 +6,11 @@
 
 namespace Civi\DataProcessor\FilterHandler;
 
+use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
+use Civi\DataProcessor\Exception\FilterRequiredException;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
 
 use CRM_Dataprocessor_ExtensionUtil as E;
@@ -220,13 +224,14 @@ abstract class AbstractFilterHandler {
     if ($this->isRequired()) {
       $filterSpec = $this->getFieldSpecification();
       $filterName = $filterSpec->alias;
+      $processedSubmittedValues = $this->processSubmittedValues($submittedValues);
       if ($filterSpec->type == 'Date' || $filterSpec->type == 'Timestamp') {
-        $relative = \CRM_Utils_Array::value("{$filterName}_relative", $submittedValues);
-        $from = \CRM_Utils_Array::value("{$filterName}_from", $submittedValues);
-        $to = \CRM_Utils_Array::value("{$filterName}_to", $submittedValues);
-        $fromTime = \CRM_Utils_Array::value("{$filterName}_from_time", $submittedValues);
-        $toTime = \CRM_Utils_Array::value("{$filterName}_to_time", $submittedValues);
-        $op = \CRM_Utils_Array::value("op", $submittedValues);
+        $relative = \CRM_Utils_Array::value("relative", $processedSubmittedValues);
+        $from = \CRM_Utils_Array::value("from", $processedSubmittedValues);
+        $to = \CRM_Utils_Array::value("to", $processedSubmittedValues);
+        $fromTime = \CRM_Utils_Array::value("from_time", $processedSubmittedValues);
+        $toTime = \CRM_Utils_Array::value("to_time", $processedSubmittedValues);
+        $op = \CRM_Utils_Array::value("op", $processedSubmittedValues);
 
         if ($relative != 'null') {
           list($from, $to) = \CRM_Utils_Date::getFromTo($relative, $from, $to, $fromTime, $toTime);
@@ -235,7 +240,7 @@ abstract class AbstractFilterHandler {
           $errors[$filterName . '_relative'] = E::ts('Field %1 is required', [1 => $filterSpec->title]);
         }
       }
-      elseif (!isset($submittedValues[$filterName . '_op']) || !(isset($submittedValues[$filterName . '_value']) && $submittedValues[$filterName . '_value'])) {
+      elseif (!isset($processedSubmittedValues['op']) || !(isset($processedSubmittedValues['value']) && $processedSubmittedValues['value'])) {
         $errors[$filterName . '_value'] = E::ts('Field %1 is required', [1 => $filterSpec->title]);
       }
     }
@@ -333,24 +338,20 @@ abstract class AbstractFilterHandler {
           break;
 
         case 'null':
-          if (empty($submittedValues['value'])) {
-            $filterParams = [
-              'op' => 'IS NULL',
-              'value' => '',
-            ];
-            $this->setFilter($filterParams);
-            $isFilterSet = TRUE;
-          }
+          $filterParams = [
+            'op' => 'IS NULL',
+            'value' => '',
+          ];
+          $this->setFilter($filterParams);
+          $isFilterSet = TRUE;
           break;
         case 'not null':
-          if (empty($submittedValues['value'])) {
-            $filterParams = [
-              'op' => 'IS NOT NULL',
-              'value' => '',
-            ];
-            $this->setFilter($filterParams);
-            $isFilterSet = TRUE;
-          }
+          $filterParams = [
+            'op' => 'IS NOT NULL',
+            'value' => '',
+          ];
+          $this->setFilter($filterParams);
+          $isFilterSet = TRUE;
           break;
         case 'bw':
           if (isset($submittedValues['min']) && $submittedValues['min'] && isset($submittedValues['max']) && $submittedValues['max']) {
@@ -375,7 +376,7 @@ abstract class AbstractFilterHandler {
       }
     }
     if ($this->isRequired() && !$isFilterSet) {
-      throw new \Exception('Field ' . $filterSpec->title . ' is required');
+      throw new FilterRequiredException('Field ' . $filterSpec->title . ' is required');
     }
   }
 
@@ -395,15 +396,23 @@ abstract class AbstractFilterHandler {
     }
     if (isset($submittedValues[$alias.'_value'])) {
       $return['value'] = $submittedValues[$alias . '_value'];
+      if (empty($return['value'])) {
+        // Don't save an empty default criteria to the database or we can't override (eg. via URL)
+        unset($return['value']);
+      }
     }
     if (isset($submittedValues[$alias.'_relative'])) {
       $return['relative'] = $submittedValues[$alias . '_relative'];
     }
     if (isset($submittedValues[$alias.'_from'])) {
       $return['from'] = $submittedValues[$alias . '_from'];
+    } elseif (isset($submittedValues[$alias.'_low'])) {
+      $return['from'] = $submittedValues[$alias . '_low'];
     }
     if (isset($submittedValues[$alias.'_to'])) {
       $return['to'] = $submittedValues[$alias . '_to'];
+    } elseif (isset($submittedValues[$alias.'_high'])) {
+      $return['to'] = $submittedValues[$alias . '_high'];
     }
     if (isset($submittedValues[$alias.'_from_time'])) {
       $return['from_time'] = $submittedValues[$alias.'_from_time'];
@@ -480,8 +489,8 @@ abstract class AbstractFilterHandler {
       switch ($type) {
         case \CRM_Utils_Type::T_DATE:
         case \CRM_Utils_Type::T_TIMESTAMP:
-          $additionalOp['null'] = E::ts('Not set');
-          \CRM_Core_Form_Date::buildDateRange($form, $alias, $count, '_from', '_to', E::ts('From:'), $this->isRequired(), $additionalOp, 'searchDate', FALSE, ['class' => 'crm-select2 '.$sizeClass]);
+          $additionalOptions['null'] = E::ts('Not set');
+          \CRM_Dataprocessor_Utils_Form::addDatePickerRange($form, $alias, $title, FALSE, FALSE, E::ts('From'), E::ts('To'), $additionalOptions, '_high', '_low');
           if (isset($defaultFilterValue['op'])) {
             $defaults[$alias . '_op'] = $defaultFilterValue['op'];
           }
@@ -508,6 +517,7 @@ abstract class AbstractFilterHandler {
           break;
         case \CRM_Utils_Type::T_INT:
         case \CRM_Utils_Type::T_FLOAT:
+        case \CRM_Utils_Type::T_MONEY:
           $form->add('select', "{$alias}_op", E::ts('Operator:'), $operations, true, [
             'onchange' => "return showHideMaxMinVal( '$alias', this.value );",
             'style' => $minWidth,
@@ -527,9 +537,9 @@ abstract class AbstractFilterHandler {
           }
 
           // and a min value input box
-          $form->add('text', "{$alias}_min", E::ts('Min'), ['class' => 'six']);
+          $form->add('text', "{$alias}_min", E::ts('Min'), ['class' => $sizeClass]);
           // and a max value input box
-          $form->add('text', "{$alias}_max", E::ts('Max'), ['class' => 'six']);
+          $form->add('text', "{$alias}_max", E::ts('Max'), ['class' => $sizeClass]);
 
           if (isset($defaultFilterValue['min'])) {
             $defaults[$alias.'_min'] = $defaultFilterValue['min'];
@@ -551,7 +561,7 @@ abstract class AbstractFilterHandler {
           if (isset($defaultFilterValue['op']) && $defaultFilterValue['op']) {
             $defaults[$alias . '_op'] = $defaultFilterValue['op'];
           } else {
-            $defaults[$alias . '_op'] = 'has'; // Contains
+            $defaults[$alias . '_op'] = key($operations);
           }
           if (isset($defaultFilterValue['value'])) {
             $defaults[$alias.'_value'] = $defaultFilterValue['value'];
@@ -572,6 +582,22 @@ abstract class AbstractFilterHandler {
     return $filter;
   }
 
+  /**
+   * Get the default operator
+   * @return string
+   */
+  public function getDefaultOperator() {
+    $operators = $this->getOperatorOptions($this->getFieldSpecification());
+    return key($operators);
+  }
+
+  /**
+   * Get a list of possible operator options.
+   *
+   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $fieldSpec
+   *
+   * @return array
+   */
   protected function getOperatorOptions(\Civi\DataProcessor\DataSpecification\FieldSpecification $fieldSpec) {
     if ($fieldSpec->getOptions()) {
       return array(
@@ -593,6 +619,7 @@ abstract class AbstractFilterHandler {
         break;
       case \CRM_Utils_Type::T_INT:
       case \CRM_Utils_Type::T_FLOAT:
+      case \CRM_Utils_Type::T_MONEY:
         return array(
           '=' => E::ts('Is equal to'),
           '<=' => E::ts('Is less than or equal to'),
@@ -608,9 +635,9 @@ abstract class AbstractFilterHandler {
         break;
     }
     return array(
+      'has' => E::ts('Contains'),
       '=' => E::ts('Is equal to'),
       '!=' => E::ts('Is not equal to'),
-      'has' => E::ts('Contains'),
       'sw' => E::ts('Starts with'),
       'ew' => E::ts('Ends with'),
       'nhas' => E::ts('Does not contain'),
@@ -669,6 +696,22 @@ abstract class AbstractFilterHandler {
       return TRUE;
     }
     return FALSE;
+  }
+
+  /**
+   * Returns the table alias of a sql data flow.
+   *
+   * @param \Civi\DataProcessor\DataFlow\SqlDataFlow $dataFlow
+   * @return string|null
+   */
+  protected function getTableAlias(SqlDataFlow $dataFlow) {
+    $tableAlias = $dataFlow->getName();
+    if ($dataFlow instanceof SqlTableDataFlow) {
+      $tableAlias = $dataFlow->getTableAlias();
+    } elseif ($dataFlow instanceof CombinedSqlDataFlow) {
+      $tableAlias = $dataFlow->getPrimaryTableAlias();
+    }
+    return $tableAlias;
   }
 
 }

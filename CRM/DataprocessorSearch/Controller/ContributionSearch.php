@@ -26,6 +26,7 @@ class CRM_DataprocessorSearch_Controller_ContributionSearch extends CRM_Core_Con
   public function __construct($title = NULL, $modal = TRUE, $action = CRM_Core_Action::NONE) {
     parent::__construct($title, $modal);
 
+    $this->set('component_mode', CRM_Contact_BAO_Query::MODE_CONTRIBUTE);
     $this->_stateMachine = new CRM_DataprocessorSearch_StateMachine_ContributionSearch($this, $action);
 
     // create and instantiate the pages
@@ -57,7 +58,7 @@ class CRM_DataprocessorSearch_Controller_ContributionSearch extends CRM_Core_Con
     if (!$this->_pages[$pageName] instanceof CRM_DataprocessorSearch_Form_ContributionSearch) {
       $session = CRM_Core_Session::singleton();
       $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this);
-      $urlPath = CRM_Utils_System::getUrlPath();
+      $urlPath = CRM_Utils_System::currentPath();
       $urlParams = 'force=1';
       if ($qfKey) {
         $urlParams .= "&qfKey=$qfKey";

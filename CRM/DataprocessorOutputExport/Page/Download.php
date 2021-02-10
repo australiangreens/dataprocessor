@@ -12,14 +12,14 @@ class CRM_DataprocessorOutputExport_Page_Download extends CRM_Core_Page {
   public function run() {
     $factory = dataprocessor_get_factory();
 
-    $download = CRM_Utils_Request::retrieve('download', 'Integer', $this, FALSE, 1);
+    $download = CRM_Utils_Request::retrieveValue('download', 'Integer', 1);
     $disposition = $download == 0 ? 'inline' : 'download';
 
-    $directory = CRM_Utils_Request::retrieve('directory', 'String', $this, FALSE);
+    $directory = CRM_Utils_Request::retrieveValue('directory', 'String');
     if (!empty($directory)) {
       $directory = $directory.'/';
     }
-    $fileName = CRM_Utils_Request::retrieve('filename', 'String', $this, FALSE);
+    $fileName = CRM_Utils_Request::retrieveValue('filename', 'String');
     if (empty($fileName)) {
       CRM_Core_Error::statusBounce("Cannot access file");
     }
@@ -52,6 +52,7 @@ class CRM_DataprocessorOutputExport_Page_Download extends CRM_Core_Page {
       CRM_Core_Error::statusBounce('The file is either empty or you do not have permission to retrieve the file');
     }
 
+    CRM_Utils_System::setHttpHeader('Access-Control-Allow-Origin', '*');
     CRM_Utils_System::download(
       $download_name,
       $mimeType,

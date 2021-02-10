@@ -8,10 +8,10 @@ namespace Civi\DataProcessor\DataFlow\CombinedDataFlow;
 
 use \Civi\DataProcessor\DataFlow\AbstractDataFlow;
 use \Civi\DataProcessor\DataFlow\EndOfFlowException;
+use Civi\DataProcessor\DataFlow\InvalidFlowException;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\DataFlowDescription;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\JoinInterface;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\MultipleSourceDataFlows;
-use Civi\DataProcessor\DataFlow\SqlDataFlow;
 use \Civi\DataProcessor\DataSpecification\DataSpecification;
 
 
@@ -64,6 +64,21 @@ class CombinedDataFlow extends AbstractDataFlow implements MultipleSourceDataFlo
    */
   public function addSourceDataFlow(DataFlowDescription $dataFlowDescription) {
     $this->sourceDataFlowDescriptions[] = $dataFlowDescription;
+  }
+
+  /**
+   * Removes a source data flow
+   *
+   * @param \Civi\DataProcessor\DataFlow\MultipleDataFlows\DataFlowDescription $dataFlowDescription
+   * @return void
+   * @throws \Civi\DataProcessor\DataFlow\InvalidFlowException
+   */
+  public function removeSourceDataFlow(DataFlowDescription $dataFlowDescription) {
+    foreach($this->sourceDataFlowDescriptions as $idx => $sourceDataFlowDescription) {
+      if ($sourceDataFlowDescription === $dataFlowDescription) {
+        unset($this->sourceDataFlowDescriptions[$idx]);
+      }
+    }
   }
 
   /**

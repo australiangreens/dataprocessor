@@ -72,7 +72,7 @@ class MultiValueFieldWhereClause implements WhereClauseInterface {
         case 'NOT IN':
         case '!=':
           $combine = "AND";
-          $clauses[] = "(`{$this->table_alias}`.`{$this->field}` NOT LIKE ' {$compareValue}')";
+          $clauses[] = "(`{$this->table_alias}`.`{$this->field}` NOT LIKE '{$compareValue}')";
           break;
       }
     }

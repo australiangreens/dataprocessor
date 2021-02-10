@@ -6,9 +6,13 @@
 
 namespace Civi\DataProcessor\FilterHandler;
 
+use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
+use Civi\DataProcessor\DataFlow\InMemoryDataFlow;
 use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
 use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\Exception\InvalidConfigurationException;
+use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
 class SimpleSqlFilter extends AbstractFieldFilterHandler {
@@ -36,12 +40,17 @@ class SimpleSqlFilter extends AbstractFieldFilterHandler {
     $this->resetFilter();
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
+      $fieldName = $this->inputFieldSpecification->getName();
       if ($this->isMultiValueField()) {
-        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($dataFlow->getName(), $this->inputFieldSpecification->name, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\MultiValueFieldWhereClause($tableAlias, $fieldName, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       } else {
-        $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->name, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
+        $this->whereClause = new SqlDataFlow\SimpleWhereClause($tableAlias, $fieldName, $filter['op'], $filter['value'], $this->inputFieldSpecification->type);
       }
       $dataFlow->addWhereClause($this->whereClause);
+    } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow && !$this->isMultiValueField()) {
+      $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->getName(), $filter['op'], $filter['value']);
+      $dataFlow->addFilter($this->filterClass);
     }
   }
 
@@ -84,7 +93,7 @@ class SimpleSqlFilter extends AbstractFieldFilterHandler {
     if (isset($filter['configuration'])) {
       $configuration = $filter['configuration'];
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['datasource'], $configuration['field']);
         $form->setDefaults($defaults);
       }
     }

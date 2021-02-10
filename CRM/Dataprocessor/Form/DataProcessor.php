@@ -103,10 +103,35 @@ class CRM_Dataprocessor_Form_DataProcessor extends CRM_Core_Form {
   }
 
   protected function addFields() {
+    $factory = dataprocessor_get_factory();
     $fields = civicrm_api3('DataProcessorField', 'get', array('data_processor_id' => $this->dataProcessorId, 'options' => array('limit' => 0)));
     $fields = $fields['values'];
     CRM_Utils_Weight::addOrder($fields, 'CRM_Dataprocessor_DAO_DataProcessorField', 'id', $this->currentUrl, 'data_processor_id='.$this->dataProcessorId);
     $this->assign('fields', $fields);
+    $sortFields = [];
+    foreach($fields as $idx => $field) {
+      $fieldClass = $factory->getOutputHandlerByName($field['type']);
+      if ($fieldClass instanceof \Civi\DataProcessor\FieldOutputHandler\OutputHandlerSortable) {
+        $sortFields['asc_by_'.$field['name']] = E::ts('%1 Ascending', [1=>$field['title']]);
+        $sortFields['desc_by_'.$field['name']] = E::ts('%1 Descending', [1=>$field['title']]);
+      }
+    }
+    if (isset($this->dataProcessor['configuration']['default_sort']) && is_array($this->dataProcessor['configuration']['default_sort'])) {
+      foreach(array_reverse($this->dataProcessor['configuration']['default_sort']) as $sort) {
+        $label = $sortFields[$sort];
+        unset($sortFields[$sort]);
+        $sortFields = array_merge([$sort=>$label], $sortFields);
+      }
+    }
+    $sortOptions = array_flip($sortFields);
+    $this->addCheckBox('defaultSort',  E::ts('Default sort'), $sortOptions);
+    $this->assign('sortFields', $sortFields);
+    $this->add('hidden', 'default_sort_weight', null, ['id' => 'default_sort_weight']);
+    // Backwords compatibilty
+    $this->assign('defaultSortUseIcon', false);
+    if (version_compare(CRM_Utils_System::version(), '5.15', '<')) {
+      $this->assign('defaultSortUseIcon', true);
+    }
   }
 
   protected function addFilters() {
@@ -144,7 +169,7 @@ class CRM_Dataprocessor_Form_DataProcessor extends CRM_Core_Form {
     if ($this->_action != CRM_Core_Action::DELETE) {
       $this->add('text', 'name', E::ts('Name'), array('size' => CRM_Utils_Type::HUGE), FALSE);
       $this->add('text', 'title', E::ts('Title'), array('size' => CRM_Utils_Type::HUGE), TRUE);
-      $this->add('text', 'description', E::ts('Description'), array('size' => 100, 'maxlength' => 256));
+      $this->add('text', 'description', E::ts('Description'), array('size' => 100, 'maxlength' => 256, 'style' => 'width: 600px;'));
       $this->add('checkbox', 'is_active', E::ts('Enabled'));
     }
     if ($this->_action == CRM_Core_Action::ADD) {
@@ -215,6 +240,17 @@ class CRM_Dataprocessor_Form_DataProcessor extends CRM_Core_Form {
     if ($this->dataProcessorId) {
       $params['id'] = $this->dataProcessorId;
     }
+    if (!empty($values['default_sort_weight'])) {
+      $defaultSortWeight = explode(',', $values['default_sort_weight']);
+      $params['configuration']['default_sort'] = [];
+      foreach ($defaultSortWeight as $key => $val) {
+        if ($val && isset($values['defaultSort'][$val])) {
+          $params['configuration']['default_sort'][] = $val;
+        }
+      }
+    } elseif (isset($values['defaultSort'])) {
+      $params['configuration']['default_sort'] = array_keys($values['defaultSort']);
+    }
 
     $result = civicrm_api3('DataProcessor', 'create', $params);
 
@@ -264,6 +300,12 @@ class CRM_Dataprocessor_Form_DataProcessor extends CRM_Core_Form {
         $defaults['description'] = '';
       }
       $defaults['is_active'] = $this->dataProcessor['is_active'];
+      if (isset($this->dataProcessor['configuration']['default_sort'])) {
+        $defaults['defaultSort'] = [];
+        foreach($this->dataProcessor['configuration']['default_sort'] as $sort) {
+          $defaults['defaultSort'][$sort] = 1;
+        }
+      }
     }
   }
 

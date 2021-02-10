@@ -1,25 +1,9 @@
 -- +--------------------------------------------------------------------+
--- | CiviCRM version 5                                                  |
--- +--------------------------------------------------------------------+
--- | Copyright CiviCRM LLC (c) 2004-2019                                |
--- +--------------------------------------------------------------------+
--- | This file is a part of CiviCRM.                                    |
+-- | Copyright CiviCRM LLC. All rights reserved.                        |
 -- |                                                                    |
--- | CiviCRM is free software; you can copy, modify, and distribute it  |
--- | under the terms of the GNU Affero General Public License           |
--- | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
--- |                                                                    |
--- | CiviCRM is distributed in the hope that it will be useful, but     |
--- | WITHOUT ANY WARRANTY; without even the implied warranty of         |
--- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
--- | See the GNU Affero General Public License for more details.        |
--- |                                                                    |
--- | You should have received a copy of the GNU Affero General Public   |
--- | License and the CiviCRM Licensing Exception along                  |
--- | with this program; if not, contact CiviCRM LLC                     |
--- | at info[AT]civicrm[DOT]org. If you have questions about the        |
--- | GNU Affero General Public License or the licensing of CiviCRM,     |
--- | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+-- | This work is published under the GNU AGPLv3 license with some      |
+-- | permitted exceptions and without any warranty. For full license    |
+-- | and copyright information, see https://civicrm.org/licensing       |
 -- +--------------------------------------------------------------------+
 --
 -- Generated from schema.tpl
@@ -28,27 +12,11 @@
 
 
 -- +--------------------------------------------------------------------+
--- | CiviCRM version 5                                                  |
--- +--------------------------------------------------------------------+
--- | Copyright CiviCRM LLC (c) 2004-2019                                |
--- +--------------------------------------------------------------------+
--- | This file is a part of CiviCRM.                                    |
+-- | Copyright CiviCRM LLC. All rights reserved.                        |
 -- |                                                                    |
--- | CiviCRM is free software; you can copy, modify, and distribute it  |
--- | under the terms of the GNU Affero General Public License           |
--- | Version 3, 19 November 2007 and the CiviCRM Licensing Exception.   |
--- |                                                                    |
--- | CiviCRM is distributed in the hope that it will be useful, but     |
--- | WITHOUT ANY WARRANTY; without even the implied warranty of         |
--- | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.               |
--- | See the GNU Affero General Public License for more details.        |
--- |                                                                    |
--- | You should have received a copy of the GNU Affero General Public   |
--- | License and the CiviCRM Licensing Exception along                  |
--- | with this program; if not, contact CiviCRM LLC                     |
--- | at info[AT]civicrm[DOT]org. If you have questions about the        |
--- | GNU Affero General Public License or the licensing of CiviCRM,     |
--- | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
+-- | This work is published under the GNU AGPLv3 license with some      |
+-- | permitted exceptions and without any warranty. For full license    |
+-- | and copyright information, see https://civicrm.org/licensing       |
 -- +--------------------------------------------------------------------+
 --
 -- Generated from drop.tpl
@@ -93,13 +61,13 @@ CREATE TABLE `civicrm_data_processor` (
      `storage_type` varchar(255) NULL   ,
      `storage_configuration` text NULL   ,
      `status` int unsigned NULL  DEFAULT 0 ,
-     `source_file` varchar(255) NULL    
+     `source_file` varchar(255) NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
- 
-)    ;
+
+
+
+) ENGINE=InnoDB   ;
 
 -- /*******************************************************
 -- *
@@ -115,12 +83,12 @@ CREATE TABLE `civicrm_data_processor_field` (
      `name` varchar(255) NULL   ,
      `title` varchar(255) NOT NULL   ,
      `type` varchar(255) NOT NULL   ,
-     `configuration` text NULL    
+     `configuration` text NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_field_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
+
+
+,          CONSTRAINT FK_civicrm_data_processor_field_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
 )    ;
 
 -- /*******************************************************
@@ -140,13 +108,13 @@ CREATE TABLE `civicrm_data_processor_filter` (
      `is_required` tinyint NULL   ,
      `is_exposed` tinyint NULL  DEFAULT 1 ,
      `configuration` text NULL   ,
-     `filter_value` text NULL    
+     `filter_value` text NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_filter_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
-)    ;
+
+
+,          CONSTRAINT FK_civicrm_data_processor_filter_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB   ;
 
 -- /*******************************************************
 -- *
@@ -163,13 +131,13 @@ CREATE TABLE `civicrm_data_processor_output` (
      `permission` varchar(255) NULL   ,
      `api_entity` varchar(255) NULL   ,
      `api_action` varchar(255) NULL   ,
-     `api_count_action` varchar(255) NULL    
+     `api_count_action` varchar(255) NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_output_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
-)    ;
+
+
+,          CONSTRAINT FK_civicrm_data_processor_output_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB   ;
 
 -- /*******************************************************
 -- *
@@ -187,12 +155,11 @@ CREATE TABLE `civicrm_data_processor_source` (
      `type` varchar(255) NOT NULL   ,
      `configuration` text NULL   ,
      `join_type` varchar(255) NULL   ,
-     `join_configuration` text NULL    
+     `join_configuration` text NULL
 ,
         PRIMARY KEY (`id`)
- 
- 
-,          CONSTRAINT FK_civicrm_data_processor_source_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE  
-)    ;
 
- 
+
+,          CONSTRAINT FK_civicrm_data_processor_source_data_processor_id FOREIGN KEY (`data_processor_id`) REFERENCES `civicrm_data_processor`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB   ;
+

@@ -34,9 +34,19 @@
       <div class="content">{$form.expanded_search.html}</div>
       <div class="clear"></div>
     </div>
+  <div class="crm-section">
+    <div class="label">{$form.show_manage_case.label}</div>
+    <div class="content">{$form.show_manage_case.html}</div>
+    <div class="clear"></div>
+  </div>
     <div class="crm-section">
         <div class="label">{$form.help_text.label}</div>
         <div class="content">{$form.help_text.html}</div>
         <div class="clear"></div>
+    </div>
+    <div class="crm-section">
+      <div class="label">{$form.no_result_text.label}</div>
+      <div class="content">{$form.no_result_text.html}</div>
+      <div class="clear"></div>
     </div>
 {/crmScope}

@@ -10,7 +10,9 @@ use Civi\DataProcessor\DataFlow\Sort\SortComparer;
 
 class SortCompareFactory {
 
-  private $compareres = array();
+  private $compareres = array(
+    'String' => '\Civi\DataProcessor\DataFlow\Sort\StringSortComparer'
+  );
 
   private $genericComparer = '\Civi\DataProcessor\DataFlow\Sort\SortComparer';
 

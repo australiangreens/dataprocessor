@@ -1,9 +1,9 @@
-<div id="dataprocessorDashlet_{$dataProcessorName}"></div>
+<div id="dataprocessorDashlet_{$dataProcessorName}_{$context}"></div>
 
 {literal}
 <script type="text/javascript">
 (function($) {
-  var target = "#dataprocessorDashlet_{/literal}{$dataProcessorName}{literal}";
+  var target = "#dataprocessorDashlet_{/literal}{$dataProcessorName}_{$context}{literal}";
   var form = CRM.loadForm(CRM.url('civicrm/dataprocessor/form/dashlet', {"reset": 1, "data_processor": "{/literal}{$dataProcessorName}{literal}"}), {
     "target": target,
     "dialog": false,

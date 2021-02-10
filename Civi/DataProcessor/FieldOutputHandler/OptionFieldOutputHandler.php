@@ -11,7 +11,7 @@ use Civi\DataProcessor\Source\SourceInterface;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\FieldOutputHandler\FieldOutput;
 
-class OptionFieldOutputHandler extends AbstractSimpleFieldOutputHandler implements OutputHandlerAggregate {
+class OptionFieldOutputHandler extends AbstractSimpleSortableFieldOutputHandler implements OutputHandlerAggregate {
 
   /**
    * @var bool
@@ -67,7 +67,9 @@ class OptionFieldOutputHandler extends AbstractSimpleFieldOutputHandler implemen
     $options = $this->inputFieldSpec->getOptions();
     if (is_array($rawValue)) {
       foreach ($rawValue as $v) {
-        $formattedOptions[] = $options[$v];
+        if (isset($options[$v])) {
+          $formattedOptions[] = $options[$v];
+        }
       }
     }
     $formattedValue = new FieldOutput($rawRecord[$this->inputFieldSpec->alias]);

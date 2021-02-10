@@ -16,7 +16,7 @@ class CRM_DataprocessorSearch_Form_ParticipantSearch extends CRM_DataprocessorSe
   public function getDefaultEntity() {
     return 'Contact';
   }
-  
+
   /**
    * Returns the url for view of the record action
    *
@@ -57,7 +57,7 @@ class CRM_DataprocessorSearch_Form_ParticipantSearch extends CRM_DataprocessorSe
    * @return String
    */
   protected function getDataProcessorName() {
-    $dataProcessorName = str_replace('civicrm/dataprocessor_participant_search/', '', CRM_Utils_System::getUrlPath());
+    $dataProcessorName = str_replace('civicrm/dataprocessor_participant_search/', '', CRM_Utils_System::currentPath());
     return $dataProcessorName;
   }
 
@@ -91,7 +91,7 @@ class CRM_DataprocessorSearch_Form_ParticipantSearch extends CRM_DataprocessorSe
    * @return bool
    */
   protected function usePrevNextCache() {
-    return true;
+    return false;
   }
 
   /**
@@ -105,6 +105,41 @@ class CRM_DataprocessorSearch_Form_ParticipantSearch extends CRM_DataprocessorSe
       $this->_taskList = CRM_Event_Task::permissionedTaskTitles(CRM_Core_Permission::getPermission(), $taskParams);
     }
     return $this->_taskList;
+  }
+
+  /**
+   * Return altered rows
+   *
+   * Save the ids into the queryParams value. So that when an action is done on the selected record
+   * or on all records, the queryParams will hold all the activity ids so that in the next step only the selected record,
+   * or all records are populated.
+   */
+  protected function retrieveEntityIds() {
+    $this->dataProcessorClass->getDataFlow()->setLimit(false);
+    $this->dataProcessorClass->getDataFlow()->setOffset(0);
+    $this->entityIDs = [];
+    $id_field = $this->getIdFieldName();
+    try {
+      while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
+        if ($id_field && isset($record[$id_field])) {
+          $this->entityIDs[] = $record[$id_field]->rawValue;
+        }
+      }
+    } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
+      // Do nothing
+    } catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      // Do nothing
+    }
+    $this->_queryParams[0] = array(
+      'participant_id',
+      '=',
+      array(
+        'IN' => $this->entityIDs,
+      ),
+      0,
+      0
+    );
+    $this->controller->set('queryParams', $this->_queryParams);
   }
 
 }

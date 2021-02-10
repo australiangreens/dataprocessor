@@ -5,6 +5,7 @@
  */
 
 use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\InMemoryDataFlow;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\Exception\DataSourceNotFoundException;
 use Civi\DataProcessor\Exception\FieldNotFoundException;
@@ -77,7 +78,7 @@ class CRM_Contact_Form_DataProcessorContactSummaryTab extends CRM_DataprocessorS
    * @return String
    */
   protected function getDataProcessorName() {
-    $dataProcessorName = str_replace('civicrm/dataprocessor_contact_summary/', '', CRM_Utils_System::getUrlPath());
+    $dataProcessorName = str_replace('civicrm/dataprocessor_contact_summary/', '', CRM_Utils_System::currentPath());
     return $dataProcessorName;
   }
 
@@ -117,29 +118,7 @@ class CRM_Contact_Form_DataProcessorContactSummaryTab extends CRM_DataprocessorS
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass
    */
   protected function alterDataProcessor(AbstractProcessorType $dataProcessorClass) {
-    $cid = CRM_Utils_Request::retrieve('contact_id', 'Integer', $this, true);
-    list($datasource_name, $field_name) = explode('::', $this->dataProcessorOutput['configuration']['contact_id_field'], 2);
-    $dataSource = $dataProcessorClass->getDataSourceByName($datasource_name);
-    if (!$dataSource) {
-      throw new DataSourceNotFoundException(E::ts("Requires data source '%1' which could not be found. Did you rename or deleted the data source?", array(1=>$datasource_name)));
-    }
-    $fieldSpecification  =  $dataSource->getAvailableFilterFields()->getFieldSpecificationByAlias($field_name);
-    if (!$fieldSpecification) {
-      $fieldSpecification  =  $dataSource->getAvailableFilterFields()->getFieldSpecificationByName($field_name);
-    }
-    if (!$fieldSpecification) {
-      throw new FieldNotFoundException(E::ts("Requires a field with the name '%1' in the data source '%2'. Did you change the data source type?", array(
-        1 => $field_name,
-        2 => $datasource_name
-      )));
-    }
-
-    $fieldSpecification = clone $fieldSpecification;
-    $fieldSpecification->alias = 'contact_summary_tab_contact_id';
-    $dataFlow = $dataSource->ensureField($fieldSpecification);
-    if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
-      $whereClause = new SimpleWhereClause($dataFlow->getName(), $fieldSpecification->name, '=', $cid, $fieldSpecification->type);
-      $dataFlow->addWhereClause($whereClause);
-    }
+    $cid = CRM_Utils_Request::retrieveValue('contact_id', 'Integer', NULL, TRUE);
+    CRM_Contact_DataProcessorContactSummaryTab::alterDataProcessor($cid, $this->dataProcessorOutput, $dataProcessorClass);
   }
 }

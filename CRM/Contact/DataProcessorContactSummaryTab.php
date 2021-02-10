@@ -6,6 +6,11 @@
 
 use CRM_Dataprocessor_ExtensionUtil as E;
 use Civi\DataProcessor\Output\UIFormOutputInterface;
+use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
+use Civi\DataProcessor\DataFlow\InMemoryDataFlow\SimpleFilter;
+use Civi\DataProcessor\DataFlow\InMemoryDataFlow;
+use Civi\DataProcessor\DataFlow\SqlDataFlow;
+use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 
 class CRM_Contact_DataProcessorContactSummaryTab implements UIFormOutputInterface {
 
@@ -24,6 +29,7 @@ class CRM_Contact_DataProcessorContactSummaryTab implements UIFormOutputInterfac
     if ($tabsetName != 'civicrm/contact/view') {
       return;
     }
+    $contactId = $context['contact_id'];
 
     $factory = dataprocessor_get_factory();
     // Check whether the factory exists. Usually just after
@@ -61,6 +67,7 @@ class CRM_Contact_DataProcessorContactSummaryTab implements UIFormOutputInterfac
         'id' => 'dataprocessor_' . $dataprocessor['name'],
         'title' => $outputClass->getTitleForUiLink($output, $dataprocessor),
         'icon' => $outputClass->getIconForUiLink($output, $dataprocessor),
+        'count' => $outputClass->getCount($contactId, $output, $dataprocessor),
         'url' => CRM_Utils_System::url('civicrm/dataprocessor/page/contactsummary', array('contact_id' => $context['contact_id'], 'data_processor' => $dataprocessor['name'], 'reset' => 1, 'force' => 1)),
         'class' => '',
       ];
@@ -220,6 +227,29 @@ class CRM_Contact_DataProcessorContactSummaryTab implements UIFormOutputInterfac
   }
 
   /**
+   * Returns the data processor name from a url.
+   *
+   * @param $url
+   *
+   * @return string
+   */
+  public function getDataProcessorNameFromUrl($url) {
+    return str_replace('civicrm/dataprocessor_contact_summary/', '', $url);
+  }
+
+  /**
+   * Returns the name of the contact id field.
+   *
+   * @param $config
+   *
+   * @return string|false
+   */
+  public function getContactIdFieldNameFromConfig($config) {
+    return false;
+  }
+
+
+  /**
    * Returns the url for the page/form this output will show to the user
    *
    * @param array $output
@@ -263,5 +293,60 @@ class CRM_Contact_DataProcessorContactSummaryTab implements UIFormOutputInterfac
     ));
   }
 
+  public function getCount($contact_id, $output, $dataProcessor) {
+    $dataProcessorClass = $this->loadDataProcessor($contact_id, $output, $dataProcessor);
+    return $dataProcessorClass->getDataFlow()->recordCount();
+  }
+
+  /**
+   * @param $contact_id
+   * @param $dataProcessor
+   *
+   * @return \Civi\DataProcessor\ProcessorType\AbstractProcessorType
+   * @throws \Exception
+   */
+  protected function loadDataProcessor($contact_id, $output, $dataProcessor) {
+    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
+    return self::alterDataProcessor($contact_id, $output, $dataProcessorClass);
+  }
+
+  /**
+   * @param $contact_id
+   * @param $output
+   * @param AbstractProcessorType $dataProcessorClass
+   *
+   * @return AbstractProcessorType
+   * @throws \Civi\DataProcessor\Exception\DataSourceNotFoundException
+   * @throws \Civi\DataProcessor\Exception\FieldNotFoundException
+   */
+  public static function alterDataProcessor($contact_id, $output, AbstractProcessorType $dataProcessorClass) {
+    list($datasource_name, $field_name) = explode('::', $output['configuration']['contact_id_field'], 2);
+    $dataSource = $dataProcessorClass->getDataSourceByName($datasource_name);
+    if (!$dataSource) {
+      throw new \Civi\DataProcessor\Exception\DataSourceNotFoundException(E::ts("Requires data source '%1' which could not be found. Did you rename or deleted the data source?", array(1=>$datasource_name)));
+    }
+    $fieldSpecification  =  $dataSource->getAvailableFilterFields()->getFieldSpecificationByAlias($field_name);
+    if (!$fieldSpecification) {
+      $fieldSpecification  =  $dataSource->getAvailableFilterFields()->getFieldSpecificationByName($field_name);
+    }
+    if (!$fieldSpecification) {
+      throw new \Civi\DataProcessor\Exception\FieldNotFoundException(E::ts("Requires a field with the name '%1' in the data source '%2'. Did you change the data source type?", array(
+        1 => $field_name,
+        2 => $datasource_name
+      )));
+    }
+
+    $fieldSpecification = clone $fieldSpecification;
+    $fieldSpecification->alias = 'contact_summary_tab_contact_id';
+    $dataFlow = $dataSource->ensureField($fieldSpecification);
+    if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $whereClause = new SimpleWhereClause($dataFlow->getName(), $fieldSpecification->name, '=', $contact_id, $fieldSpecification->type);
+      $dataFlow->addWhereClause($whereClause);
+    } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow) {
+      $filterClass = new SimpleFilter($fieldSpecification->name, '=', $contact_id);
+      $dataFlow->addFilter($filterClass);
+    }
+    return $dataProcessorClass;
+  }
 
 }
