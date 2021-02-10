@@ -49,4 +49,21 @@ interface UIFormOutputInterface extends UIOutputInterface {
    */
   public function getCallbackForUi();
 
+  /**
+   * Returns the data processor name from a url.
+   *
+   * @param $url
+   *
+   * @return string
+   */
+  public function getDataProcessorNameFromUrl($url);
+
+  /**
+   * Returns the name of the contact id field.
+   *
+   * @param $config
+   * @return string|false
+   */
+  public function getContactIdFieldNameFromConfig($config);
+
 }

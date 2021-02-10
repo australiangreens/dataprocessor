@@ -54,13 +54,14 @@ class ContactTypeFilter extends AbstractFieldFilterHandler {
     if (count($contactTypeClauses)) {
       $contactTypeClause = new SqlDataFlow\OrClause($contactTypeClauses);
       if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+        $tableAlias = $this->getTableAlias($dataFlow);
         $this->whereClause = new SqlDataFlow\InTableWhereClause(
           'id',
           'civicrm_contact',
           $contactTableAlias,
           array($contactTypeClause),
-          $dataFlow->getName(),
-          $this->inputFieldSpecification->name,
+          $tableAlias,
+          $this->inputFieldSpecification->getName(),
           $filter['op']
         );
 
@@ -97,7 +98,7 @@ class ContactTypeFilter extends AbstractFieldFilterHandler {
       $configuration = $filter['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['contact_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       $form->setDefaults($defaults);
     }

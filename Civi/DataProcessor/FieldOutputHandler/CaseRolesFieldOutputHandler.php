@@ -68,21 +68,7 @@ class CaseRolesFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
-    $this->caseIdSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->caseIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->caseIdField = $this->caseIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    if (!$this->caseIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->caseIdSource->ensureFieldInSource($this->caseIdField);
-
+    list($this->caseIdSource, $this->caseIdField) = $this->initializeField($configuration['field'], $configuration['datasource'], $alias);
     $this->outputFieldSpecification = new FieldSpecification($this->caseIdField->name, 'String', $title, null, $alias);
 
     if (isset($configuration['relationship_types']) && is_array($configuration['relationship_types'])) {
@@ -107,7 +93,7 @@ class CaseRolesFieldOutputHandler extends AbstractFieldOutputHandler {
   public function formatField($rawRecord, $formattedRecord) {
     $caseId = $rawRecord[$this->caseIdField->alias];
     $sql = "SELECT c.id, c.display_name, t.label_a_b, r.relationship_type_id
-            FROM civicrm_contact c 
+            FROM civicrm_contact c
             INNER JOIN civicrm_relationship r ON r.contact_id_b = c.id
             INNER JOIN civicrm_relationship_type t on r.relationship_type_id = t.id
             WHERE c.is_deleted = 0 AND r.is_active = 1 AND r.case_id = %1";
@@ -137,8 +123,9 @@ class CaseRolesFieldOutputHandler extends AbstractFieldOutputHandler {
         $formattedValues[] = $link;
       }
     }
-    $output = new FieldOutput($rawValues);
+    $output = new HTMLFieldOutput($rawValues);
     $output->formattedValue = implode("<br>", $formattedValues);
+    $output->setHtmlOutput($output->formattedValue);
     return $output;
   }
 
@@ -182,7 +169,7 @@ class CaseRolesFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['case_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['case_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['relationship_types'])) {
         $defaults['relationship_types'] = $configuration['relationship_types'];

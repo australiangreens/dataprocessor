@@ -19,7 +19,7 @@ class CRM_DataprocessorSearch_Task extends CRM_Core_Task {
    */
   public static function tasks() {
     if (!(self::$_tasks)) {
-      $dataProcessorName = str_replace('civicrm/dataprocessor_search/', '', CRM_Utils_System::getUrlPath());
+      $dataProcessorName = str_replace('civicrm/dataprocessor_search/', '', CRM_Utils_System::currentPath());
       self::$objectType = 'dataprocessor_'.$dataProcessorName;
 
       self::$_tasks = array();
@@ -60,7 +60,7 @@ class CRM_DataprocessorSearch_Task extends CRM_Core_Task {
    */
   public static function searchActionDesignerTypes(&$types) {
     $dao = CRM_Core_DAO::executeQuery("
-        SELECT `d`.`name`, `d`.`title` 
+        SELECT `d`.`name`, `d`.`title`
         FROM `civicrm_data_processor` `d`
         INNER JOIN `civicrm_data_processor_output` `o` ON `o`.`data_processor_id` = `d`.`id`
         WHERE `d`.`is_active` = 1 AND `o`.`type` = 'search'");

@@ -17,7 +17,11 @@
                       {foreach from=$filters key=filterName item=filter}
                           {include file=$filter.template filterName=$filter.alias filter=$filter.filter}
                       {/foreach}
-                      {if $additional_criteria_template}
+                      {if $additional_criteria_template && is_array($additional_criteria_template)}
+                        {foreach from=$additional_criteria_template item=template}
+                          {include file=$template}
+                        {/foreach}
+                      {elseif $additional_criteria_template}
                         {include file=$additional_criteria_template}
                       {/if}
                   </table>
@@ -37,8 +41,16 @@
       {if !($field.operatorType & 4) && !$field.no_display && $form.$fieldOp.html}
               {literal}var val = document.getElementById("{/literal}{$fieldOp}{literal}").value;{/literal}
       {/if}
-      {literal}showHideMaxMinVal( "{/literal}{$filterName}{literal}", val );{/literal}
-      {literal}initializeOperator( "{/literal}{$filterName}{literal}");{/literal}
+      {literal}showHideMaxMinVal( "filter-{/literal}{$filterName}{literal}", val );{/literal}
+      {literal}initializeOperator( "filter-{/literal}{$filterName}{literal}");{/literal}
+      {literal}
+        CRM.$(function($) {
+          cj("#{/literal}{$fieldOp}{literal}").change(function() {
+            var val = $(this).val();
+            showHideMaxMinVal("filter-{/literal}{$filter.alias}{literal}", val );
+          });
+        });
+      {/literal}
       {/foreach}
 
       {literal}

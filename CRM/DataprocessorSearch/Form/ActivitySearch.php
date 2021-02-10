@@ -9,16 +9,6 @@ use CRM_Dataprocessor_ExtensionUtil as E;
 class CRM_DataprocessorSearch_Form_ActivitySearch extends CRM_DataprocessorSearch_Form_AbstractSearch {
 
   /**
-   * The params that are sent to the query.
-   *
-   * @var array
-   */
-  protected $_queryParams;
-
-  protected $activity_ids;
-
-
-  /**
    * Returns the name of the default Entity
    *
    * @return string
@@ -35,7 +25,38 @@ class CRM_DataprocessorSearch_Form_ActivitySearch extends CRM_DataprocessorSearc
    * @return false|string
    */
   protected function link($row) {
-    return CRM_Utils_System::url('civicrm/activity', 'reset=1&action=view&id='.$row['id']);
+    if (empty($row['id'])) {
+      return '';
+    }
+    $activity = civicrm_api3('Activity', 'getsingle', ['id' => $row['id'], "return" => ["target_contact_id", "source_record_id", "activity_type_id"]]);
+    $activity['cid'] = reset($activity['target_contact_id']);
+    unset($activity['target_contact_id']);
+    unset($activity['target_contact_name']);
+    unset($activity['target_contact_sort_name']);
+    $activity['cxt'] = '';
+    // CRM-3553
+    $accessMailingReport = FALSE;
+    if (!empty($activity['mailingId'])) {
+      $accessMailingReport = TRUE;
+    }
+
+    $actionLinks = \CRM_Activity_Selector_Activity::actionLinks(CRM_Utils_Array::value('activity_type_id', $activity),
+      CRM_Utils_Array::value('source_record_id', $activity),
+      $accessMailingReport,
+      CRM_Utils_Array::value('activity_id', $activity)
+    );
+    $link = $actionLinks[\CRM_Core_Action::VIEW];
+
+    $values = $activity;
+    $extra = isset($link['extra']) ? \CRM_Core_Action::replace($link['extra'], $values) : NULL;
+    $frontend = isset($link['fe']);
+    if (isset($link['qs']) && !\CRM_Utils_System::isNull($link['qs'])) {
+      $urlPath = \CRM_Utils_System::url(\CRM_Core_Action::replace($link['url'], $values), \CRM_Core_Action::replace($link['qs'], $values), FALSE, NULL, TRUE, $frontend);
+    }
+    else {
+      $urlPath = \CRM_Utils_Array::value('url', $link, '#');
+    }
+    return $urlPath;
   }
 
   /**
@@ -55,7 +76,7 @@ class CRM_DataprocessorSearch_Form_ActivitySearch extends CRM_DataprocessorSearc
    * @return String
    */
   protected function getDataProcessorName() {
-    $dataProcessorName = str_replace('civicrm/dataprocessor_activity_search/', '', CRM_Utils_System::getUrlPath());
+    $dataProcessorName = str_replace('civicrm/dataprocessor_activity_search/', '', CRM_Utils_System::currentPath());
     return $dataProcessorName;
   }
 
@@ -112,20 +133,30 @@ class CRM_DataprocessorSearch_Form_ActivitySearch extends CRM_DataprocessorSearc
    * Return altered rows
    *
    * Save the ids into the queryParams value. So that when an action is done on the selected record
-   * or on all records, the queryParams will hold all the activity ids so that in the next step only the selected record, or the first
-   * 50 records are populated.
-   *
-   * @param array $rows
-   * @param array $ids
-   *
+   * or on all records, the queryParams will hold all the activity ids so that in the next step only the selected record, or
+   * all records are populated.
    */
-  protected function alterRows(&$rows, $ids) {
-    $this->activity_ids = $ids;
+  protected function retrieveEntityIds() {
+    $this->dataProcessorClass->getDataFlow()->setLimit(false);
+    $this->dataProcessorClass->getDataFlow()->setOffset(0);
+    $this->entityIDs = [];
+    $id_field = $this->getIdFieldName();
+    try {
+      while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
+        if ($id_field && isset($record[$id_field])) {
+          $this->entityIDs[] = $record[$id_field]->rawValue;
+        }
+      }
+    } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
+      // Do nothing
+    } catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      // Do nothing
+    }
     $this->_queryParams[0] = array(
       'activity_id',
       '=',
       array(
-        'IN' => $this->activity_ids,
+        'IN' => $this->entityIDs,
       ),
       0,
       0

@@ -11,8 +11,11 @@ use Civi\DataProcessor\DataFlow\MultipleDataFlows\DataFlowDescription;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleJoin;
 use Civi\DataProcessor\DataFlow\CombinedDataFlow\SubqueryDataFlow;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleNonRequiredJoin;
+use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
+use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
+use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 use Civi\DataProcessor\DataSpecification\Utils as DataSpecificationUtils;
 
@@ -99,11 +102,11 @@ class ContributionSource extends AbstractCivicrmEntitySource {
     $contributionSoftDataDescription = new DataFlowDescription($this->contributionSoftDataFlow, $join);
 
     // Create the subquery data flow
-    $entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->getTable(), $this->getSourceName());
-    $entityDataFlow->addSourceDataFlow($contributionDataDescription);
-    $entityDataFlow->addSourceDataFlow($contributionSoftDataDescription);
+    $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->contributionDataFlow->getTable(), $this->contributionDataFlow->getTableAlias());
+    $this->entityDataFlow->addSourceDataFlow($contributionDataDescription);
+    $this->entityDataFlow->addSourceDataFlow($contributionSoftDataDescription);
 
-    return $entityDataFlow;
+    return $this->entityDataFlow;
   }
 
   /**
@@ -130,6 +133,77 @@ class ContributionSource extends AbstractCivicrmEntitySource {
     $additionalDataFlowDescription = new DataFlowDescription($entityDataFlow,$join);
     $this->additionalDataFlowDescriptions[] = $additionalDataFlowDescription;
     return $additionalDataFlowDescription->getDataFlow();
+  }
+
+  /**
+   * Adds an inidvidual filter to the data source
+   *
+   * @param $filter_field_alias
+   * @param $op
+   * @param $values
+   *
+   * @throws \Exception
+   */
+  protected function addFilter($filter_field_alias, $op, $values) {
+    $spec = null;
+    if ($this->getAvailableFields()->doesAliasExists($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByAlias($filter_field_alias);
+    } elseif ($this->getAvailableFields()->doesFieldExist($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByName($filter_field_alias);
+    }
+
+    if ($spec) {
+      if ($spec instanceof CustomFieldSpecification) {
+        $customGroupDataFlow = $this->ensureCustomGroup($spec->customGroupTableName, $spec->customGroupName);
+        $customGroupTableAlias = $customGroupDataFlow->getTableAlias();
+        $customGroupDataFlow->addWhereClause(
+          new SimpleWhereClause($customGroupTableAlias, $spec->customFieldColumnName, $op, $values, $spec->type, TRUE)
+        );
+      } else {
+        $this->ensureEntity();
+        if (stripos($spec->name, 'contribution_soft_') === 0) {
+          $name = str_replace('contribution_soft_', '', $spec->name);
+          $this->contributionSoftDataFlow->addWhereClause(new SimpleWhereClause($this->contributionSoftDataFlow->getTableAlias(), $name, $op, $values, $spec->type, FALSE));
+        } else {
+          $this->contributionDataFlow->addWhereClause(new SimpleWhereClause($this->contributionDataFlow->getTableAlias(), $spec->name, $op, $values, $spec->type, TRUE));
+        }
+        $this->addFilterToAggregationDataFlow($spec, $op, $values);
+      }
+    }
+  }
+
+  public function ensureField(FieldSpecification $field) {
+    if (stripos($field->name, 'contribution_soft_') === 0) {
+      $this->ensureEntity();
+      $field->name = str_replace('contribution_soft_', '', $field->name);
+      return $this->contributionSoftDataFlow;
+    }
+    if ($this->contributionSoftDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      return $this->contributionSoftDataFlow;
+    }
+
+    return parent::ensureField($field);
+  }
+
+  /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field) {
+    if (stripos($field->name, 'contribution_soft_') === 0) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    } elseif ($this->contributionDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    } elseif ($this->contributionSoftDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    }
+    return parent::ensureFieldForJoin($field);
   }
 
   /**

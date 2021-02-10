@@ -7,6 +7,7 @@
 namespace Civi\DataProcessor\Source;
 
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\JoinInterface;
+use Civi\DataProcessor\DataSpecification\FieldExistsException;
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
 
@@ -134,10 +135,25 @@ abstract class AbstractSource implements SourceInterface {
   public function ensureField(FieldSpecification $field) {
     $field = $this->getAvailableFields()->getFieldSpecificationByAlias($field->alias);
     if ($field) {
-      $this->dataFlow->getDataSpecification()
-        ->addFieldSpecification($field->name, $field);
+      try {
+        $this->dataFlow->getDataSpecification()
+          ->addFieldSpecification($field->name, $field);
+      } catch (FieldExistsException $e) {
+        // Do nothing.
+      }
     }
     return $this->dataFlow;
+  }
+
+  /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field) {
+    return $this->ensureField($field);
   }
 
   /**
@@ -149,8 +165,18 @@ abstract class AbstractSource implements SourceInterface {
    * @throws \Exception
    */
   public function ensureFieldInSource(FieldSpecification $fieldSpecification) {
-    if (!$this->dataFlow->getDataSpecification()->doesFieldExist($fieldSpecification->name)) {
-      $this->dataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification->name, $fieldSpecification);
+    try {
+      $originalFieldSpecification = null;
+      if ($this->getAvailableFields()->doesAliasExists($fieldSpecification->alias)) {
+        $originalFieldSpecification = $this->getAvailableFields()->getFieldSpecificationByAlias($fieldSpecification->alias);
+      } elseif ($this->getAvailableFields()->doesFieldExist($fieldSpecification->name)) {
+        $originalFieldSpecification = $this->getAvailableFields()->getFieldSpecificationByName($fieldSpecification->name);
+      }
+      if ($originalFieldSpecification) {
+        $this->dataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification->alias, $fieldSpecification);
+      }
+    } catch (FieldExistsException $e) {
+      // Do nothing.
     }
     return $this;
   }
@@ -198,6 +224,7 @@ abstract class AbstractSource implements SourceInterface {
       if (in_array($alias, $requiredFilters)) {
         $isRequired = true;
       }
+
       switch ($fieldSpec->type) {
         case 'Boolean':
           if ($isRequired) {
@@ -256,8 +283,12 @@ abstract class AbstractSource implements SourceInterface {
     $defaults = array();
     if (isset($source['configuration']['filter'])) {
       foreach($source['configuration']['filter'] as $alias => $filter) {
-        $defaults[$alias.'_op'] = $filter['op'];
-        $defaults[$alias.'_value'] = $filter['value'];
+        $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByAlias($alias);
+        if (!$fieldSpec) {
+          $fieldSpec = $this->getAvailableFilterFields()->getFieldSpecificationByName($alias);
+        }
+        $defaults[$fieldSpec->name.'_op'] = $filter['op'];
+        $defaults[$fieldSpec->name.'_value'] = $filter['value'];
       }
     }
     $form->setDefaults($defaults);
@@ -295,6 +326,14 @@ abstract class AbstractSource implements SourceInterface {
     $configuration['filter'] = $filter_config;
 
     return $configuration;
+  }
+
+  /**
+   * This function is called after a source is loaded from the cache.
+   * @return void
+   */
+  public function sourceLoadedFromCache() {
+
   }
 
 }

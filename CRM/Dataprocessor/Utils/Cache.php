@@ -33,6 +33,7 @@ class CRM_Dataprocessor_Utils_Cache {
   public static function clearAllDataProcessorCaches() {
       $cache = CRM_Dataprocessor_Utils_Cache::singleton();
       $cache->cache->clear();
+      Civi\DataProcessor\Config\ConfigContainer::clearCache();
       Civi\DataProcessor\Output\Api::clearCache();
   }
 
@@ -53,7 +54,7 @@ class CRM_Dataprocessor_Utils_Cache {
    * @return mixed
    */
   public function get($key, $default=NULL) {
-    $environment = CRM_Core_BAO_Setting::getItem('', 'environment');
+    $environment = \Civi::settings()->get('environment');
     if ($environment == 'Production') {
       return $this->cache->get($key, $default);
     }
@@ -68,7 +69,7 @@ class CRM_Dataprocessor_Utils_Cache {
    * @return bool
    */
   public function set($key, $value, $ttl=NULL) {
-    $environment = CRM_Core_BAO_Setting::getItem('', 'environment');
+    $environment = \Civi::settings()->get('environment');
     if ($environment == 'Production') {
       return $this->cache->set($key, $value, $ttl);
     }

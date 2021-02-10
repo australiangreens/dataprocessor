@@ -60,6 +60,7 @@
           $('#type').on('change', function() {
             {/literal}{if $action eq 1}{literal}
               var titlepreset = $.trim($('#type option:selected').text().split("::").pop());
+              titlepreset = $.trim(titlepreset.split("(").shift());
               $('#title').val(titlepreset).trigger('blur');
             {/literal}{/if}{literal};
             var type = $('#type').val();
@@ -67,7 +68,12 @@
             var id = {/literal}{if ($source)}{$source.id}{else}false{/if}{literal};
             var data_processor_id = {/literal}{$data_processor_id}{literal};
             if (type) {
-              var dataUrl = CRM.url('civicrm/dataprocessor/form/source', {type: type, 'data_processor_id': data_processor_id, 'id': id, 'join_type': join_type});
+              var params = {type: type, 'data_processor_id': data_processor_id, 'id': id, 'join_type': join_type};
+              var table_name = $('#table_name').val();
+              if (table_name) {
+                params.table_name = table_name;
+              }
+              var dataUrl = CRM.url('civicrm/dataprocessor/form/source', params);
               CRM.loadPage(dataUrl, {'target': '#type_configuration'});
             }
           });

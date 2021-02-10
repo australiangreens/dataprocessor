@@ -14,9 +14,10 @@ use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\DataSpecification\Utils;
 use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 
+use Civi\DataProcessor\Utils\AlterExportInterface;
 use CRM_Dataprocessor_ExtensionUtil as E;
 
-class EventSource extends AbstractCivicrmEntitySource {
+class EventSource extends AbstractCivicrmEntitySource implements AlterExportInterface {
 
   /**
    * @var SqlTableDataFlow
@@ -39,6 +40,70 @@ class EventSource extends AbstractCivicrmEntitySource {
    */
   protected function getTable() {
     return 'civicrm_event';
+  }
+
+  /**
+   * Function to alter the export data.
+   * E.g. use this to convert ids to names
+   *
+   * @param array $data
+   *
+   * @return array
+   */
+  public function alterExportData($data) {
+    if (isset($data['configuration']) && is_array($data['configuration'])) {
+      $configuration = $data['configuration'];
+
+      if (isset($configuration['filter']['event_type_id'])) {
+        $event_types = [];
+        foreach ($configuration['filter']['event_type_id']['value'] as $event_type_id) {
+          try {
+            $event_types[] = civicrm_api3('OptionValue', 'getvalue', [
+              'option_group_id' => 'event_type',
+              'value' => $event_type_id,
+              'return' => 'name'
+            ]);
+          } catch (\CiviCRM_API3_Exception $ex) {
+            $event_types[] = $event_type_id;
+          }
+        }
+        $configuration['filter']['event_type_id']['value'] = $event_types;
+      }
+
+      $data['configuration'] = $configuration;
+    }
+    return $data;
+  }
+
+  /**
+   * Function to alter the export data.
+   * E.g. use this to convert names to ids
+   *
+   * @param array $data
+   *
+   * @return array
+   */
+  public function alterImportData($data) {
+    if (isset($data['configuration']) && is_array($data['configuration'])) {
+      $configuration = $data['configuration'];
+      if (isset($configuration['filter']['event_type_id'])) {
+        $event_types = [];
+        foreach ($configuration['filter']['event_type_id']['value'] as $event_type_id) {
+          try {
+            $event_types[] = civicrm_api3('OptionValue', 'getvalue', [
+              'option_group_id' => 'event_type',
+              'name' => $event_type_id,
+              'return' => 'value'
+            ]);
+          } catch (\CiviCRM_API3_Exception $ex) {
+            $event_types[] = $event_type_id;
+          }
+        }
+        $configuration['filter']['event_type_id']['value'] = $event_types;
+      }
+      $data['configuration'] = $configuration;
+    }
+    return $data;
   }
 
   /**
@@ -111,8 +176,9 @@ class EventSource extends AbstractCivicrmEntitySource {
     if (stripos($fieldSpecification->alias, $this->getSourceName().'_locblock_') === 0) {
       $this->ensureEntity();
       $this->locBlockDataFlow->getDataSpecification()->addFieldSpecification($fieldSpecification);
+      return $this;
     } else {
-      parent::ensureFieldInSource($fieldSpecification);
+      return parent::ensureFieldInSource($fieldSpecification);
     }
   }
 

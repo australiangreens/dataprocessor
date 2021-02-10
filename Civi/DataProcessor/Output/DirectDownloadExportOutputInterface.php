@@ -28,6 +28,6 @@ interface DirectDownloadExportOutputInterface extends UrlOutputInterface {
    *   Array with the selectedIds.
    * @return string
    */
-  public function doDirectDownload(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $sortFieldName = null, $sortDirection = 'ASC', $idField, $selectedIds=array());
+  public function doDirectDownload(\Civi\DataProcessor\ProcessorType\AbstractProcessorType $dataProcessorClass, $dataProcessor, $outputBAO, $sortFieldName = null, $sortDirection = 'ASC', $idField=null, $selectedIds=array());
 
 }

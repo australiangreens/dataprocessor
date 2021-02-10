@@ -10,6 +10,10 @@ use Civi\DataProcessor\DataFlow\Sort\SortSpecification;
 use Civi\DataProcessor\DataFlow\SqlDataFlow\WhereClauseInterface;
 use Civi\DataProcessor\DataFlow\Utils\Aggregator;
 use \Civi\DataProcessor\DataSpecification\DataSpecification;
+use Civi\DataProcessor\DataSpecification\FieldExistsException;
+use Civi\DataProcessor\Exception\DataFlowException;
+use Civi\DataProcessor\FieldOutputHandler\OutputHandlerAggregate;
+use CRM_Dataprocessor_ExtensionUtil as E;
 
 abstract class SqlDataFlow extends AbstractDataFlow {
 
@@ -30,6 +34,11 @@ abstract class SqlDataFlow extends AbstractDataFlow {
   protected $sqlCountStatements = array();
 
   /**
+   * @var \Civi\DataProcessor\DataSpecification\DataSpecification
+   */
+  protected $groupByDataSpecification;
+
+  /**
    * Returns an array with the fields for in the select statement in the sql query.
    *
    * @return string[]
@@ -45,10 +54,42 @@ abstract class SqlDataFlow extends AbstractDataFlow {
    */
   public function getFieldsForGroupByStatement() {
     $fields = array();
-    foreach($this->aggregateOutputHandlers as $outputHandler) {
-      $fields[] = $outputHandler->getAggregateFieldSpec()->getSqlGroupByStatement($this->getName());
+    foreach($this->getGroupByDataSpecification()->getFields() as $fieldSpec) {
+      $fields[] = $fieldSpec->getSqlGroupByStatement($this->getName());
     }
     return $fields;
+  }
+
+  /**
+   * @param \Civi\DataProcessor\DataFlow\OutputHandlerAggregate $aggregateOutputHandler
+   */
+  public function addAggregateOutputHandler(OutputHandlerAggregate $aggregateOutputHandler) {
+    parent::addAggregateOutputHandler($aggregateOutputHandler);
+    $fieldSpec = $aggregateOutputHandler->getAggregateFieldSpec();
+    try {
+      $this->getGroupByDataSpecification()->addFieldSpecification($fieldSpec->name, $fieldSpec);
+    } catch (FieldExistsException $e) {
+      // Do nothing.
+    }
+  }
+
+  /**
+   * @param \Civi\DataProcessor\DataFlow\OutputHandlerAggregate $aggregateOutputHandler
+   */
+  public function removeAggregateOutputHandler(OutputHandlerAggregate $aggregateOutputHandler) {
+    parent::removeAggregateOutputHandler($aggregateOutputHandler);
+    $fieldSpec = $aggregateOutputHandler->getAggregateFieldSpec();
+    $this->getGroupByDataSpecification()->removeFieldSpecification($fieldSpec);
+  }
+
+  /**
+   * @return DataSpecification
+   */
+  public function getGroupByDataSpecification() {
+    if (!$this->groupByDataSpecification) {
+      $this->groupByDataSpecification = new DataSpecification();
+    }
+    return $this->groupByDataSpecification;
   }
 
   /**
@@ -78,7 +119,6 @@ abstract class SqlDataFlow extends AbstractDataFlow {
     }
 
     try {
-      //$from = $this->getFromStatement();
       $selectAndFrom = $this->getSelectQueryStatement();
       $where = $this->getWhereStatement();
       $groupBy = $this->getGroupByStatement();
@@ -86,13 +126,13 @@ abstract class SqlDataFlow extends AbstractDataFlow {
       $countName = 'count_'.$this->getName();
       $sql = "{$selectAndFrom} {$where} {$groupBy} {$orderBy}";
       $countSql = "SELECT COUNT(*) AS count FROM ({$sql}) `{$countName}`";
-
-      //$countSql = "SELECT COUNT(*) AS `count` {$from} {$where} {$groupBy}";
       $this->sqlCountStatements[] = $countSql;
-      $countDao = \CRM_Core_DAO::executeQuery($countSql);
+      $countDao = \CRM_Core_DAO::executeQuery($countSql, [], true, NULL, false, true, true);
       $this->count = 0;
-      while ($countDao->fetch()) {
-        $this->count = $this->count + $countDao->count;
+      if (!is_a($countDao, 'DB_Error') && $countDao) {
+        while ($countDao->fetch()) {
+          $this->count = $this->count + $countDao->count;
+        }
       }
 
       // Build Limit and Offset.
@@ -109,14 +149,16 @@ abstract class SqlDataFlow extends AbstractDataFlow {
       }
       $sql .= " {$limitStatement}";
       $this->sqlStatements[] = $sql;
-      $this->dao = \CRM_Core_DAO::executeQuery($sql);
+      $this->dao = \CRM_Core_DAO::executeQuery($sql, [], true, NULL, false, true, true);
+      if (is_a($this->dao, 'DB_Error') || !$this->dao) {
+        throw new DataFlowException('Error in dataflow: '.$sql);
+      }
     } catch (\Exception $e) {
-      throw new \Exception(
+      throw new DataFlowException(
         "Error in DataFlow query.
         \r\nData flow: {$this->getName()}
-        \r\nCount query: {$countSql}
-        \r\nQuery: $sql
-        \r\nMessage: {$e->getMessage()}", 0, $e);
+        \r\nQuery: {$sql}
+        \r\nCount query: {$countSql}");
 
 
     }
@@ -204,8 +246,8 @@ abstract class SqlDataFlow extends AbstractDataFlow {
    */
   public function getWhereStatement() {
     $clauses = array("1");
-    foreach($this->getWhereClauses() as $clause) {
-      $clauses[] = $clause->getWhereClause();
+    foreach($this->getWhereClauses(FALSE, TRUE) as $clause) {
+        $clauses[] = $clause->getWhereClause();
     }
     return "WHERE ". implode(" AND ", $clauses);
   }
@@ -242,9 +284,20 @@ abstract class SqlDataFlow extends AbstractDataFlow {
   /**
    * Return all the where clauses
    *
+   * @param bool $includeJoinClause
+   * @param bool $includeNonJoinClause
    * @return array
    */
-  public function getWhereClauses() {
+  public function getWhereClauses($includeJoinClause=TRUE, $includeNonJoinClause=TRUE) {
+    $clauses = [];
+    foreach($this->whereClauses as $clause) {
+      if ($clause->isJoinClause() && $includeJoinClause) {
+        $clauses[] = $clause;
+      }
+      if (!$clause->isJoinClause() && $includeNonJoinClause) {
+        $clauses[] = $clause;
+      }
+    }
     return $this->whereClauses;
   }
 

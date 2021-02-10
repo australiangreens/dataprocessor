@@ -16,6 +16,8 @@ class CRM_Dataprocessor_Utils_Importer {
    * @throws \Exception
    */
   public static function export($data_processor_id) {
+    $factory = dataprocessor_get_factory();
+
     $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $data_processor_id));
     unset($dataProcessor['id']);
     unset($dataProcessor['status']);
@@ -26,6 +28,10 @@ class CRM_Dataprocessor_Utils_Importer {
     foreach($sources['values'] as $i => $datasource) {
       unset($datasource['id']);
       unset($datasource['data_processor_id']);
+      $sourceClass = $factory->getDataSourceByName($datasource['type']);
+      if ($sourceClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $datasource = $sourceClass->alterExportData($datasource);
+      }
       $dataProcessor['data_sources'][] = $datasource;
     }
     $filters = civicrm_api3('DataProcessorFilter', 'get', array('data_processor_id' => $data_processor_id, 'options' => array('limit' => 0)));
@@ -33,6 +39,10 @@ class CRM_Dataprocessor_Utils_Importer {
     foreach($filters['values'] as $i => $filter) {
       unset($filter['id']);
       unset($filter['data_processor_id']);
+      $filterClass = $factory->getFilterByName($filter['type']);
+      if ($filterClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $filter = $filterClass->alterExportData($filter);
+      }
       $dataProcessor['filters'][] = $filter;
     }
     $fields = civicrm_api3('DataProcessorField', 'get', array('data_processor_id' => $data_processor_id, 'options' => array('limit' => 0)));
@@ -40,6 +50,10 @@ class CRM_Dataprocessor_Utils_Importer {
     foreach($fields['values'] as $i => $field) {
       unset($field['id']);
       unset($field['data_processor_id']);
+      $fieldClass = $factory->getOutputHandlerByName($field['type']);
+      if ($fieldClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $field = $fieldClass->alterExportData($field);
+      }
       $dataProcessor['fields'][] = $field;
     }
     $outputs = $outputs = civicrm_api3('DataProcessorOutput', 'get', array('data_processor_id' => $data_processor_id, 'options' => array('limit' => 0)));
@@ -47,6 +61,10 @@ class CRM_Dataprocessor_Utils_Importer {
     foreach($outputs['values'] as $i => $output) {
       unset($output['id']);
       unset($output['data_processor_id']);
+      $outputClass = $factory->getOutputByName($output['type']);
+      if ($outputClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $output = $outputClass->alterExportData($output);
+      }
       $dataProcessor['outputs'][] = $output;
     }
 
@@ -141,13 +159,15 @@ class CRM_Dataprocessor_Utils_Importer {
    * Import a data processor
    *
    * @param $data
-   * @param $filename
-   * @param $data_processor_id
+   * @param string|null $filename
+   * @param int|null $data_processor_id
+   * @param int
    *
    * @return mixed
    * @throws \Exception
    */
   public static function importDataProcessor($data, $filename, $data_processor_id, $status) {
+    $factory = dataprocessor_get_factory();
     $params = $data;
     unset($params['data_sources']);
     unset($params['outputs']);
@@ -174,6 +194,10 @@ class CRM_Dataprocessor_Utils_Importer {
     CRM_Dataprocessor_BAO_DataProcessorOutput::deleteWithDataProcessorId($id);
 
     foreach($data['data_sources'] as $data_source) {
+      $sourceClass = $factory->getDataSourceByName($data_source['type']);
+      if ($sourceClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $data_source = $sourceClass->alterImportData($data_source);
+      }
       $params = $data_source;
       $params['data_processor_id'] = $id;
       $params['debug'] = 1;
@@ -184,16 +208,28 @@ class CRM_Dataprocessor_Utils_Importer {
       }
     }
     foreach($data['filters'] as $filter) {
+      $filterClass = $factory->getFilterByName($filter['type']);
+      if ($filterClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $filter = $filterClass->alterImportData($filter);
+      }
       $params = $filter;
       $params['data_processor_id'] = $id;
       civicrm_api3('DataProcessorFilter', 'create', $params);
     }
     foreach($data['fields'] as $field) {
+      $fieldClass = $factory->getOutputHandlerByName($field['type']);
+      if ($fieldClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $field = $fieldClass->alterImportData($field);
+      }
       $params = $field;
       $params['data_processor_id'] = $id;
       civicrm_api3('DataProcessorField', 'create', $params);
     }
     foreach($data['outputs'] as $output) {
+      $outputClass = $factory->getOutputByName($output['type']);
+      if ($outputClass instanceof \Civi\DataProcessor\Utils\AlterExportInterface) {
+        $output = $outputClass->alterImportData($output);
+      }
       $params = $output;
       $params['data_processor_id'] = $id;
       civicrm_api3('DataProcessorOutput', 'create', $params);
@@ -212,6 +248,7 @@ class CRM_Dataprocessor_Utils_Importer {
     $return = array();
     $importedIds = array();
     $extensions = self::getExtensionFileListWithDataProcessors($extension);
+    \Civi\DataProcessor\Output\UIOutputHelper::disableRebuildingOfMenuAndNavigation();
     foreach($extensions as $ext_file) {
       $data = json_decode($ext_file['data'], true);
       $return[$ext_file['file']] = self::import($data, $ext_file['file']);
@@ -222,9 +259,9 @@ class CRM_Dataprocessor_Utils_Importer {
 
     // Remove all data processors which are in code or overridden but not imported
     $removeSql = "
-        SELECT id, name, status 
-        FROM civicrm_data_processor 
-        WHERE  status IN (".CRM_Dataprocessor_Status::STATUS_IN_CODE.", ".CRM_Dataprocessor_Status::STATUS_OVERRIDDEN.") 
+        SELECT id, name, status
+        FROM civicrm_data_processor
+        WHERE  status IN (".CRM_Dataprocessor_Status::STATUS_IN_CODE.", ".CRM_Dataprocessor_Status::STATUS_OVERRIDDEN.")
         AND source_file IS NOT NULL";
     if (count($importedIds)) {
       $removeSql .= " AND id NOT IN (".implode($importedIds, ",").")";
@@ -246,6 +283,7 @@ class CRM_Dataprocessor_Utils_Importer {
         $return['deleted data processors'][] = 'Error: '. $dao->id.": ".$dao->name;
       }
     }
+    \Civi\DataProcessor\Output\UIOutputHelper::rebuildMenuAndNavigation();
     return $return;
   }
 

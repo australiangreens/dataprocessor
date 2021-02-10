@@ -33,12 +33,19 @@ class DataSpecification {
       throw new FieldExistsException($name);
     }
     $this->fields[] = $field;
-
-    /*if (isset($this->fields[$name])) {
-      throw new FieldExistsException($name);
-    }
-    $this->fields[$name] = $field;*/
     return $this;
+  }
+
+  /**
+   * Removes a field from the specification
+   *
+   * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $field
+   */
+  public function removeFieldSpecification(FieldSpecification $field) {
+    $key = array_search($field, $this->fields);
+    if ($key !== false) {
+      unset($this->fields[$key]);
+    }
   }
 
   /**
@@ -54,7 +61,9 @@ class DataSpecification {
    */
   public function getFieldSpecificationByName($name) {
     foreach($this->fields as $field) {
-      if ($field->name == $name) {
+      if ($field->getName() == $name) {
+        return $field;
+      } elseif ($field->name == $name) {
         return $field;
       }
     }
@@ -82,7 +91,7 @@ class DataSpecification {
    */
   public function doesFieldExist($name) {
     foreach($this->fields as $field) {
-      if ($field->name == $name) {
+      if ($field->getName() == $name || $field->name == $name) {
         return true;
       }
     }
@@ -119,6 +128,13 @@ class DataSpecification {
       $this->addFieldSpecification($f->name, $f);
     }
     return $this;
+  }
+
+  /**
+   * Remove all fields from this specification.
+   */
+  public function clear() {
+    $this->fields = array();
   }
 
 }

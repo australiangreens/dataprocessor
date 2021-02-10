@@ -1,0 +1,34 @@
+site_name: Data Processor
+repo_url: https://lab.civicrm.org/extensions/dataprocessor
+theme:
+  name: material
+
+nav:
+  - Introduction: index.md
+  - Basic Concept: basic-concept.md
+  - How to create:
+      - Website overview of contact, country and website from CiviCRM: usecase1.md
+      - Blabla: usercase2.md
+      - Your own data source: HowToDevelopACsvDataSource.md
+      - A data source for a CiviCRM entity: add_your_own_datasource.md
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  - def_list
+  - toc:
+      permalink: true
+  - pymdownx.highlight:
+      guess_lang: true
+      extend_pygments_lang:
+        - name: php
+          lang: php
+          options:
+            startinline: true
+  - pymdownx.superfences:
+      css_class: codehilite
+  - pymdownx.inlinehilite:
+      css_class: codehilite
+  - pymdownx.tilde
+  - pymdownx.betterem
+  - pymdownx.mark

@@ -26,7 +26,7 @@ class CRM_Dataprocessor_Form_CloneDataProcessor extends CRM_Core_Form {
    * @access public
    */
   function preProcess() {
-    $this->dataProcessorId = CRM_Utils_Request::retrieve('id', 'Integer', $this, true);
+    $this->dataProcessorId = CRM_Utils_Request::retrieveValue('id', 'Integer', NULL, TRUE);
     $this->dataProcessor = civicrm_api3('DataProcessor', 'getsingle', ['id' => $this->dataProcessorId]);
     $this->dataProcessorClass = CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($this->dataProcessor, true);
     $this->currentUrl = CRM_Utils_System::url('civicrm/dataprocessor/form/edit', array('reset' => 1, 'action' => 'update', 'id' => $this->dataProcessorId));
@@ -75,48 +75,13 @@ class CRM_Dataprocessor_Form_CloneDataProcessor extends CRM_Core_Form {
   public function postProcess() {
     $session = CRM_Core_Session::singleton();
     $values = $this->exportValues();
-    $params['name'] = $values['name'];
-    $params['title'] = $values['title'];
-    $params['description'] = $values['description'];
-    $params['is_active'] = !empty($values['is_active']) ? 1 : 0;
-
-    $result = civicrm_api3('DataProcessor', 'create', $params);
-    $newId = $result['id'];
-
-    $sources = civicrm_api3('DataProcessorSource', 'get', array('data_processor_id' => $this->dataProcessorId, 'options' => array('limit' => 0)));
-    $dataProcessor['data_sources'] = array();
-    foreach($sources['values'] as $i => $datasource) {
-      unset($datasource['id']);
-      unset($datasource['data_processor_id']);
-      $datasource['data_processor_id'] = $newId;
-      civicrm_api3('DataProcessorSource', 'create', $datasource);
-    }
-    $filters = civicrm_api3('DataProcessorFilter', 'get', array('data_processor_id' => $this->dataProcessorId, 'options' => array('limit' => 0)));
-    $dataProcessor['filters']  = array();
-    foreach($filters['values'] as $i => $filter) {
-      unset($filter['id']);
-      unset($filter['data_processor_id']);
-      $filter['data_processor_id'] = $newId;
-      civicrm_api3('DataProcessorFilter', 'create', $filter);
-    }
-    $fields = civicrm_api3('DataProcessorField', 'get', array('data_processor_id' => $this->dataProcessorId, 'options' => array('limit' => 0)));
-    $dataProcessor['fields'] = array();
-    foreach($fields['values'] as $i => $field) {
-      unset($field['id']);
-      unset($field['data_processor_id']);
-      $field['data_processor_id'] = $newId;
-      civicrm_api3('DataProcessorField', 'create', $field);
-    }
-    $outputs = $outputs = civicrm_api3('DataProcessorOutput', 'get', array('data_processor_id' => $this->dataProcessorId, 'options' => array('limit' => 0)));
-    $dataProcessor['outputs'] = array();
-    foreach($outputs['values'] as $i => $output) {
-      unset($output['id']);
-      unset($output['data_processor_id']);
-      $output['data_processor_id'] = $newId;
-      civicrm_api3('DataProcessorOutput', 'create', $output);
-    }
-
-    $redirectUrl = CRM_Utils_System::url('civicrm/dataprocessor/form/edit', array('reset' => 1, 'action' => 'update', 'id' => $result['id']));
+    $dataProcessor = CRM_Dataprocessor_Utils_Importer::export($this->dataProcessorId);
+    $dataProcessor['name'] = $values['name'];
+    $dataProcessor['title'] = $values['title'];
+    $dataProcessor['description'] = $values['description'];
+    $dataProcessor['is_active'] = !empty($values['is_active']) ? 1 : 0;
+    $newId = CRM_Dataprocessor_Utils_Importer::importDataProcessor($dataProcessor, null, null, CRM_Dataprocessor_Status::STATUS_IN_DATABASE);
+    $redirectUrl = CRM_Utils_System::url('civicrm/dataprocessor/form/edit', array('reset' => 1, 'action' => 'update', 'id' => $newId));
     CRM_Utils_System::redirect($redirectUrl);
   }
 

@@ -6,38 +6,13 @@
 
 namespace Civi\DataProcessor\Output;
 
-use Civi\API\Event\ResolveEvent;
-use Civi\API\Event\RespondEvent;
-use Civi\API\Events;
-use Civi\API\Provider\ProviderInterface as API_ProviderInterface;
-use Civi\DataProcessor\FieldOutputHandler\arrayFieldOutput;
+use Civi\DataProcessor\Config\ConfigContainer;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 use \CRM_Dataprocessor_ExtensionUtil as E;
 
-class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInterface {
-
-  /**
-   * @var \CRM_Utils_Cache_Interface
-   */
-  protected $cache;
-
-  public function __construct() {
-    $this->cache = \CRM_Utils_Cache::create([
-      'name' => 'dataprocessor_api',
-      'type' => ['*memory*', 'SqlGroup', 'ArrayCache'],
-      'prefetch' => true,
-    ]);
-  }
-
-  /**
-   * Flushes the caches
-   */
-  public static function clearCache() {
-    $api = new Api();
-    $api->cache->clear();
-  }
+class Api extends AbstractApi implements OutputInterface {
 
   /**
    * Returns true when this filter has additional configuration
@@ -56,6 +31,9 @@ class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInte
    * @param array $filter
    */
   public function buildConfigurationForm(\CRM_Core_Form $form, $output=array()) {
+    $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $output['data_processor_id']));
+    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
+
     $form->add('select','permission', E::ts('Permission'), \CRM_Core_Permission::basicPermissions(), true, array(
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge',
@@ -64,6 +42,14 @@ class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInte
     $form->add('text', 'api_entity', E::ts('API Entity'), true);
     $form->add('text', 'api_action', E::ts('API Action Name'), true);
     $form->add('text', 'api_count_action', E::ts('API GetCount Action Name'), true);
+
+    if (isset($output['id'])) {
+      $doc = $this->generateMkDocs($dataProcessorClass, $dataProcessor, $output);
+      $resources = \CRM_Core_Resources::singleton();
+      $resources->addScriptFile('dataprocessor', 'packages/markdown-it/dist/markdown-it.min.js');
+      $form->assign('doc', $doc);
+
+    }
 
     if ($output && isset($output['id']) && $output['id']) {
       $defaults['permission'] = $output['permission'];
@@ -104,149 +90,12 @@ class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInte
     return array();
   }
 
-  /**
-   * This function is called prior to removing an output
-   *
-   * @param array $output
-   * @return void
-   */
-  public function deleteOutput($output) {
-    // Do nothing
-  }
 
-  /**
-   * @return array
-   */
-  public static function getSubscribedEvents() {
-    // Some remarks on the solution to implement the getFields method.
-    // We would like to have implemented it as a normal api call. Meaning
-    // it would been processed in the invoke method.
-    //
-    // However the reflection provider has a stop propegation so we cannot use
-    // getfields here unles we are earlier then the reflection provider.
-    // We should then use a weight lower than Events::W_EARLY and do a
-    // stop propegation in our event. But setting an early flag is not a neat way to do stuff.
-    // So instead we use the Respond event and check in the respond event whether the action is getFields and
-    // if so do our getfields stuff there.
-    return array(
-      Events::RESOLVE => array(
-        array('onApiResolve', Events::W_EARLY),
-      ),
-    );
-  }
-
-  public function onApiResolve(ResolveEvent $event) {
-    $entities = $this->getEntityNames();
-    $apiRequest = $event->getApiRequest();
-    $params = array();
-    if (isset($apiRequest['params'])) {
-      $params = $apiRequest['params'];
-    }
-    foreach($entities as $entity) {
-      $actions = $this->getActionNames(3, $entity);
-      $actions = array_map('strtolower', $actions);
-      if (strtolower($apiRequest['entity']) == strtolower($entity)) {
-        if (strtolower($apiRequest['action']) == 'getfields' || strtolower($apiRequest['action']) == 'getoptions') {
-          if (isset($params['api_action']) && in_array(strtolower($params['api_action']), $actions)) {
-            $event->setApiProvider($this);
-            $event->stopPropagation();
-          }
-        } elseif (in_array(strtolower($apiRequest['action']), $actions)) {
-          $event->setApiProvider($this);
-        }
-      }
-    }
-  }
-
-  /**
-   * Invoke the GetFields action
-   *
-   * @param $apiRequest
-   *
-   * @return array
-   */
-  protected function invokeGetFields($apiRequest) {
-    $params = $apiRequest['params'];
-    $result = array();
-
-    if (isset($params['action'])) {
-      try {
-        $fields = $this->getFields($apiRequest['entity'], $params);
-        if (strtolower($params['action']) != 'getoptions') {
-          $result['values'] = $fields;
-        } else {
-          $actions = array();
-          foreach($this->getActionNames(3, $apiRequest['entity']) as $action) {
-            $actions[$action] = $action;
-          }
-          $fieldNames = array();
-          foreach($fields as $field) {
-            $fieldNames[$field['name']] = $field['title'];
-          }
-          $result['values']['field']['title'] = E::ts('Field');
-          $result['values']['field']['name'] = 'field';
-          $result['values']['field']['api.required'] = TRUE;
-          $result['values']['field']['options'] = $fieldNames;
-          $result['values']['field']['type'] = \CRM_Utils_Type::T_STRING;
-
-          $result['values']['context']['title'] = E::ts('Context');
-          $result['values']['context']['name'] = 'context';
-          $result['values']['context']['api.required'] = FALSE;
-          $result['values']['context']['options'] = \CRM_Core_DAO::buildOptionsContext();
-          $result['values']['context']['type'] = \CRM_Utils_Type::T_STRING;
-
-          $result['values']['api_action']['title'] = E::ts('Action');
-          $result['values']['api_action']['name'] = 'api_action';
-          $result['values']['api_action']['api.required'] = FALSE;
-          $result['values']['api_action']['options'] = $actions;
-          $result['values']['api_action']['type'] = \CRM_Utils_Type::T_STRING;
-
-        }
-      } catch(\Exception $e) {
-        // Do nothing.
-      }
-
-      $result['count'] = count($result['values']);
-    }
-
-    $result = $this->checkForErrors($result);
-
-    return $result;
-  }
-
-  protected function getFields($entity, $params) {
-    $cacheKey = 'getfields_'.strtolower($entity);
-    if (isset($params['action'])) {
-      $cacheKey .= '_'.strtolower($params['action']);
-    }
-    if ($cache = $this->cache->get($cacheKey)) {
-      return $cache;
-    }
+  public function generateMkDocs(AbstractProcessorType $dataProcessorClass, $dataProcessor, $output) {
     $types = \CRM_Utils_Type::getValidTypes();
     $types['Memo'] = \CRM_Utils_Type::T_TEXT;
     $fields = array();
-
-    // Find the data processor
-    $dataProcessorIdSql = "
-          SELECT *
-          FROM civicrm_data_processor_output o
-          INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
-          WHERE p.is_active = 1 AND LOWER(o.api_entity) = LOWER(%1)
-        ";
-
-    $dataProcessorIdParams[1] = array($entity, 'String');
-    if (isset($params['action']) && strtolower($params['action']) != 'getoptions') {
-      $dataProcessorIdSql .= " AND (LOWER(o.api_action) = LOWER(%2) OR LOWER(o.api_count_action) = LOWER(%2))";
-      $dataProcessorIdParams[2] = array($params['action'], 'String');
-    }
-    $dao = \CRM_Core_DAO::executeQuery($dataProcessorIdSql, $dataProcessorIdParams);
-    if (!$dao->fetch()) {
-      throw new \API_Exception("Could not find a data processor");
-    }
-    $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $dao->data_processor_id));
-    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
-
-
+    $filters = array();
     foreach ($dataProcessorClass->getDataFlow()->getOutputFieldHandlers() as $outputFieldHandler) {
       $fieldSpec = $outputFieldHandler->getOutputFieldSpecification();
       $type = \CRM_Utils_Type::T_STRING;
@@ -259,7 +108,6 @@ class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInte
         'description' => '',
         'type' => $type,
         'data_type' => $fieldSpec->type,
-        'api.required' => FALSE,
         'api.aliases' => [],
         'api.filter' => FALSE,
         'api.return' => TRUE,
@@ -281,216 +129,88 @@ class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInte
       $field = [
         'name' => $fieldSpec->alias,
         'title' => $fieldSpec->title,
+        'data_type' => $fieldSpec->type,
         'description' => '',
         'type' => $type,
-        'api.required' => $filterHandler->isRequired(),
-        'api.aliases' => [],
-        'api.filter' => TRUE,
-        'api.return' => isset($fields[$fieldSpec->alias]) ? $fields[$fieldSpec->alias]['api.return'] : FALSE,
+        'required' => $filterHandler->isRequired(),
       ];
       if ($fieldSpec->getOptions()) {
         $field['options'] = $fieldSpec->getOptions();
       }
 
-      if (!isset($fields[$fieldSpec->alias])) {
-        $fields[$fieldSpec->alias] = $field;
-      } else {
-        $fields[$fieldSpec->alias] = array_merge($fields[$fieldSpec->alias], $field);
-      }
+      $filters[$fieldSpec->alias] = $field;
     }
-    $this->cache->set($cacheKey, $fields);
-    return $fields;
+
+    $template = \CRM_Core_Smarty::singleton();
+    $config = \CRM_Core_Config::singleton();
+    $oldTemplateVars = $template->get_template_vars();
+    $template->clearTemplateVars();
+    $template->assign('dataprocessor', $dataProcessor);
+    $template->assign('output', $output);
+    $template->assign('fields', $fields);
+    $template->assign('filters', $filters);
+    $template->assign('resourceBase', rtrim($config->userFrameworkBaseURL, "/").rtrim($config->resourceBase, "/"));
+    $docs = $template->fetch('CRM/Dataprocessor/Docs/Output/API.tpl');
+    $template->assignAll($oldTemplateVars);
+    return $docs;
   }
 
   /**
-   * Invoke the GetOptions api call
+   * This function is called prior to removing an output
    *
-   * @param $apiRequest
-   * @return array
+   * @param array $output
+   * @return void
    */
-  protected function invokeGetOptions($apiRequest) {
-    $params = $apiRequest['params'];
-    $result = array();
-    $result['values'] = array();
-    // Now check whether the action param is set. With the action param we can find the data processor.
-    if (isset($params['field'])) {
-      try {
-        $fieldName = $params['field'];
-        $fields = $this->getFields($apiRequest['entity'], $params);
-        if (isset($fields[$fieldName]) && isset($fields[$fieldName]['options'])) {
-          $result['values'] = $fields[$fieldName]['options'];
-        }
-      } catch(\Exception $e) {
-        // Do nothing.
-      }
-
-      $result['count'] = count($result['values']);
-    }
-
-    $result = $this->checkForErrors($result);
-
-    return $result;
+  public function deleteOutput($output) {
+    // Do nothing
   }
-
 
   /**
-   * @param array $apiRequest
-   *   The full description of the API request.
-   * @return array
-   *   structured response data (per civicrm_api3_create_success)
-   * @see civicrm_api3_create_success
-   * @throws \Exception
+   * Build the container.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerBuilder $containerBuilder
    */
-  public function invoke($apiRequest) {
-    switch (strtolower($apiRequest['action'])) {
-      case 'getfields':
-        // Do get fields
-        return $this->invokeGetFields($apiRequest);
-        break;
-      case 'getoptions':
-        // Do get options
-        return $this->invokeGetOptions($apiRequest);
-        break;
-      default:
-        return $this->invokeDataProcessor($apiRequest);
-        break;
-    }
-  }
-
-  protected function invokeDataProcessor($apiRequest) {
-    $isCountAction = FALSE;
-    $dataProcessorIdSql = "
-      SELECT *
+  public static function buildConfigContainer(ContainerBuilder $containerBuilder) {
+    // Load the entities.
+    $dao = \CRM_Core_DAO::executeQuery("
+      SELECT DISTINCT o.api_entity, api_action, api_count_action
       FROM civicrm_data_processor_output o
       INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
-      WHERE p.is_active = 1 AND LOWER(o.api_entity) = LOWER(%1)
-      AND (LOWER(o.api_action) = LOWER(%2) OR LOWER(o.api_count_action) = LOWER(%2))
-    ";
-    $dataProcessorIdParams[1] = array($apiRequest['entity'], 'String');
-    $dataProcessorIdParams[2] = array($apiRequest['action'], 'String');
-    $dao = \CRM_Core_DAO::executeQuery($dataProcessorIdSql, $dataProcessorIdParams);
-    if (!$dao->fetch()) {
-      throw new \API_Exception("Could not find a data processor");
-    }
-    if (strtolower($dao->api_count_action) == $apiRequest['action']) {
-      $isCountAction = TRUE;
-    }
+      WHERE p.is_active = 1
+    ");
+    $entities = array();
+    $actions = array();
 
-    $cache_key = 'data_processor_id_'.$dao->data_processor_id;
-    if (! ($dataProcessor = $this->cache->get($cache_key)) ){
-      $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', ['id' => $dao->data_processor_id]);
-      $this->cache->set($cache_key, $dataProcessor);
-    }
-    $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
-
-    $params = $apiRequest['params'];
-    return $this->runDataProcessor($dataProcessorClass, $params, $isCountAction);
-  }
-
-  protected function runDataProcessor(AbstractProcessorType $dataProcessorClass, $params, $isCount) {
-    foreach($dataProcessorClass->getFilterHandlers() as $filter) {
-      if (!$filter->isExposed()) {
-        continue;
-      }
-      $filterSpec = $filter->getFieldSpecification();
-      if ($filter->isRequired() && !isset($params[$filterSpec->alias])) {
-        throw new \API_Exception('Field '.$filterSpec->alias.' is required');
-      }
-      if (isset($params[$filterSpec->alias])) {
-        if (!is_array($params[$filterSpec->alias])) {
-          $filterParams = [
-            'op' => '=',
-            'value' => $params[$filterSpec->alias],
-          ];
-        } else {
-          $value = reset($params[$filterSpec->alias]);
-          $filterParams = [
-            'op' => key($params[$filterSpec->alias]),
-            'value' => $value,
-          ];
+    while($dao->fetch()) {
+      if ($dao->api_entity ) {
+        if (!in_array($dao->api_entity, $entities)) {
+          $entities[] = $dao->api_entity;
         }
-        $filter->setFilter($filterParams);
+        if (!isset($actions[$dao->api_entity])) {
+          $actions[$dao->api_entity][] = 'getfields';
+          $actions[$dao->api_entity][] = 'getoptions';
+        }
+        $actions[$dao->api_entity][] = $dao->api_action;
+        $actions[$dao->api_entity][] = $dao->api_count_action;
       }
     }
-
-    if ($isCount) {
-      $count = $dataProcessorClass->getDataFlow()->recordCount();
-      return array('result' => $count, 'is_error' => 0);
-    } else {
-      $options = _civicrm_api3_get_options_from_params($params);
-
-      if (isset($options['limit']) && $options['limit'] > 0) {
-        $dataProcessorClass->getDataFlow()->setLimit($options['limit']);
-      }
-      if (isset($options['offset'])) {
-        $dataProcessorClass->getDataFlow()->setOffset($options['offset']);
-      }
-      if (isset($options['sort'])) {
-        $sort = explode(', ', $options['sort']);
-        foreach ($sort as $index => &$sortString) {
-          // Get sort field and direction
-          list($sortField, $dir) = array_pad(explode(' ', $sortString), 2, 'ASC');
-          $dataProcessorClass->getDataFlow()->addSort($sortField, $dir);
-        }
-      }
-
-      $records = $dataProcessorClass->getDataFlow()->allRecords();
-      $values = array();
-      foreach($records as $idx => $record) {
-        foreach($record as $fieldname => $field) {
-          if ($field instanceof arrayFieldOutput) {
-            $values[$idx][$fieldname] = $field->getArrayData();
-          } else {
-            $values[$idx][$fieldname] = $field->formattedValue;
-          }
-        }
-      }
-      $return = array(
-        'values' => $values,
-        'count' => count($values),
-        'is_error' => 0,
-      );
-
-      if (isset($params['debug']) && $params['debug']) {
-        $return['debug_info'] = $dataProcessorClass->getDataFlow()->getDebugInformation();
-      }
-
-      $return = $this->checkForErrors($return);
-
-      return $return;
-    }
+    $containerBuilder->setParameter('entity_names', $entities);
+    $containerBuilder->setParameter('action_names', $actions);
   }
 
   /**
-   * Check for errors in the CiviCRM Status messages list
-   * and if errors are present create a civicrm api return error with the messages in
-   * the status list
+   * Clears the cached configuration file ony when custom field or custom group has been saved.
    *
-   * @param $return
-   *
-   * @return mixed
+   * @param $op
+   * @param $objectName
+   * @param $objectId
+   * @param $objectRef
    */
-  protected function checkForErrors($return) {
-    $session = \CRM_Core_Session::singleton();
-    $statuses = $session->getStatus(true);
-    if (!is_array($statuses)) {
-      return $return;
+  public static function postHook($op, $objectName, $id, &$objectRef) {
+    $clearCacheObjects = ['DataProcessorOutput'];
+    if (in_array($objectName, $clearCacheObjects)) {
+      ConfigContainer::clearCache();
     }
-    foreach($statuses as $status) {
-      if ($status['type'] == 'error') {
-        $return['is_error'] = 1;
-        unset($return['values']);
-        unset($return['count']);
-        if (!isset($return['error_message'])) {
-          $return['error_message'] = "";
-        }
-        $return['error_message'] .= " ".$status['text'];
-      }
-    }
-    if (isset($return['error_message'])) {
-      $return['error_message'] = trim($return['error_message']);
-    }
-    return $return;
   }
 
   /**
@@ -499,20 +219,9 @@ class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInte
    * @return array<string>
    */
   public function getEntityNames($version=null) {
-    $dao = \CRM_Core_DAO::executeQuery("
-      SELECT DISTINCT o.api_entity
-      FROM civicrm_data_processor_output o
-      INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
-      WHERE p.is_active = 1
-    ");
-    $entities = array();
-
-    while($dao->fetch()) {
-      if ($dao->api_entity) {
-        $entities[] = $dao->api_entity;
-      }
-    }
-    return $entities;
+    $config = ConfigContainer::getInstance();
+    $return = $config->getParameter('entity_names');
+    return $return;
   }
 
   /**
@@ -523,22 +232,78 @@ class Api implements OutputInterface, API_ProviderInterface, EventSubscriberInte
    * @return array<string>
    */
   public function getActionNames($version, $entity) {
-    $actions = array();
-    $dao = \CRM_Core_DAO::executeQuery("
-      SELECT api_action, api_count_action
+    $config = ConfigContainer::getInstance();
+    $actions = $config->getParameter('action_names');
+    if (isset($actions[$entity])) {
+      return $actions[$entity];
+    }
+    return array();
+  }
+
+  /**
+   * Returns the ID for this data processor.
+   *
+   * @param $entity
+   * @param $action
+   * @param $params
+   *
+   * @return int
+   * @throws \API_Exception
+   */
+  protected function getDataProcessorId($entity, $action, $params) {
+    // Find the data processor
+    $dataProcessorIdSql = "
+          SELECT *
+          FROM civicrm_data_processor_output o
+          INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
+          WHERE p.is_active = 1 AND LOWER(o.api_entity) = LOWER(%1)
+        ";
+
+    $dataProcessorIdParams[1] = array($entity, 'String');
+    if (strtolower($action) == 'getfields') {
+      if (isset($params['action']) && strtolower($params['action']) != 'getoptions') {
+        $dataProcessorIdSql .= " AND (LOWER(o.api_action) = LOWER(%2) OR LOWER(o.api_count_action) = LOWER(%2))";
+        $dataProcessorIdParams[2] = [$params['action'], 'String'];
+      }
+    } else {
+      $dataProcessorIdSql .= " AND (LOWER(o.api_action) = LOWER(%2) OR LOWER(o.api_count_action) = LOWER(%2))";
+      $dataProcessorIdParams[2] = [$action, 'String'];
+    }
+    $dao = \CRM_Core_DAO::executeQuery($dataProcessorIdSql, $dataProcessorIdParams);
+    if (!$dao->fetch()) {
+      throw new \API_Exception("Could not find a data processor");
+    }
+    return $dao->data_processor_id;
+  }
+
+  /**
+   * Returns whether this action is a getcount action.
+   *
+   * @param $entity
+   * @param $action
+   * @param $params
+   *
+   * @return bool
+   * @throws \API_Exception
+   */
+  protected function isCountAction($entity, $action, $params) {
+    $dataProcessorIdSql = "
+      SELECT *
       FROM civicrm_data_processor_output o
       INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
-      WHERE p.is_active = 1 AND LOWER(o.api_entity) = LOWER(%1)",
-      array(1=>array($entity, 'String'))
-    );
-    while($dao->fetch()) {
-      $actions[] = $dao->api_action;
-      $actions[] = $dao->api_count_action;
+      WHERE p.is_active = 1 AND LOWER(o.api_entity) = LOWER(%1)
+      AND (LOWER(o.api_action) = LOWER(%2) OR LOWER(o.api_count_action) = LOWER(%2))
+    ";
+    $dataProcessorIdParams[1] = array($entity, 'String');
+    $dataProcessorIdParams[2] = array($action, 'String');
+    $dao = \CRM_Core_DAO::executeQuery($dataProcessorIdSql, $dataProcessorIdParams);
+    if (!$dao->fetch()) {
+      throw new \API_Exception("Could not find a data processor");
     }
-    $actions[] = 'getfields';
-    $actions[] = 'getoptions';
-
-    return $actions;
+    if (strtolower($dao->api_count_action) == $action) {
+      return TRUE;
+    }
+    return FALSE;
   }
 
 

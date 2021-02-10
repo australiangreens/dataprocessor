@@ -10,8 +10,11 @@ use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\DataFlowDescription;
 use Civi\DataProcessor\DataFlow\MultipleDataFlows\SimpleJoin;
 use Civi\DataProcessor\DataFlow\CombinedDataFlow\SubqueryDataFlow;
+use Civi\DataProcessor\DataFlow\SqlDataFlow\SimpleWhereClause;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
+use Civi\DataProcessor\DataSpecification\CustomFieldSpecification;
 use Civi\DataProcessor\DataSpecification\DataSpecification;
+use Civi\DataProcessor\DataSpecification\FieldSpecification;
 use Civi\DataProcessor\Source\AbstractCivicrmEntitySource;
 use Civi\DataProcessor\DataSpecification\Utils as DataSpecificationUtils;
 
@@ -112,11 +115,11 @@ class CaseSource extends AbstractCivicrmEntitySource {
     $caseContactDataDescription = new DataFlowDescription($this->caseContactDataFlow, $join);
 
     // Create the subquery data flow
-    $entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->getTable(), $this->getSourceName());
-    $entityDataFlow->addSourceDataFlow($caseDataDescription);
-    $entityDataFlow->addSourceDataFlow($caseContactDataDescription);
+    $this->entityDataFlow = new SubqueryDataFlow($this->getSourceName(), $this->caseDataFlow->getTable(), $this->caseDataFlow->getTableAlias());
+    $this->entityDataFlow->addSourceDataFlow($caseDataDescription);
+    $this->entityDataFlow->addSourceDataFlow($caseContactDataDescription);
 
-    return $entityDataFlow;
+    return $this->entityDataFlow;
   }
 
   /**
@@ -133,7 +136,7 @@ class CaseSource extends AbstractCivicrmEntitySource {
       return $this->primaryDataFlow;
     }
     foreach($this->additionalDataFlowDescriptions as $additionalDataFlowDescription) {
-      if ($additionalDataFlowDescription->getDataFlow()->getTable() == $this->getTable()) {
+      if ($additionalDataFlowDescription->getDataFlow() instanceof SqlTableDataFlow && $additionalDataFlowDescription->getDataFlow()->getTable() == $this->getTable()) {
         return $additionalDataFlowDescription->getDataFlow();
       }
     }
@@ -143,6 +146,72 @@ class CaseSource extends AbstractCivicrmEntitySource {
     $additionalDataFlowDescription = new DataFlowDescription($entityDataFlow,$join);
     $this->additionalDataFlowDescriptions[] = $additionalDataFlowDescription;
     return $additionalDataFlowDescription->getDataFlow();
+  }
+
+
+  /**
+   * Adds an inidvidual filter to the data source
+   *
+   * @param $filter_field_alias
+   * @param $op
+   * @param $values
+   *
+   * @throws \Exception
+   */
+  protected function addFilter($filter_field_alias, $op, $values) {
+    $spec = null;
+    if ($this->getAvailableFields()->doesAliasExists($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByAlias($filter_field_alias);
+    } elseif ($this->getAvailableFields()->doesFieldExist($filter_field_alias)) {
+      $spec = $this->getAvailableFields()->getFieldSpecificationByName($filter_field_alias);
+    }
+
+    if ($spec) {
+      if ($spec instanceof CustomFieldSpecification) {
+        $customGroupDataFlow = $this->ensureCustomGroup($spec->customGroupTableName, $spec->customGroupName);
+        $customGroupTableAlias = $customGroupDataFlow->getTableAlias();
+        $customGroupDataFlow->addWhereClause(
+          new SimpleWhereClause($customGroupTableAlias, $spec->customFieldColumnName, $op, $values, $spec->type, TRUE)
+        );
+      } else {
+        $this->ensureEntity();
+        if (stripos($spec->name, 'case_contact_') === 0) {
+          $name = str_replace('case_contact_', '', $spec->name);
+          $this->caseContactDataFlow->addWhereClause(new SimpleWhereClause($this->caseContactDataFlow->getTableAlias(), $name, $op, $values, $spec->type, FALSE));
+        } else {
+          $this->caseDataFlow->addWhereClause(new SimpleWhereClause($this->caseDataFlow->getTableAlias(), $spec->name, $op, $values, $spec->type, TRUE));
+        }
+        $this->addFilterToAggregationDataFlow($spec, $op, $values);
+      }
+    }
+  }
+
+  public function ensureField(FieldSpecification $field) {
+    if (stripos($field->name, 'case_contact_') === 0) {
+      $this->ensureEntity();
+      $field->name = str_replace('case_contact_', '', $field->name);
+      return $this->caseContactDataFlow;
+    }
+    if ($this->caseContactDataFlow->getDataSpecification()->doesFieldExist($field->name)) {
+      return $this->caseContactDataFlow;
+    }
+
+    return parent::ensureField($field);
+  }
+
+  /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field) {
+    if (stripos($field->name, 'case_contact_') === 0) {
+      $this->ensureEntity();
+      return $this->entityDataFlow;
+    }
+    return parent::ensureFieldForJoin($field);
   }
 
   /**

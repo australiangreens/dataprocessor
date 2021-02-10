@@ -74,24 +74,7 @@ class RelationshipsFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
-    $this->contactIdSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->contactIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['field']);
-    if (!$this->contactIdField) {
-      $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    }
-    if (!$this->contactIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->contactIdSource->ensureFieldInSource($this->contactIdField);
-
+    list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['field'], $configuration['datasource'], $alias);
     $this->outputFieldSpecification = new FieldSpecification($this->contactIdField->name, 'String', $title, null, $alias);
 
     if (isset($configuration['relationship_types']) && is_array($configuration['relationship_types'])) {
@@ -135,50 +118,48 @@ class RelationshipsFieldOutputHandler extends AbstractFieldOutputHandler {
     if ($this->includeDeceased) {
       $isDeceasedCond = "";
     }
-    $sql['a_b'] = "SELECT c.id, c.display_name, t.label_a_b as label, r.relationship_type_id, c.contact_type, c.contact_sub_type
+
+    $sqlStatements = [];
+
+    $sql['a_b'] = "SELECT c.id, c.display_name, c.birth_date, t.label_a_b as label, r.relationship_type_id, c.contact_type, c.contact_sub_type, 'order' as `order`
             FROM civicrm_contact c
             INNER JOIN civicrm_relationship r ON r.contact_id_b = c.id
             INNER JOIN civicrm_relationship_type t on r.relationship_type_id = t.id
             WHERE c.is_deleted = 0 {$isDeceasedCond} AND r.is_active = 1 AND r.contact_id_a = %1";
-    $sql['b_a'] = "SELECT c.id, c.display_name, t.label_b_a as label, r.relationship_type_id, c.contact_type, c.contact_sub_type
+    $sql['b_a'] = "SELECT c.id, c.display_name, c.birth_date, t.label_b_a as label, r.relationship_type_id, c.contact_type, c.contact_sub_type, 'order' as `order`
             FROM civicrm_contact c
             INNER JOIN civicrm_relationship r ON r.contact_id_a = c.id
             INNER JOIN civicrm_relationship_type t on r.relationship_type_id = t.id
             WHERE c.is_deleted = 0 {$isDeceasedCond} AND r.is_active = 1 AND r.contact_id_b = %1";
+
     if (count($this->relationship_type_ids)) {
-      $relationShipTypeIdsA_B = array();
-      $relationShipTypeIdsB_A = array();
+      $order = 1;
       foreach($this->relationship_type_ids as $rel_type) {
         if ($rel_type['dir'] == 'a_b') {
-          $relationShipTypeIdsA_B[] = $rel_type['id'];
+          $statement = $sql['a_b'] . " AND t.id = ".\CRM_Utils_Type::escape($rel_type['id'], 'Integer');
         } else {
-          $relationShipTypeIdsB_A[] = $rel_type['id'];
+          $statement = $sql['b_a'] . " AND t.id = ".\CRM_Utils_Type::escape($rel_type['id'], 'Integer');
         }
-      }
-      if (count($relationShipTypeIdsA_B)) {
-        $sql['a_b'] .= " AND t.id IN (" . implode(", ", $relationShipTypeIdsA_B) . ") ";
-      } else {
-        unset($sql['a_b']);
-      }
-      if (count($relationShipTypeIdsB_A)) {
-        $sql['b_a'] .= " AND t.id IN (" . implode(", ", $relationShipTypeIdsB_A) . ") ";
-      } else {
-        unset($sql['b_a']);
+        $sqlStatements[] = str_replace("'order' as `order`", "'{$order}' as `order`", $statement);
+        $order ++;
       }
     }
     $formattedValues = [];
     $htmlFormattedValues = [];
-    if (count($sql)) {
-      $sql = implode(" UNION ", $sql);
+    if (count($sqlStatements)) {
+      $sql = implode(" UNION ", $sqlStatements);
       switch ($this->sort) {
         case 'birthdate':
-          $sql .= " ORDER BY c.birth_date ASC, display_name ASC";
+          $sql .= " ORDER BY `birth_date` ASC, `display_name` ASC";
           break;
         case 'name':
-          $sql .= " ORDER BY display_name ASC";
+          $sql .= " ORDER BY `display_name` ASC";
+          break;
+        case 'relationship-birthdate-name':
+          $sql .= " ORDER BY `order` ASC, `birth_date` ASC, `display_name` ASC";
           break;
         default:
-          $sql .= " ORDER BY label ASC, display_name ASC";
+          $sql .= " ORDER BY `order` ASC, `display_name` ASC";
           break;
       }
       $sqlParams[1] = [$contactId, 'Integer'];
@@ -224,27 +205,45 @@ class RelationshipsFieldOutputHandler extends AbstractFieldOutputHandler {
    */
   public function buildConfigurationForm(\CRM_Core_Form $form, $field=array()) {
     $fieldSelect = \CRM_Dataprocessor_Utils_DataSourceFields::getAvailableFieldsInDataSources($field['data_processor_id']);
-    $relationshipTypeApi = civicrm_api3('RelationshipType', 'get', array('is_active' => 1, 'options' => array('limit' => 0)));
-    $relationshipTypes = array();
-    foreach($relationshipTypeApi['values'] as $relationship_type) {
-      $relationshipTypes['a_b_'.$relationship_type['name_a_b']] = $relationship_type['label_a_b'];
-      $relationshipTypes['b_a_'.$relationship_type['name_b_a']] = $relationship_type['label_b_a'];
+    $relationshipTypeApi = civicrm_api3('RelationshipType', 'get', [
+      'is_active' => 1,
+      'options' => ['limit' => 0]
+    ]);
+    $relationshipTypes = [];
+
+    foreach ($relationshipTypeApi['values'] as $relationship_type) {
+      $relationshipTypes['a_b_' . $relationship_type['name_a_b']] = $relationship_type['label_a_b'];
+      $relationshipTypes['b_a_' . $relationship_type['name_b_a']] = $relationship_type['label_b_a'];
     }
-    $sort['label-name'] = E::ts('Relationship Type, Display Name');
-    $sort['birthdate'] = E::ts('Birth date, Display Name');
-    $sort['name'] = E::ts('Display Name');
+    if (isset($field['configuration']) && isset($field['configuration']['relationship_types'])) {
+      foreach (array_reverse($field['configuration']['relationship_types']) as $rel_type) {
+        $label = $relationshipTypes[$rel_type];
+        unset($relationshipTypes[$rel_type]);
+        $relationshipTypes = array_merge([$rel_type => $label], $relationshipTypes);
+      }
+    }
+
+    $sort['label-name'] = E::ts('Relationship type, display name');
+    $sort['relationship-birthdate-name'] = E::ts('Relationship type, date of birth, display name');
+    $sort['birthdate'] = E::ts('date of birth, display name');
+    $sort['name'] = E::ts('display name');
 
     $form->add('select', 'contact_id_field', E::ts('Contact ID Field'), $fieldSelect, true, array(
       'style' => 'min-width:250px',
       'class' => 'crm-select2 huge data-processor-field-for-name',
       'placeholder' => E::ts('- select -'),
     ));
-    $form->add('select', 'relationship_types', E::ts('Restrict to relationship'), $relationshipTypes, false, array(
-      'style' => 'min-width:250px',
-      'class' => 'crm-select2 huge',
-      'placeholder' => E::ts('- Show all roles -'),
-      'multiple' => true,
-    ));
+
+    $relationshipTypes = array_flip($relationshipTypes);
+    $form->addCheckBox('relationship_type_checkboxes',  E::ts('Restrict to relationship'), $relationshipTypes);
+    $form->assign('relationship_types', $relationshipTypes);
+    $form->add('hidden', 'sorted_relationship_types', null, ['id' => 'sorted_relationship_types']);
+    // Backwords compatibilty
+    $form->assign('useSortIcon', false);
+    if (version_compare(\CRM_Utils_System::version(), '5.15', '<')) {
+      $form->assign('useSortIcon', true);
+    }
+
     $form->add('checkbox', 'show_label', E::ts('Show relationship type'), false, false);
     $form->add('checkbox', 'include_deceased', E::ts('Include deceased'), false, false);
     $form->add('text', 'separator', E::ts('Separator'), true);
@@ -256,10 +255,13 @@ class RelationshipsFieldOutputHandler extends AbstractFieldOutputHandler {
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['contact_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['relationship_types'])) {
-        $defaults['relationship_types'] = $configuration['relationship_types'];
+        $defaults['relationship_type_checkboxes'] = array();
+        foreach($configuration['relationship_types'] as $rel_type) {
+          $defaults['relationship_type_checkboxes'][$rel_type] = 1;
+        }
       }
       if (isset($configuration['show_label'])) {
         $defaults['show_label'] = $configuration['show_label'];
@@ -306,11 +308,23 @@ class RelationshipsFieldOutputHandler extends AbstractFieldOutputHandler {
     list($datasource, $field) = explode('::', $submittedValues['contact_id_field'], 2);
     $configuration['field'] = $field;
     $configuration['datasource'] = $datasource;
-    $configuration['relationship_types'] = isset($submittedValues['relationship_types']) ? $submittedValues['relationship_types'] : array();
     $configuration['show_label'] = isset($submittedValues['show_label']) ? $submittedValues['show_label'] : 0;
     $configuration['separator'] = $submittedValues['separator'];
     $configuration['sort'] = $submittedValues['sort'];
-    $configuration['include_deceased'] = $submittedValues['include_deceased'];
+    $configuration['include_deceased'] = isset($submittedValues['include_deceased']) ? $submittedValues['include_deceased'] : null;
+
+    if (!empty($submittedValues['sorted_relationship_types'])) {
+      $sortedRelationshipTypes = explode(',', $submittedValues['sorted_relationship_types']);
+      $configuration['relationship_types'] = [];
+      foreach ($sortedRelationshipTypes as $key => $val) {
+        if ($val && isset($submittedValues['relationship_type_checkboxes'][$val])) {
+          $configuration['relationship_types'][] = $val;
+        }
+      }
+    } elseif (isset($submittedValues['relationship_type_checkboxes'])) {
+      $configuration['relationship_types'] = array_keys($submittedValues['relationship_type_checkboxes']);
+    }
+
     return $configuration;
   }
 

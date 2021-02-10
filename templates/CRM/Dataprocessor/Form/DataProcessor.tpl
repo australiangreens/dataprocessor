@@ -7,7 +7,7 @@
   {* Are you sure to delete form *}
   <h3>{ts}Delete Data Processor{/ts}</h3>
   <div class="crm-block crm-form-block crm-data-processor_label-block">
-    <div class="crm-section">{ts 1=$rule.label}Are you sure to delete data processor '%1'?{/ts}</div>
+    <div class="crm-section">{ts 1=$dataProcessor.title}Are you sure to delete data processor '%1'?{/ts}</div>
   </div>
 
 {else}
@@ -53,6 +53,23 @@
       <tr>
         <td style="width: 50%;">
           {include file="CRM/Dataprocessor/Form/DataProcessorBlocks/Sources.tpl"}
+
+          {if $data_processor_id && $sortFields && count($sortFields)}
+            <h3>{ts}Default Sort{/ts}</h3>
+            <div class="crm-block crm-form-block crm-data-processor_outputs-block">
+                <ul id="defaultsort" class="crm-checkbox-list crm-sortable-list" style="width: 100%;">
+                  {foreach from=$sortFields item="sortFieldLabel" key="sortFieldValue"}
+                    <li id="defaultsort-{$sortFieldValue}">
+                      {if $defaultSortUseIcon}
+                        <i class="crm-i fa-arrows crm-grip" style="float:left;"></i>
+                      {/if}
+                      {$form.defaultSort.$sortFieldValue.html}
+                    </li>
+                  {/foreach}
+                </ul>
+            </div>
+          {/if}
+
           {include file="CRM/Dataprocessor/Form/DataProcessorBlocks/Outputs.tpl"}
         </td>
         <td style="width: 50%;">
@@ -79,13 +96,75 @@
           });
         }
       });
+
+      function getSorting(e, ui) {
+        var params = [];
+        var y = 0;
+        var items = $("#defaultsort li");
+        if (items.length > 0) {
+          for (var y = 0; y < items.length; y++) {
+            var idState = items[y].id.split('-');
+            params[y + 1] = idState[1];
+          }
+        }
+        $('#default_sort_weight').val(params.toString());
+      }
+
+      $("#defaultsort").sortable({
+        placeholder: 'ui-state-highlight',
+        update: getSorting
+      });
     });
     {/literal}
   </script>
+
+  <style type="text/css">{literal}
+    .crm-container ul.crm-sortable-list li label::after {
+      display: block;
+      font-family: "FontAwesome";
+      content: "\f047";
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      font-size: 10px;
+      color: grey;
+    }
+
+    .crm-container ul.crm-checkbox-list.crm-sortable-list li {
+      padding: 4px 7px;
+      list-style: none;
+    }
+
+    .crm-container ul.crm-checkbox-list.crm-sortable-list li input {
+      left: 20px;
+      top: 4px;
+    }
+    {/literal}
+    {if $defaultSortUseIcon}{literal}
+    .crm-container ul.crm-checkbox-list.crm-sortable-list {
+      border: 1px solid #a5a5a5;
+      padding: 0px;
+      background-color: white;
+    }
+    .crm-container ul.crm-checkbox-list.crm-sortable-list li i {
+      margin-top: 3px;
+    }
+    {/literal}{/if}
+    </style>
 
 {/if}
 
 <div class="crm-submit-buttons">
   {include file="CRM/common/formButtons.tpl" location="bottom"}
 </div>
+
+<style type="text/css">
+  {literal}
+  .crm-container .CRM_Dataprocessor_Form_DataProcessor .crm-configure-actions .btn-slide {
+    padding-right: 15px !important;
+    text-indent: initial;
+    width: auto;
+  }
+  {/literal}
+</style>
 {/crmScope}

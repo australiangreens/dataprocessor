@@ -12,6 +12,7 @@
                 <td>{$output.type_name}</td>
                 <td style="width:60px;"></td>
                 <td class="right nowrap" style="width: 100px;">
+                  <div class="crm-configure-actions">
                         <span class="btn-slide crm-hover-button">{ts}Configure{/ts}
                         <ul class="panel">
                             <li><a class="action-item crm-hover-button" href="{crmURL p="civicrm/dataprocessor/form/output" q="reset=1&action=update&data_processor_id=`$output.data_processor_id`&id=`$output.id`"}">{ts}Edit{/ts}</a></li>
@@ -21,6 +22,7 @@
                             {/if}
                         </ul>
                         </span>
+                  </div>
                 </td>
             </tr>
         {/foreach}

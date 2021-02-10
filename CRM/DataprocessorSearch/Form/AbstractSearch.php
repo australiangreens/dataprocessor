@@ -47,6 +47,27 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   protected $currentUrl;
 
   /**
+   * The params that are sent to the query.
+   *
+   * @var array
+   */
+  protected $_queryParams;
+
+  /**
+   * The array of entity IDs from the form
+   *
+   * @var array
+   */
+  protected $entityIDs;
+
+  /**
+   * Name of action button
+   *
+   * @var string
+   */
+  protected $_searchButtonName;
+
+  /**
    * Returns the name of the ID field in the dataset.
    *
    * @return string
@@ -104,6 +125,18 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   }
 
   /**
+   * Retrieve the text for no results.
+   *
+   * @return string
+   */
+  protected function getNoResultText() {
+    if (isset($this->dataProcessorOutput['configuration']['no_result_text'])) {
+      return $this->dataProcessorOutput['configuration']['no_result_text'];
+    }
+    return E::ts('No results');
+  }
+
+  /**
    * Returns the url for view of the record action
    *
    * @param $row
@@ -135,8 +168,8 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   public function preProcess() {
     parent::preProcess();
 
-    $qfKey = CRM_Utils_Request::retrieve('qfKey', 'String', $this);
-    $urlPath = CRM_Utils_System::getUrlPath();
+    $qfKey = CRM_Utils_Request::retrieveValue('qfKey', 'String');
+    $urlPath = CRM_Utils_System::currentPath();
     $urlParams = 'force=1';
     if ($qfKey) {
       $urlParams .= "&qfKey=$qfKey";
@@ -147,8 +180,15 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
 
     if (!empty($_POST) && !$this->controller->isModal()) {
       $this->_formValues = $this->controller->exportValues($this->_name);
-    }
-    else {
+    } elseif (CRM_Utils_Request::retrieve('ssID', 'Integer')) {
+      $savedSearchDao = new CRM_Contact_DAO_SavedSearch();
+      $savedSearchDao->id = CRM_Utils_Request::retrieve('ssID', 'Integer');
+      if ($savedSearchDao->find(TRUE) && !empty($savedSearchDao->form_values)) {
+        $this->_formValues = unserialize($savedSearchDao->form_values);
+        $this->_submitValues = $this->_formValues;
+        $this->controller->set('formValue', $this->_formValues);
+      }
+    } else {
       $this->_formValues = $this->getSubmitValues();
     }
 
@@ -158,10 +198,10 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $this->defaults = [];
     // we allow the controller to set force/reset externally, useful when we are being
     // driven by the wizard framework
-    $this->_debug = CRM_Utils_Request::retrieve('debug', 'Boolean', $this, FALSE);
-    $this->_reset = CRM_Utils_Request::retrieve('reset', 'Boolean', CRM_Core_DAO::$_nullObject);
-    $this->_force = CRM_Utils_Request::retrieve('force', 'Boolean', $this, FALSE);
-    $this->_context = CRM_Utils_Request::retrieve('context', 'String', $this, FALSE, 'search');
+    $this->_debug = $this->isDebug();
+    $this->_reset = CRM_Utils_Request::retrieveValue('reset', 'Boolean');
+    $this->_force = CRM_Utils_Request::retrieveValue('force', 'Boolean');
+    $this->_context = CRM_Utils_Request::retrieveValue('context', 'String', 'search');
     $this->set('context', $this->_context);
     $this->assign("context", $this->_context);
     $this->assign('debug', $this->_debug);
@@ -174,13 +214,13 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
       }
       $this->assign_by_ref('sort', $this->sort);
 
-      $export_id = CRM_Utils_Request::retrieve('export_id', 'Positive');
+      $export_id = CRM_Utils_Request::retrieveValue('export_id', 'Positive');
       if ($export_id) {
         $this->runExport($export_id);
       }
 
-      $limit = CRM_Utils_Request::retrieve('crmRowCount', 'Positive', $this, FALSE, $this->getDefaultLimit());
-      $pageId = CRM_Utils_Request::retrieve('crmPID', 'Positive', $this, FALSE, 1);
+      $limit = CRM_Utils_Request::retrieveValue('crmRowCount', 'Positive', $this->getDefaultLimit());
+      $pageId = CRM_Utils_Request::retrieveValue('crmPID', 'Positive', 1);
       $this->buildRows($pageId, $limit);
       $this->addExportOutputs();
     }
@@ -220,7 +260,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     // Set the sort
     $sortDirection = 'ASC';
     $sortFieldName = null;
-    if (!empty($this->sort->_vars[$this->sort->getCurrentSortID()])) {
+    if ($this->sort->getCurrentSortID() > 1) {
       $sortField = $this->sort->_vars[$this->sort->getCurrentSortID()];
       if ($this->sort->getCurrentSortDirection() == CRM_Utils_Sort::DESCENDING) {
         $sortDirection = 'DESC';
@@ -249,6 +289,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $rows = [];
     $ids = array();
     $prevnextData = array();
+    $showLink = false;
 
     $id_field = $this->getIdFieldName();
     $this->assign('id_field', $id_field);
@@ -259,26 +300,27 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     self::applyFilters($this->dataProcessorClass, $this->_formValues);
 
     // Set the sort
-    $sortDirection = 'ASC';
-    if (!empty($this->sort->_vars[$this->sort->getCurrentSortID()])) {
+    if ($this->sort->getCurrentSortID() > 1) {
+      $sortDirection = 'ASC';
       $sortField = $this->sort->_vars[$this->sort->getCurrentSortID()];
       if ($this->sort->getCurrentSortDirection() == CRM_Utils_Sort::DESCENDING) {
         $sortDirection = 'DESC';
       }
+      $this->dataProcessorClass->getDataFlow()->resetSort();
       $this->dataProcessorClass->getDataFlow()->addSort($sortField['name'], $sortDirection);
     }
 
     $this->alterDataProcessor($this->dataProcessorClass);
 
-    $pagerParams = $this->getPagerParams();
-    $pagerParams['total'] = $this->dataProcessorClass->getDataFlow()->recordCount();
-    $pagerParams['pageID'] = $pageId;
-    $this->pager = new CRM_Utils_Pager($pagerParams);
-    $this->assign('pager', $this->pager);
-    $this->controller->set('rowCount', $this->dataProcessorClass->getDataFlow()->recordCount());
-
-    $i=0;
     try {
+      $pagerParams = $this->getPagerParams();
+      $pagerParams['total'] = $this->dataProcessorClass->getDataFlow()->recordCount();
+      $pagerParams['pageID'] = $pageId;
+      $this->pager = new CRM_Utils_Pager($pagerParams);
+      $this->assign('pager', $this->pager);
+      $this->controller->set('rowCount', $this->dataProcessorClass->getDataFlow()->recordCount());
+
+      $i=0;
       while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
         $i ++;
         $row = array();
@@ -303,6 +345,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
         if ($link) {
           $row['url'] = $link;
           $row['link_text'] = $this->linkText($row);
+          $showLink = true;
         }
 
         if (isset($row['checkbox'])) {
@@ -324,17 +367,31 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
       }
     } catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
       // Do nothing
+    } catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      \CRM_Core_Session::setStatus(E::ts('Error in data processor'), E::ts('Error'), 'error');
     }
 
     $this->alterRows($rows, $ids);
 
     $this->addElement('checkbox', 'toggleSelect', NULL, NULL, ['class' => 'select-rows']);
     $this->assign('rows', $rows);
+    $this->assign('no_result_text', $this->getNoResultText());
+    $this->assign('showLink', $showLink);
     $this->assign('debug_info', $this->dataProcessorClass->getDataFlow()->getDebugInformation());
+
     if ($this->usePrevNextCache()) {
       $cacheKey = "civicrm search {$this->controller->_key}";
       CRM_DataprocessorSearch_Utils_PrevNextCache::fillWithArray($cacheKey, $prevnextData);
+    } else {
+      $this->retrieveEntityIds();
     }
+  }
+
+  /**
+   * Function to retrieve the entity ids
+   */
+  protected function retrieveEntityIds() {
+    // Could be overriden in child classes.
   }
 
   /**
@@ -349,7 +406,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $sortFields = array();
     $hiddenFields = $this->getHiddenFields();
     $columnHeaders = array();
-    $sortColumnNr = 1;
+    $sortColumnNr = 2; // Start at two as 1 is the default sort.
     foreach($this->dataProcessorClass->getDataFlow()->getOutputFieldHandlers() as $outputFieldHandler) {
       $field = $outputFieldHandler->getOutputFieldSpecification();
       if (!in_array($field->alias, $hiddenFields)) {
@@ -406,8 +463,8 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     $this->assign('other_outputs', $otherOutputs);
   }
 
-  public function buildQuickform() {
-    parent::buildQuickform();
+  public function buildQuickForm() {
+    parent::buildQuickForm();
 
     $this->buildCriteriaForm();
 
@@ -432,7 +489,6 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
   }
 
   public function postProcess() {
-    $values = $this->exportValues();
     if ($this->_done) {
       return;
     }
@@ -441,7 +497,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     //for prev/next pagination
     $crmPID = CRM_Utils_Request::retrieve('crmPID', 'Integer');
 
-    if (array_key_exists($this->_searchButtonName, $_POST) ||
+    if (($this->_searchButtonName && array_key_exists($this->_searchButtonName, $_POST)) ||
       ($this->_force && !$crmPID)
     ) {
       //reset the cache table for new search
@@ -454,7 +510,7 @@ abstract class CRM_DataprocessorSearch_Form_AbstractSearch extends CRM_Dataproce
     }
     $this->set('formValues', $this->_formValues);
     $buttonName = $this->controller->getButtonName();
-    if ($buttonName == $this->_actionButtonName) {
+    if ($buttonName && $buttonName == $this->_actionButtonName) {
       // check actionName and if next, then do not repeat a search, since we are going to the next page
       // hack, make sure we reset the task values
       $formName = $this->controller->getStateMachine()->getTaskFormName();

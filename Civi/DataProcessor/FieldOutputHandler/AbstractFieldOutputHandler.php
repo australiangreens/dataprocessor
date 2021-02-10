@@ -7,7 +7,11 @@
 namespace Civi\DataProcessor\FieldOutputHandler;
 
 use Civi\DataProcessor\DataSpecification\FieldSpecification;
+use Civi\DataProcessor\Exception\DataSourceNotFoundException;
+use Civi\DataProcessor\Exception\FieldNotFoundException;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
+
+use CRM_Dataprocessor_ExtensionUtil as E;
 
 abstract class AbstractFieldOutputHandler {
 
@@ -69,6 +73,44 @@ abstract class AbstractFieldOutputHandler {
     // Override this in child classes.
     //$this->outputFieldSpecification->title = $title;
     //$this->outputFieldSpecification->alias = $alias;
+  }
+
+  /**
+   * Initialize a field.
+   * Returns the datasource and the field specification
+   * The new alias is set as alias in the field.
+   *
+   * @param $fieldAlias
+   * @param $datasourceName
+   * @param $newAlias
+   *
+   * @return array
+   * @throws \Civi\DataProcessor\Exception\DataSourceNotFoundException
+   * @throws \Civi\DataProcessor\Exception\FieldNotFoundException
+   */
+  protected function initializeField($fieldAlias, $datasourceName, $newAlias='') {
+    $dataSource = $this->dataProcessor->getDataSourceByName($datasourceName);
+    if (!$dataSource) {
+      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$newAlias, 2=>$datasourceName)));
+    }
+    $inputFieldSpec = $dataSource->getAvailableFields()->getFieldSpecificationByAlias($fieldAlias);
+    if (!$inputFieldSpec) {
+      $inputFieldSpec = $dataSource->getAvailableFields()->getFieldSpecificationByName($fieldAlias);
+    }
+    if (!$inputFieldSpec) {
+      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
+        1 => $newAlias,
+        2 => $fieldAlias,
+        3 => $datasourceName
+      )));
+    }
+
+    $inputFieldSpec = clone $inputFieldSpec;
+    if ($newAlias) {
+      $inputFieldSpec->alias = $newAlias;
+    }
+    $dataSource->ensureFieldInSource($inputFieldSpec);
+    return [$dataSource, $inputFieldSpec];
   }
 
   /**

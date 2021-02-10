@@ -46,7 +46,7 @@ class CRM_Dataprocessor_Form_Source extends CRM_Core_Form {
     if ($this->snippet) {
       $this->assign('suppressForm', TRUE);
       $this->controller->_generateQFKey = FALSE;
-      $block = CRM_Utils_Request::retrieve('block', 'String', $this, FALSE, 'configuration');
+      $block = CRM_Utils_Request::retrieveValue('block', 'String', 'configuration');
       $this->assign('block', $block);
     }
 
@@ -88,11 +88,15 @@ class CRM_Dataprocessor_Form_Source extends CRM_Core_Form {
     $type = CRM_Utils_Request::retrieve('type', 'String');
     if ($type) {
       $this->source['type'] = $type;
+      if ($type==='sqltable') {
+        $table_name = CRM_Utils_Request::retrieve('table_name', 'String');
+        $this->source['configuration']['table_name'] = $table_name;
+      }
       $this->sourceClass = CRM_Dataprocessor_BAO_DataProcessorSource::sourceToSourceClass($this->source);
       $this->assign('has_configuration', $this->sourceClass->hasConfiguration());
-      if ($this->sourceClass && !$this->id) {
+      if ($this->sourceClass && !$this->id && !$table_name) {
         $this->source['configuration'] = $this->sourceClass->getDefaultConfiguration();
-      }
+      }   
     }
 
     $join_type = CRM_Utils_Request::retrieve('join_type', 'String');

@@ -66,23 +66,8 @@ class GroupsOfContactFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->outputFieldSpecification = new FieldSpecification($alias, 'String', $title, null, $alias);
-    $this->contactIdSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->contactIdSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->contactIdField = $this->contactIdSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    if (!$this->contactIdField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->contactIdSource->ensureFieldInSource($this->contactIdField);
-
+    list($this->contactIdSource, $this->contactIdField) = $this->initializeField($configuration['field'], $configuration['datasource'], $alias);
     $this->outputFieldSpecification = new FieldSpecification($this->contactIdField->name, 'String', $title, null, $alias);
-
     if (isset($configuration['parent_group']) && $configuration['parent_group']) {
       $this->parent_group_id = civicrm_api3('Group', 'getvalue', array('return' => 'id', 'name' => $configuration['parent_group']));
     }
@@ -99,7 +84,7 @@ class GroupsOfContactFieldOutputHandler extends AbstractFieldOutputHandler {
   public function formatField($rawRecord, $formattedRecord) {
     $contactId = $rawRecord[$this->contactIdField->alias];
     $sql = "SELECT g.title, g.id
-            FROM civicrm_group g 
+            FROM civicrm_group g
             INNER JOIN civicrm_group_contact gc ON gc.group_id = g.id
             WHERE gc.status = 'Added' AND gc.contact_id = %1";
     if ($this->parent_group_id) {
@@ -163,7 +148,7 @@ class GroupsOfContactFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['contact_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['parent_group'])) {
         $defaults['parent_group'] = $configuration['parent_group'];

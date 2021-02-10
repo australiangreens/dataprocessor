@@ -36,7 +36,7 @@ class ContactWithTagFilter extends AbstractFieldFilterHandler {
     $dataFlow  = $this->dataSource->ensureField($this->inputFieldSpecification);
     $tag_ids = $filter['value'];
     if (!is_array($tag_ids)) {
-      $tag_ids = array($tag_ids);
+      $tag_ids = explode(',', $tag_ids);
     }
     $tagTableAlias = 'civicrm_entity_tag_'.$this->inputFieldSpecification->alias;
     $tagFilters = array(
@@ -45,13 +45,14 @@ class ContactWithTagFilter extends AbstractFieldFilterHandler {
     );
 
     if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
+      $tableAlias = $this->getTableAlias($dataFlow);
       $this->whereClause = new SqlDataFlow\InTableWhereClause(
         'entity_id',
         'civicrm_entity_tag',
         $tagTableAlias,
         $tagFilters,
-        $dataFlow->getName(),
-        $this->inputFieldSpecification->name,
+        $tableAlias,
+        $this->inputFieldSpecification->getName(),
         $filter['op']
       );
 
@@ -87,7 +88,7 @@ class ContactWithTagFilter extends AbstractFieldFilterHandler {
       $configuration = $filter['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['contact_id_field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['contact_id_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       $form->setDefaults($defaults);
     }

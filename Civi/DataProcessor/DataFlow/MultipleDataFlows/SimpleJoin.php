@@ -10,6 +10,7 @@ use Civi\DataProcessor\DataFlow\AbstractDataFlow;
 use Civi\DataProcessor\DataFlow\CombinedDataFlow\CombinedSqlDataFlow;
 use Civi\DataProcessor\DataFlow\SqlDataFlow;
 use Civi\DataProcessor\DataFlow\SqlTableDataFlow;
+use Civi\DataProcessor\DataSpecification\FieldExistsException;
 use Civi\DataProcessor\ProcessorType\AbstractProcessorType;
 use Civi\DataProcessor\Source\SourceInterface;
 
@@ -149,13 +150,17 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
       'placeholder' => E::ts('- select -'),
     ));
 
-    // Backwords compatability
+    // Backwards compatibility
     if (isset($joinConfiguration['right_prefix']) && $joinConfiguration['right_prefix'] == $joinFromSource->getSourceName()) {
       $joinConfigurationBackwardsCompatibility = $joinConfiguration;
       $joinConfiguration['left_prefix'] = '';
       $joinConfiguration['left_field'] = $joinConfigurationBackwardsCompatibility['right_field'];
+      $joinConfiguration['left_field'] = $this->correctFieldName($joinConfiguration['left_field'], $joinFromSource);
       $joinConfiguration['right_prefix'] = $joinConfigurationBackwardsCompatibility['left_prefix'];
       $joinConfiguration['right_field'] = $joinConfigurationBackwardsCompatibility['left_field'];
+      if (!isset($rightFields[$joinConfiguration['right_prefix']."::".$joinConfiguration['right_field']])) {
+        $joinConfiguration['right_field'] = $this->correctFieldName($joinConfiguration['right_field'], $joinToSource);
+      }
     }
 
     $defaults = array();
@@ -188,7 +193,7 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
    */
   public function processConfiguration($submittedValues, SourceInterface $joinFromSource) {
     $left_prefix = $joinFromSource->getSourceName();
-    $left_field = $this->ocrrectFieldName($submittedValues['left_field'], $joinFromSource);
+    $left_field = $this->correctFieldName($submittedValues['left_field'], $joinFromSource);
     list($right_prefix, $right_field) = explode("::",$submittedValues['right_field'], 2);
 
     $configuration = array(
@@ -215,7 +220,7 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
    * @param \Civi\DataProcessor\Source\SourceInterface $joinFromSource
    * @return String
    */
-  private function ocrrectFieldName($fieldAlias, SourceInterface $joinFromSource) {
+  private function correctFieldName($fieldAlias, SourceInterface $joinFromSource) {
     try {
       $fields = \CRM_Dataprocessor_Utils_DataSourceFields::getAvailableFieldsInDataSource($joinFromSource, '', '');
       if (isset($fields[$fieldAlias])) {
@@ -228,7 +233,7 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
       $fieldKeys = array_keys($fields);
       $fieldsWithoutPrefixKeys = array_keys($fieldsWithoutPrefix);
       $key = array_search($fieldAlias, $fieldsWithoutPrefixKeys);
-      if (isset($fieldKeys[$key])) {
+      if ($key!== false && isset($fieldKeys[$key])) {
         return $fieldKeys[$key];
       }
     } catch (\Exception $e) {
@@ -304,7 +309,7 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
           $this->leftFieldSpec = $this->left_source->getAvailableFields()->getFieldSpecificationByName($this->left_field);
         }
         if ($this->leftFieldSpec) {
-          $leftTable = $this->left_source->ensureField($this->leftFieldSpec);
+          $leftTable = $this->left_source->ensureFieldForJoin($this->leftFieldSpec);
           if ($leftTable && $leftTable instanceof SqlTableDataFlow) {
             $this->left_table = $leftTable->getTableAlias();
           }
@@ -321,7 +326,7 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
           $this->rightFieldSpec = $this->right_source->getAvailableFields()->getFieldSpecificationByName($this->right_field);
         }
         if ($this->rightFieldSpec) {
-          $rightTable = $this->right_source->ensureField($this->rightFieldSpec);
+          $rightTable = $this->right_source->ensureFieldForJoin($this->rightFieldSpec);
           if ($rightTable && $rightTable instanceof SqlTableDataFlow) {
             $this->right_table = $rightTable->getTableAlias();
           }
@@ -348,8 +353,8 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
       foreach ($left_record_set as $left_index => $left_record) {
         $is_record_present_in_right_set = FALSE;
         foreach ($right_record_set as $right_index => $right_record) {
-          if (isset($left_record[$this->left_field_alias]) && isset($right_record[$this->right_field_alias])) {
-            if ($left_record[$this->left_field_alias] == $right_record[$this->right_field_alias]) {
+          if (isset($left_record[$this->right_field_alias]) && isset($right_record[$this->left_field_alias])) {
+            if ($left_record[$this->right_field_alias] == $right_record[$this->left_field_alias]) {
               $joined_record_set[] = array_merge($left_record, $right_record);
               $is_record_present_in_right_set = TRUE;
             }
@@ -363,8 +368,8 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
       foreach ($right_record_set as $right_index => $right_record) {
         $is_record_present_in_left_set = FALSE;
         foreach ($left_record_set as $left_index => $left_record) {
-          if (isset($left_record[$this->left_field_alias]) && isset($right_record[$this->right_field_alias])) {
-            if ($left_record[$this->left_field_alias] == $right_record[$this->right_field_alias]) {
+          if (isset($left_record[$this->right_field_alias]) && isset($right_record[$this->left_field_alias])) {
+            if ($left_record[$this->right_field_alias] == $right_record[$this->left_field_alias]) {
               $joined_record_set[] = array_merge($left_record, $right_record);
               $is_record_present_in_left_set = TRUE;
             }
@@ -395,14 +400,15 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
       $table = $rightDataFlow->getTableAlias();
       $this->rightClause = new SqlDataFlow\OrClause();
       foreach ($left_record_set as $left_record) {
-        if (isset($left_record[$this->left_field_alias])) {
-          $value = $left_record[$this->left_field_alias];
-          $this->rightClause->addWhereClause(new SqlDataFlow\SimpleWhereClause($table, $this->right_field, '=', $value));
+        if (isset($left_record[$this->right_field_alias])) {
+          $value = $left_record[$this->right_field_alias];
+          $this->rightClause->addWhereClause(new SqlDataFlow\SimpleWhereClause($table, $this->leftFieldSpec->name, '=', $value));
 
           // Make sure the join field is also available in the select statement of the query.
-          if (!$rightDataFlow->getDataSpecification()->doesFieldExist($this->right_field_alias)) {
-            $rightDataFlow->getDataSpecification()
-              ->addFieldSpecification($this->right_field_alias, $this->rightFieldSpec);
+          try {
+            $rightDataFlow->getDataSpecification()->addFieldSpecification($this->left_field_alias, $this->leftFieldSpec);
+          } catch (FieldExistsException $e) {
+            // Do nothing.
           }
         }
       }
@@ -443,6 +449,38 @@ class SimpleJoin implements JoinInterface, SqlJoinInterface {
     }
 
     return "{$this->type} JOIN {$tablePart} {$joinClause} ";
+  }
+
+  public function getLeftTable() {
+    return $this->left_table;
+  }
+
+  public function getLeftPrefix() {
+    return $this->left_prefix;
+  }
+
+  public function setLeftTable($table) {
+    $this->left_table = $table;
+  }
+
+  public function setLeftPrefix($prefix) {
+    $this->left_prefix = $prefix;
+  }
+
+  public function getRightTable() {
+    return $this->right_table;
+  }
+
+  public function getRightPrefix() {
+    return $this->right_prefix;
+  }
+
+  public function setRightTable($table) {
+    $this->right_table = $table;
+  }
+
+  public function setRightPrefix($prefix) {
+    $this->right_prefix = $prefix;
   }
 
 

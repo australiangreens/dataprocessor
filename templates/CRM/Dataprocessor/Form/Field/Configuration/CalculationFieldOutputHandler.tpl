@@ -1,9 +1,12 @@
 {crmScope extensionKey='dataprocessor'}
+  {foreach from=$fieldSelects item=fieldKey}
     <div class="crm-section">
-        <div class="label">{$form.fields.label}</div>
-        <div class="content">{$form.fields.html}</div>
-        <div class="clear"></div>
+      <div class="label">{$form.$fieldKey.label}</div>
+      <div class="content">{$form.$fieldKey.html}</div>
+      <div class="clear"></div>
     </div>
+  {/foreach}
+
 
     <div class="crm-section">
         <div class="label">{$form.number_of_decimals.label}</div>

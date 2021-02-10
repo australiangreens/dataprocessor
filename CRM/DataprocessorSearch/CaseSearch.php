@@ -27,6 +27,7 @@ class CRM_DataprocessorSearch_CaseSearch implements UIFormOutputInterface {
    * @param array $filter
    */
   public function buildConfigurationForm(\CRM_Core_Form $form, $output=array()) {
+    \Civi\DataProcessor\Output\UIOutputHelper::fixBackwardsCompatibility($output);
     $navigation = CRM_Dataprocessor_Utils_Navigation::singleton();
     $dataProcessor = civicrm_api3('DataProcessor', 'getsingle', array('id' => $output['data_processor_id']));
     $dataProcessorClass = \CRM_Dataprocessor_BAO_DataProcessor::dataProcessorToClass($dataProcessor);
@@ -61,14 +62,12 @@ class CRM_DataprocessorSearch_CaseSearch implements UIFormOutputInterface {
     ));
 
     $form->add('wysiwyg', 'help_text', E::ts('Help text for this search'), array('rows' => 6, 'cols' => 80));
+    $form->add('text', 'no_result_text', E::ts('No result text'), array('class' => 'huge'), false);
     $form->add('checkbox', 'expanded_search', E::ts('Expand criteria form initially'));
+    $form->add('checkbox', 'show_manage_case', E::ts('Show manage case column'));
 
     // navigation field
     $navigationOptions = $navigation->getNavigationOptions();
-    if (isset($output['configuration']['navigation_id'])) {
-      $navigationPath = $navigation->getNavigationPathById($output['configuration']['navigation_id']);
-      unset($navigationOptions[$navigationPath]);
-    }
     $form->add('select', 'navigation_parent_path', ts('Parent Menu'), array('' => ts('- select -')) + $navigationOptions, true);
 
     $defaults = array();
@@ -83,8 +82,8 @@ class CRM_DataprocessorSearch_CaseSearch implements UIFormOutputInterface {
         if (isset($output['configuration']['case_id_field'])) {
           $defaults['case_id_field'] = $output['configuration']['case_id_field'];
         }
-        if (isset($output['configuration']['navigation_id'])) {
-          $defaults['navigation_parent_path'] = $navigation->getNavigationParentPathById($output['configuration']['navigation_id']);
+        if (isset($output['configuration']['navigation_parent_path'])) {
+          $defaults['navigation_parent_path'] = $output['configuration']['navigation_parent_path'];
         }
         if (isset($output['configuration']['hide_id_fields'])) {
           $defaults['hide_id_fields'] = $output['configuration']['hide_id_fields'];
@@ -95,8 +94,16 @@ class CRM_DataprocessorSearch_CaseSearch implements UIFormOutputInterface {
         if (isset($output['configuration']['help_text'])) {
           $defaults['help_text'] = $output['configuration']['help_text'];
         }
+        if (isset($output['configuration']['no_result_text'])) {
+          $defaults['no_result_text'] = $output['configuration']['no_result_text'];
+        } else {
+          $defaults['no_result_text'] = E::ts('No results');
+        }
         if (isset($output['configuration']['expanded_search'])) {
           $defaults['expanded_search'] = $output['configuration']['expanded_search'];
+        }
+        if (isset($output['configuration']['show_manage_case'])) {
+          $defaults['show_manage_case'] = $output['configuration']['show_manage_case'];
         }
       }
     }
@@ -128,11 +135,13 @@ class CRM_DataprocessorSearch_CaseSearch implements UIFormOutputInterface {
     $output['permission'] = $submittedValues['permission'];
     $configuration['contact_id_field'] = $submittedValues['contact_id_field'];
     $configuration['case_id_field'] = $submittedValues['case_id_field'];
+    $configuration['no_result_text'] = $submittedValues['no_result_text'];
     $configuration['hidden_fields'] = $submittedValues['hidden_fields'];
     $configuration['navigation_parent_path'] = $submittedValues['navigation_parent_path'];
     $configuration['hide_id_fields'] = $submittedValues['hide_id_fields'];
     $configuration['help_text'] = $submittedValues['help_text'];
     $configuration['expanded_search'] = isset($submittedValues['expanded_search']) ? $submittedValues['expanded_search'] : false;
+    $configuration['show_manage_case'] = isset($submittedValues['show_manage_case']) ? $submittedValues['show_manage_case'] : false;
     return $configuration;
   }
 
@@ -199,6 +208,28 @@ class CRM_DataprocessorSearch_CaseSearch implements UIFormOutputInterface {
     return CRM_Core_Permission::check(array(
       $output['permission']
     ));
+  }
+
+  /**
+   * Returns the data processor name from a url.
+   *
+   * @param $url
+   *
+   * @return string
+   */
+  public function getDataProcessorNameFromUrl($url) {
+    $dataProcessorName = str_replace('civicrm/dataprocessor_case_search/', '', $url);
+    return $dataProcessorName;
+  }
+
+  /**
+   * Returns the name of the contact id field.
+   *
+   * @param $config
+   * @return string
+   */
+  public function getContactIdFieldNameFromConfig($config) {
+    return false;
   }
 
 }

@@ -29,6 +29,17 @@ function dataprocessor_civicrm_container(ContainerBuilder $container) {
   $apiKernelDefinition = $container->getDefinition('civi_api_kernel');
   $apiProviderDefinition = new Definition('Civi\DataProcessor\Output\Api');
   $apiKernelDefinition->addMethodCall('registerApiProvider', array($apiProviderDefinition));
+
+  // Add the data source for custom groups with multiple set.
+  // This will add a data source for each custom group.
+  $container->addCompilerPass(new \Civi\DataProcessor\Source\CompilerPass\MultipleCustomGroupSource());
+
+  // Add event listeners so we can integrate a data processor search with smart groups.
+  // Insert event listener for altering saved search so we can save smart groups.
+  $container->findDefinition('dispatcher')
+    ->addMethodCall('addListener', array('civi.dao.postUpdate', ['CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegration', 'alterSavedSearch']))
+    ->addMethodCall('addListener', array('civi.dao.postInsert', ['CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegration', 'alterSavedSearch']))
+  ;
 }
 
 /**
@@ -51,8 +62,8 @@ function dataprocessor_civicrm_alterAPIPermissions($entity, $action, &$params, &
   $actionCamelCase = _civicrm_api_get_camel_name($api_action);
   $dao = CRM_Core_DAO::executeQuery("
     SELECT *
-    FROM civicrm_data_processor_output o 
-    INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id 
+    FROM civicrm_data_processor_output o
+    INNER JOIN civicrm_data_processor p ON o.data_processor_id = p.id
     WHERE p.is_active = 1
     AND (LOWER(api_entity) = LOWER(%1) OR LOWER(api_entity) = LOWER(%2))
     AND (
@@ -76,6 +87,20 @@ function dataprocessor_civicrm_alterAPIPermissions($entity, $action, &$params, &
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_alterMenu/
  */
 function dataprocessor_civicrm_alterMenu(&$items) {
+  // This hook is called BEFORE civicrm_entityTypes so DataProcessor API calls will fail with missing BAO in
+  //   some cases (eg. running cv flush from cli)
+  // So we manually run it here before calling alterMenu function
+  $entityTypes = [];
+  _dataprocessor_civix_civicrm_entityTypes($entityTypes);
+  foreach ($entityTypes as $entityType) {
+    CRM_Core_DAO_AllCoreTables::registerEntityType(
+      $entityType['name'],
+      $entityType['class'],
+      $entityType['table'],
+      $entityType['fields_callback'] ?? NULL,
+      $entityType['links_callback'] ?? NULL
+    );
+  }
   \Civi\DataProcessor\Output\UIOutputHelper::alterMenu($items);
 }
 
@@ -90,7 +115,7 @@ function dataprocessor_civicrm_alterMenu(&$items) {
  * @param $params
  */
 function dataprocessor_civicrm_pre($op, $objectName, $objectId, &$params) {
-  \Civi\DataProcessor\Output\UIOutputHelper::preHook($op, $objectName, $objectId, $params);
+
 }
 
 /**
@@ -105,6 +130,7 @@ function dataprocessor_civicrm_pre($op, $objectName, $objectId, &$params) {
  */
 function dataprocessor_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   \Civi\DataProcessor\Output\UIOutputHelper::postHook($op, $objectName, $objectId, $objectRef);
+  \Civi\DataProcessor\Config\ConfigContainer::postHook($op, $objectName, $objectId, $objectRef);
 }
 
 function dataprocessor_civicrm_dataprocessor_export(&$dataProcessor) {
@@ -137,6 +163,7 @@ function dataprocessor_civicrm_tabset($tabsetName, &$tabs, $context) {
  */
 function dataprocessor_civicrm_config(&$config) {
   _dataprocessor_civix_civicrm_config($config);
+  CRM_DataprocessorSearch_Form_Search_Custom_DataprocessorSmartGroupIntegration::redirectCustomSearchToDataProcessorSearch(CRM_Utils_System::currentPath());
 }
 
 /**
@@ -261,17 +288,6 @@ function dataprocessor_civicrm_entityTypes(&$entityTypes) {
   _dataprocessor_civix_civicrm_entityTypes($entityTypes);
 }
 
-// --- Functions below this ship commented out. Uncomment as required. ---
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-function dataprocessor_civicrm_preProcess($formName, &$form) {
-
-} // */
-
 /**
  * Implements hook_civicrm_navigationMenu().
  *
@@ -302,5 +318,6 @@ function dataprocessor_civicrm_navigationMenu(&$menu) {
     'operator' => 'OR',
     'separator' => 0,
   ));
+  \Civi\DataProcessor\Output\UIOutputHelper::navigationMenuHook($menu);
   _dataprocessor_civix_navigationMenu($menu);
 }

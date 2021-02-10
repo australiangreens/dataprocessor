@@ -72,14 +72,33 @@ class ContactFilter extends AbstractFieldFilterHandler {
       'multiple' => true,
     ));
 
+    $contactTypesApi = civicrm_api3('ContactType', 'get',array('is_active' => 1, 'options' => array('limit' => 0)));
+    $contactTypes = array();
+    foreach($contactTypesApi['values'] as $contactType) {
+      $contactTypeName = $contactType['name'];
+      if (isset($contactType['parent_id']) && $contactType['parent_id']) {
+        $contactTypeName = 'sub_'. $contactTypeName;
+      }
+      $contactTypes[$contactTypeName] = $contactType['label'];
+    }
+    $form->add('select', 'limit_contact_types', E::ts('Limit to Contact Type(s)'), $contactTypes, false, array(
+      'style' => 'min-width:250px',
+      'class' => 'crm-select2 huge',
+      'placeholder' => E::ts('- All contact types -'),
+      'multiple' => true,
+    ));
+
     if (isset($filter['configuration'])) {
       $configuration = $filter['configuration'];
       $defaults = array();
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($filter['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       if (isset($configuration['limit_groups'])) {
         $defaults['limit_groups'] = $configuration['limit_groups'];
+      }
+      if (isset($configuration['limit_contact_types'])) {
+        $defaults['limit_contact_types'] = $configuration['limit_contact_types'];
       }
       $form->setDefaults($defaults);
     }
@@ -107,7 +126,47 @@ class ContactFilter extends AbstractFieldFilterHandler {
     $configuration['field'] = $field;
     $configuration['datasource'] = $datasource;
     $configuration['limit_groups'] = isset($submittedValues['limit_groups']) ? $submittedValues['limit_groups'] : false;
+    $configuration['limit_contact_types'] = isset($submittedValues['limit_contact_types']) ? $submittedValues['limit_contact_types'] : false;
     return $configuration;
+  }
+
+  /**
+   * File name of the template to add this filter to the criteria form.
+   *
+   * @return string
+   */
+  public function getTemplateFileName() {
+    return "CRM/Dataprocessor/Form/Filter/ContactFilter.tpl";
+  }
+
+  /**
+   * Validate the submitted filter parameters.
+   *
+   * @param $submittedValues
+   * @return array
+   */
+  public function validateSubmittedFilterParams($submittedValues) {
+    $filterSpec = $this->getFieldSpecification();
+    $filterName = $filterSpec->alias;
+    if (isset($submittedValues[$filterName.'_op']) && $submittedValues[$filterName.'_op'] == 'current_user') {
+      $submittedValues[$filterName.'_op'] = 'IN';
+      $submittedValues[$filterName.'_value'] = [\CRM_Core_Session::getLoggedInContactID()];
+    }
+    return parent::validateSubmittedFilterParams($submittedValues);
+  }
+
+  /**
+   * Apply the submitted filter
+   *
+   * @param $submittedValues
+   * @throws \Exception
+   */
+  public function applyFilterFromSubmittedFilterParams($submittedValues) {
+    if (isset($submittedValues['op']) && $submittedValues['op'] == 'current_user') {
+      $submittedValues['op'] = 'IN';
+      $submittedValues['value'] = [\CRM_Core_Session::getLoggedInContactID()];
+    }
+    parent::applyFilterFromSubmittedFilterParams($submittedValues);
   }
 
   /**
@@ -145,17 +204,37 @@ class ContactFilter extends AbstractFieldFilterHandler {
       'placeholder' => E::ts('- select -'),
     ]);
 
+    $api_params = array();
+    if (!empty($this->configuration['limit_groups'])) {
+      $api_params['group'] = ['IN' => $this->configuration['limit_groups']];
+    }
+    $limitContactTypes = array();
+    $limitContactSubTypes = array();
+    if (isset($this->configuration['limit_contact_types']) && is_array($this->configuration['limit_contact_types'])) {
+      foreach($this->configuration['limit_contact_types'] as $limit_contact_type) {
+        if (stripos($limit_contact_type, 'sub_') === 0) {
+          // This is a subtype
+          $limitContactSubTypes[] = substr($limit_contact_type, 4);
+        } else {
+          $limitContactTypes[] = $limit_contact_type;
+        }
+      }
+    }
+    if (count($limitContactTypes)) {
+      $api_params['contact_type'] = ['IN' => $limitContactTypes];
+    }
+    if (count($limitContactSubTypes)) {
+      $api_params['contact_sub_type'] = ['IN' => $limitContactSubTypes];
+    }
     $props = array(
       'placeholder' => E::ts('Select a contact'),
       'entity' => 'Contact',
+      'api' => array('params' => $api_params),
       'create' => false,
       'multiple' => true,
       'style' => $minWidth,
       'class' => $sizeClass,
     );
-    if (!empty($this->configuration['limit_groups'])) {
-      $props['api'] = ['params' => ['group' => ['IN' => $this->configuration['limit_groups']]]];
-    }
     $form->addEntityRef( "{$alias}_value", '', $props);
 
     if (isset($defaultFilterValue['op'])) {
@@ -183,6 +262,8 @@ class ContactFilter extends AbstractFieldFilterHandler {
       'IN' => E::ts('Is one of'),
       'NOT IN' => E::ts('Is not one of'),
       'null' => E::ts('Is empty'),
+      'not null' => E::ts('Is not empty'),
+      'current_user' => E::ts('Is current user'),
     );
   }
 

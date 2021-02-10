@@ -182,7 +182,8 @@ class MultipleFieldFilter extends AbstractFilterHandler {
       }
       $dataFlow = $dataSource->ensureField($fieldSpec);
       if ($dataFlow && $dataFlow instanceof SqlDataFlow) {
-        $clauses[] = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $fieldSpec->name, $filterParams['op'], $filterParams['value'], $this->fieldSpecification->type);
+        $tableAlias = $this->getTableAlias($dataFlow);
+        $clauses[] = new SqlDataFlow\SimpleWhereClause($tableAlias, $fieldSpec->getName(), $filterParams['op'], $filterParams['value'], $this->fieldSpecification->type);
       }
     }
     if (count($clauses)) {

@@ -62,6 +62,7 @@ abstract class AbstractDataFlow {
    * Initialize the data flow
    *
    * @return void
+   * @throws \Civi\DataProcessor\Exception\DataFlowException
    */
   abstract public function initialize();
 
@@ -80,6 +81,7 @@ abstract class AbstractDataFlow {
    */
   protected function resetInitializeState() {
     $this->currentRecordIndex = 0;
+    unset($this->_allRecords);
   }
 
   /**
@@ -88,7 +90,8 @@ abstract class AbstractDataFlow {
    * @param string $fieldNameprefix
    *   The prefix before the name of the field within the record.
    * @return array
-   * @throws EndOfFlowException
+   * @throws \Civi\DataProcessor\Exception\EndOfFlowException
+   * @throws \Civi\DataProcessor\Exception\DataFlowException
    */
   abstract public function retrieveNextRecord($fieldNameprefix='');
 
@@ -110,6 +113,7 @@ abstract class AbstractDataFlow {
    *   The prefix before the name of the field within the record.
    * @return array
    * @throws \Civi\DataProcessor\DataFlow\EndOfFlowException
+   * @throws \Civi\DataProcessor\Exception\DataFlowException
    */
   public function nextRecord($fieldNamePrefix = '') {
     $allRecords = $this->allRecords($fieldNamePrefix);
@@ -147,7 +151,7 @@ abstract class AbstractDataFlow {
    * @return array
    */
   public function allRecords($fieldNameprefix = '') {
-    if (!is_array($this->_allRecords)) {
+    if (!isset($this->_allRecords) || !is_array($this->_allRecords)) {
       $this->_allRecords = [];
       $_allRecords = [];
       try {
@@ -275,6 +279,13 @@ abstract class AbstractDataFlow {
   }
 
   /**
+   * Resets the sorting
+   */
+  public function resetSort() {
+    $this->sortSpecifications = [];
+  }
+
+  /**
    * Sort compare function
    * Returns 0 when both values are equal
    * Returns -1 when a is less than b
@@ -307,6 +318,21 @@ abstract class AbstractDataFlow {
       $records = $aggregator->aggregateRecords($fieldNameprefix);
     }
     return $records;
+  }
+
+  /**
+   * When an object is cloned, PHP 5 will perform a shallow copy of all of the
+   * object's properties. Any properties that are references to other
+   * variables, will remain references. Once the cloning is complete, if a
+   * __clone() method is defined, then the newly created object's __clone()
+   * method will be called, to allow any necessary properties that need to be
+   * changed. NOT CALLABLE DIRECTLY.
+   *
+   * @return void
+   * @link https://php.net/manual/en/language.oop5.cloning.php
+   */
+  public function __clone() {
+    $this->dataSpecification = clone $this->dataSpecification;
   }
 
 

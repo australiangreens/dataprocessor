@@ -34,12 +34,18 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
    */
   public function formatField($rawRecord, $formattedRecord) {
     $rawValue = $rawRecord[$this->inputFieldSpec->alias];
-    $output = new FieldOutput($rawValue);
+    if ($this->returnUrl) {
+      $output = new FieldOutput($rawValue);
+    } else {
+      $output = new HTMLFieldOutput($rawValue);
+    }
     if ($rawValue) {
       $attachment = civicrm_api3('Attachment', 'getsingle', array('id' => $rawValue));
       if (!isset($attachment['is_error']) || $attachment['is_error'] == '0') {
-        $formattedValue = '<a href="' . $attachment['url'] . '">' . $attachment['name'] . '</a>';
-        $output->formattedValue = $formattedValue;
+        $output->formattedValue = $attachment['url'];
+        if (!$this->returnUrl) {
+          $output->setHtmlOutput('<a href="' . $attachment['url'] . '">' . $attachment['name'] . '</a>');
+        }
       }
     }
     return $output;
@@ -74,6 +80,11 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
   protected $dataSource;
 
   /**
+   * @var bool
+   */
+  protected $returnUrl = false;
+
+  /**
    * @return \Civi\DataProcessor\DataSpecification\FieldSpecification
    */
   public function getOutputFieldSpecification() {
@@ -89,23 +100,13 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->dataSource = $this->dataProcessor->getDataSourceByName($configuration['datasource']);
-    if (!$this->dataSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(1=>$title, 2=>$configuration['datasource'])));
-    }
-    $this->inputFieldSpec = $this->dataSource->getAvailableFields()->getFieldSpecificationByName($configuration['field']);
-    if (!$this->inputFieldSpec) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['field'],
-        3 => $configuration['datasource']
-      )));
-    }
-    $this->dataSource->ensureFieldInSource($this->inputFieldSpec);
+    list($this->dataSource, $this->inputFieldSpec) = $this->initializeField($configuration['field'], $configuration['datasource'], $alias);
 
     $this->outputFieldSpec = clone $this->inputFieldSpec;
     $this->outputFieldSpec->alias = $alias;
     $this->outputFieldSpec->title = $title;
+
+    $this->returnUrl = isset($configuration['return_url']) ? $configuration['return_url'] : false;
   }
 
   /**
@@ -132,11 +133,15 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
       'class' => 'crm-select2 huge data-processor-field-for-name',
       'placeholder' => E::ts('- select -'),
     ));
+    $form->add('checkbox', 'return_url', E::ts('Only return URL'));
     if (isset($field['configuration'])) {
       $configuration = $field['configuration'];
       $defaults = array();
+      if (isset($configuration['return_url'])) {
+        $defaults['return_url'] = $configuration['return_url'];
+      }
       if (isset($configuration['field']) && isset($configuration['datasource'])) {
-        $defaults['field'] = $configuration['datasource'] . '::' . $configuration['field'];
+        $defaults['field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['datasource'], $configuration['field']);
       }
       $form->setDefaults($defaults);
     }
@@ -149,7 +154,7 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
    * @return false|string
    */
   public function getConfigurationTemplateFileName() {
-    return "CRM/Dataprocessor/Form/Field/Configuration/RawFieldOutputHandler.tpl";
+    return "CRM/Dataprocessor/Form/Field/Configuration/FileDownloadLinkOutputHandler.tpl";
   }
 
 
@@ -162,6 +167,7 @@ class FileFieldOutputHandler extends AbstractFieldOutputHandler {
   public function processConfiguration($submittedValues) {
     list($datasource, $field) = explode('::', $submittedValues['field'], 2);
     $configuration['field'] = $field;
+    $configuration['return_url'] = isset($submittedValues['return_url']) ? $submittedValues['return_url'] : false;
     $configuration['datasource'] = $datasource;
     return $configuration;
   }

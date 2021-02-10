@@ -40,7 +40,7 @@
                                 {/if}
                             </th>
                         {/foreach}
-                        <th scope="col"></th>
+                        {if ($showLink)}<th scope="col"></th>{/if}
                     </tr></thead>
 
 
@@ -55,6 +55,7 @@
                                 <td>{$columnValue}</td>
                             {/foreach}
 
+                            {if ($showLink)}
                             <td>
                                 {if ($row.url)}
                                 <a href="{$row.url}">
@@ -62,6 +63,7 @@
                                 </a>
                                 {/if}
                             </td>
+                            {/if}
                         </tr>
                     {/foreach}
 

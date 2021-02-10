@@ -14,7 +14,7 @@ class CRM_DataprocessorSearch_Form_CaseSearch extends CRM_DataprocessorSearch_Fo
    * @return string
    */
   public function getDefaultEntity() {
-    return 'Contact';
+    return 'Case';
   }
 
   /**
@@ -25,11 +25,15 @@ class CRM_DataprocessorSearch_Form_CaseSearch extends CRM_DataprocessorSearch_Fo
    * @return false|string
    */
   protected function link($row) {
+    if (empty($this->dataProcessorOutput['configuration']['show_manage_case'])) {
+      return false;
+    }
+
     $record = $row['record'];
     $idFieldName = $this->getIdFieldName();
     $contactIdFieldName = $this->getContactIdFieldName();
-    $caseId = $record[$idFieldName]->formattedValue;
-    $contactId = $record[$contactIdFieldName]->formattedValue;
+    $caseId = $record[$idFieldName];
+    $contactId = $record[$contactIdFieldName];
     return CRM_Utils_System::url('civicrm/contact/view/case', 'reset=1&action=view&id='.$caseId.'&cid='.$contactId.'&context=search');
   }
 
@@ -50,7 +54,7 @@ class CRM_DataprocessorSearch_Form_CaseSearch extends CRM_DataprocessorSearch_Fo
    * @return String
    */
   protected function getDataProcessorName() {
-    $dataProcessorName = str_replace('civicrm/dataprocessor_case_search/', '', CRM_Utils_System::getUrlPath());
+    $dataProcessorName = str_replace('civicrm/dataprocessor_case_search/', '', CRM_Utils_System::currentPath());
     return $dataProcessorName;
   }
 
@@ -140,5 +144,40 @@ class CRM_DataprocessorSearch_Form_CaseSearch extends CRM_DataprocessorSearch_Fo
     }
     return $hiddenFields;
   }
+
+  /**
+   * Return altered rows
+   *
+   * Save the ids into the queryParams value. So that when an action is done on the selected record
+   * or on all records, the queryParams will hold all the case ids so that in the next step only the selected record, or the first
+   * all records are populated.
+   */
+	protected function retrieveEntityIds() {
+		$this->dataProcessorClass->getDataFlow()->setLimit(false);
+		$this->dataProcessorClass->getDataFlow()->setOffset(0);
+		$this->entityIDs = [];
+		$id_field = $this->getIdFieldName();
+		try {
+			while($record = $this->dataProcessorClass->getDataFlow()->nextRecord()) {
+				if ($id_field && isset($record[$id_field])) {
+					$this->entityIDs[] = $record[$id_field]->rawValue;
+				}
+			}
+		} catch (\Civi\DataProcessor\DataFlow\EndOfFlowException $e) {
+			// Do nothing
+		} catch (\Civi\DataProcessor\Exception\DataFlowException $e) {
+      // Do nothing
+    }
+		$this->_queryParams[0] = array(
+			'case_id',
+			'=',
+			array(
+				'IN' => $this->entityIDs,
+			),
+			0,
+			0
+		);
+		$this->controller->set('queryParams', $this->_queryParams);
+	}
 
 }

@@ -80,57 +80,9 @@ class IsActiveFieldOutputHandler extends AbstractFieldOutputHandler {
    * @param \Civi\DataProcessor\ProcessorType\AbstractProcessorType $processorType
    */
   public function initialize($alias, $title, $configuration) {
-    $this->isActiveSource = $this->dataProcessor->getDataSourceByName($configuration['is_active_datasource']);
-    if (!$this->isActiveSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(
-          1=>$title,
-          2=>$configuration['is_active_datasource'])
-      ));
-    }
-    $this->isActiveField = $this->isActiveSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['is_active_field']);
-    if (!$this->isActiveField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['is_active_field'],
-        3 => $configuration['is_active_datasource']
-      )));
-    }
-    $this->isActiveSource->ensureFieldInSource($this->isActiveField);
-
-    $this->startDateSource = $this->dataProcessor->getDataSourceByName($configuration['start_date_datasource']);
-    if (!$this->startDateSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(
-          1=>$title,
-          2=>$configuration['start_date_datasource'])
-      ));
-    }
-    $this->startDateField = $this->isActiveSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['start_date_field']);
-    if (!$this->startDateField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['start_date_field'],
-        3 => $configuration['start_date_datasource']
-      )));
-    }
-    $this->startDateSource->ensureFieldInSource($this->startDateField);
-
-    $this->endDateSource = $this->dataProcessor->getDataSourceByName($configuration['end_date_datasource']);
-    if (!$this->endDateSource) {
-      throw new DataSourceNotFoundException(E::ts("Field %1 requires data source '%2' which could not be found. Did you rename or deleted the data source?", array(
-          1=>$title,
-          2=>$configuration['end_date_datasource'])
-      ));
-    }
-    $this->endDateField = $this->isActiveSource->getAvailableFields()->getFieldSpecificationByAlias($configuration['end_date_field']);
-    if (!$this->endDateField) {
-      throw new FieldNotFoundException(E::ts("Field %1 requires a field with the name '%2' in the data source '%3'. Did you change the data source type?", array(
-        1 => $title,
-        2 => $configuration['end_date_field'],
-        3 => $configuration['end_date_datasource']
-      )));
-    }
-    $this->endDateSource->ensureFieldInSource($this->endDateField);
-
+    list($this->isActiveSource, $this->isActiveField) = $this->initializeField($configuration['is_active_field'], $configuration['is_active_datasource'], $alias.'_is_active');
+    list($this->startDateSource, $this->startDateField) = $this->initializeField($configuration['start_date_field'], $configuration['start_date_datasource'], $alias.'_start_date');
+    list($this->endDateSource, $this->endDateField) = $this->initializeField($configuration['end_date_field'], $configuration['end_date_datasource'], $alias.'_end_date');
     $this->outputFieldSpecification = new FieldSpecification($this->isActiveField->name, 'Boolean', $title, null, $alias);
   }
 
@@ -156,6 +108,7 @@ class IsActiveFieldOutputHandler extends AbstractFieldOutputHandler {
     }
     $today = new \DateTime();
     if (
+      ($value) &&
       (!$startDate || $startDate->format(('Ymd') <= $today->format('Ymd'))) &&
       (!$endDate || $endDate->format(('Ymd') >= $today->format('Ymd')))
     ) {
@@ -204,13 +157,13 @@ class IsActiveFieldOutputHandler extends AbstractFieldOutputHandler {
       $configuration = $field['configuration'];
       $defaults = array();
       if (isset($configuration['is_active_field']) && isset($configuration['is_active_datasource'])) {
-        $defaults['is_active_field'] = $configuration['is_active_datasource'] . '::' . $configuration['is_active_field'];
+        $defaults['is_active_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['is_active_datasource'], $configuration['is_active_field']);
       }
       if (isset($configuration['start_date_field']) && isset($configuration['start_date_datasource'])) {
-        $defaults['start_date_field'] = $configuration['start_date_datasource'] . '::' . $configuration['start_date_field'];
+        $defaults['start_date_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['start_date_datasource'], $configuration['start_date_field']);
       }
       if (isset($configuration['end_date_field']) && isset($configuration['end_date_datasource'])) {
-        $defaults['end_date_field'] = $configuration['end_date_datasource'] . '::' . $configuration['end_date_field'];
+        $defaults['end_date_field'] = \CRM_Dataprocessor_Utils_DataSourceFields::getSelectedFieldValue($field['data_processor_id'], $configuration['end_date_datasource'], $configuration['end_date_field']);
       }
       $form->setDefaults($defaults);
     }

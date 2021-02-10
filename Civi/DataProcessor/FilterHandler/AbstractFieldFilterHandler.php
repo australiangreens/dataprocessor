@@ -6,6 +6,7 @@
 
 namespace Civi\DataProcessor\FilterHandler;
 
+use Civi\DataProcessor\DataFlow\InMemoryDataFlow;
 use Civi\DataProcessor\DataFlow\SqlDataFlow;
 use Civi\DataProcessor\Exception\DataSourceNotFoundException;
 use Civi\DataProcessor\Exception\FieldNotFoundException;
@@ -32,6 +33,12 @@ abstract class AbstractFieldFilterHandler extends AbstractFilterHandler {
    * @var \Civi\DataProcessor\DataFlow\SqlDataFlow\WhereClauseInterface
    */
   protected $whereClause;
+
+
+  /**
+   * @var \Civi\DataProcessor\DataFlow\InMemoryDataFlow\SimpleFilter
+   */
+  protected $filterClass;
 
   /**
    * @param $datasource_name
@@ -80,9 +87,12 @@ abstract class AbstractFieldFilterHandler extends AbstractFilterHandler {
       return;
     }
     $dataFlow  = $this->dataSource->ensureField($this->fieldSpecification);
-    if ($dataFlow && $dataFlow instanceof SqlDataFlow && $this->whereClause) {
+    if ($dataFlow && $dataFlow instanceof SqlDataFlow && isset($this->whereClause)) {
       $dataFlow->removeWhereClause($this->whereClause);
       unset($this->whereClause);
+    } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow && $this->filterClass) {
+      $dataFlow->removeFilter($this->filterClass);
+      unset($this->filter);
     }
   }
 
@@ -100,8 +110,12 @@ abstract class AbstractFieldFilterHandler extends AbstractFilterHandler {
       if (!is_array($value)) {
         $value = explode(",", $value);
       }
-      $this->whereClause = new SqlDataFlow\SimpleWhereClause($dataFlow->getName(), $this->inputFieldSpecification->name, $filter['op'], $value, $this->inputFieldSpecification->type);
+      $tableAlias = $this->getTableAlias($dataFlow);
+      $this->whereClause = new SqlDataFlow\SimpleWhereClause($tableAlias, $this->inputFieldSpecification->getName(), $filter['op'], $value, $this->inputFieldSpecification->type);
       $dataFlow->addWhereClause($this->whereClause);
+    } elseif ($dataFlow && $dataFlow instanceof InMemoryDataFlow) {
+      $this->filterClass = new InMemoryDataFlow\SimpleFilter($this->inputFieldSpecification->getName(), $filter['op'], $filter['value']);
+      $dataFlow->addFilter($this->filterClass);
     }
   }
 

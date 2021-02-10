@@ -78,6 +78,15 @@ interface SourceInterface {
   public function ensureField(FieldSpecification $field);
 
   /**
+   * Ensure that filter field is accesible in the join part of the query
+   *
+   * @param FieldSpecification $field
+   * @return \Civi\DataProcessor\DataFlow\AbstractDataFlow|null
+   * @throws \Exception
+   */
+  public function ensureFieldForJoin(FieldSpecification $field);
+
+  /**
    * Ensures a field is in the data source
    *
    * @param \Civi\DataProcessor\DataSpecification\FieldSpecification $fieldSpecification
@@ -138,5 +147,11 @@ interface SourceInterface {
    * @return array
    */
   public function processConfiguration($submittedValues);
+
+  /**
+   * This function is called after a source is loaded from the cache.
+   * @return void
+   */
+  public function sourceLoadedFromCache();
 
 }
